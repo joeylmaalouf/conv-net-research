@@ -1,10 +1,11 @@
 import theano
 from theano import tensor as T
 from theano.sandbox.rng_mrg import MRG_RandomStreams as RandomStreams
-import numpy as np
-from load import mnist
 from theano.tensor.nnet.conv import conv2d
 from theano.tensor.signal.downsample import max_pool_2d
+import numpy as np
+from load import mnist
+from cPickle import dump, load
 
 
 class ConvolutionalNeuralNetwork(object):
@@ -44,8 +45,8 @@ class ConvolutionalNeuralNetwork(object):
 			updates.append((p, p - lr * g))
 		return updates
 
-	def model(self, X, w, w2, w3, w4, w_o, p_drop_conv, p_drop_hidden):
-		l1a = self.rectify(conv2d(X, w, border_mode='full'))
+	def model(self, X, w1, w2, w3, w4, wo, p_drop_conv, p_drop_hidden):
+		l1a = self.rectify(conv2d(X, w1, border_mode='full'))
 		l1 = max_pool_2d(l1a, (2, 2))
 		l1 = self.dropout(l1, p_drop_conv)
 
@@ -61,10 +62,10 @@ class ConvolutionalNeuralNetwork(object):
 		l4 = self.rectify(T.dot(l3, w4))
 		l4 = self.dropout(l4, p_drop_hidden)
 
-		pyx = self.softmax(T.dot(l4, w_o))
+		pyx = self.softmax(T.dot(l4, wo))
 		return l1, l2, l3, l4, pyx
 
-	def train_mnist(self, verbose = False, save = False):
+	def initialize_mnist(self):
 		self.trX, self.teX, self.trY, self.teY = mnist(onehot=True)
 
 		self.trX = self.trX.reshape(-1, 1, 28, 28)
@@ -73,31 +74,47 @@ class ConvolutionalNeuralNetwork(object):
 		self.X = T.ftensor4()
 		self.Y = T.fmatrix()
 
-		self.w = self.init_weights((32, 1, 3, 3))
+		self.w1 = self.init_weights((32, 1, 3, 3))
 		self.w2 = self.init_weights((64, 32, 3, 3))
 		self.w3 = self.init_weights((128, 64, 3, 3))
 		self.w4 = self.init_weights((128 * 3 * 3, 625))
-		self.w_o = self.init_weights((625, 10))
+		self.wo = self.init_weights((625, 10))
 
-		self.noise_l1, self.noise_l2, self.noise_l3, self.noise_l4, self.noise_py_x = self.model(self.X, self.w, self.w2, self.w3, self.w4, self.w_o, 0.2, 0.5)
-		self.l1, self.l2, self.l3, self.l4, self.py_x = self.model(self.X, self.w, self.w2, self.w3, self.w4, self.w_o, 0., 0.)
+	def create_model_functions(self):
+		self.noise_l1, self.noise_l2, self.noise_l3, self.noise_l4, self.noise_py_x = self.model(self.X, self.w1, self.w2, self.w3, self.w4, self.wo, 0.2, 0.5)
+		self.l1, self.l2, self.l3, self.l4, self.py_x = self.model(self.X, self.w1, self.w2, self.w3, self.w4, self.wo, 0., 0.)
 		self.y_x = T.argmax(self.py_x, axis=1)
 
 		self.cost = T.mean(T.nnet.categorical_crossentropy(self.noise_py_x, self.Y))
-		self.params = [self.w, self.w2, self.w3, self.w4, self.w_o]
+		self.params = [self.w1, self.w2, self.w3, self.w4, self.wo]
 		self.updates = self.RMSprop(self.cost, self.params, lr=0.001)
 
 		self.train = theano.function(inputs=[self.X, self.Y], outputs=self.cost, updates=self.updates, allow_input_downcast=True)
 		self.predict = theano.function(inputs=[self.X], outputs=self.y_x, allow_input_downcast=True)
 
+	def train_mnist(self, verbose = False):
 		for i in range(1):
 			for start, end in zip(range(0, len(self.trX), 128), range(128, len(self.trX), 128)):
 				self.cost = self.train(self.trX[start:end], self.trY[start:end])
 			if verbose:
 				print np.mean(np.argmax(self.teY, axis=1) == self.predict(self.teX))
 
+	def save_weights(self, weights, filename):
+		data = np.asarray(weights)
+		f = open(filename, "wb")
+		dump(data, f)
+		f.close()
+
+	def train_mnist(self, verbose = False, save = False):
+		self.initialize_mnist()
+		self.create_model_functions()
+		self.train_mnist(verbose)
 		if save:
-			print(type(self.w))
+			self.save_weights(self.w1, "w1.ws")
+			self.save_weights(self.w2, "w2.ws")
+			self.save_weights(self.w3, "w3.ws")
+			self.save_weights(self.w4, "w4.ws")
+			self.save_weights(self.wo, "wo.ws")
 
 
 if __name__ == "__main__":
