@@ -102,12 +102,14 @@ class ConvolutionalNeuralNetwork(object):
 	def save_weights(self, weights, filename):
 		data = np.asarray(weights)
 		f = open(filename, "wb")
-		dump(data, f)
+		# dump(data, f)
+		np.save(f, data)
 		f.close()
 
 	def load_weights(self, filename):
 		f = open(filename, "rb")
-		data = load(f)
+		# data = load(f)
+		data = np.load(f)
 		f.close()
 		return data
 
