@@ -6,6 +6,7 @@ from load import mnist
 from theano.tensor.nnet.conv import conv2d
 from theano.tensor.signal.downsample import max_pool_2d
 
+theano.config.floatX = "float32"
 srng = RandomStreams()
 
 def floatX(X):
