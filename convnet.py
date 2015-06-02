@@ -93,7 +93,7 @@ class ConvolutionalNeuralNetwork(object):
 		self.predict = theano.function(inputs=[self.X], outputs=self.y_x, allow_input_downcast=True)
 
 	def train_mnist(self, verbose):
-		for i in range(1): # change back to 100
+		for i in range(10): # change back to 100
 			for start, end in zip(range(0, len(self.trX), 128), range(128, len(self.trX), 128)):
 				self.cost = self.train(self.trX[start:end], self.trY[start:end])
 			if verbose:
@@ -125,19 +125,15 @@ class ConvolutionalNeuralNetwork(object):
 		self.w4 = self.load_weights("weights/w4.ws")
 		self.wo = self.load_weights("weights/wo.ws")
 
-	def train_mnist(self, verbose = False, save = False):
+	def mnist_example(self, verbose = False, save = False):
 		self.initialize_mnist()
-		print("Initialized successfully. Now creating model functions...")
 		self.create_model_functions()
-		print("Created successfully. Now training...")
 		self.train_mnist(verbose)
 		if save:
-			print("Trained successfully. Now saving weights...")
 			self.save_all_weights()
-		else:
-			print("Trained successfully. Now exiting...")
 
 
 if __name__ == "__main__":
 	cnn = ConvolutionalNeuralNetwork()
-	cnn.train_mnist(verbose = True, save = True)
+	cnn.mnist_example(verbose = True, save = True)
+	print("Demonstration complete.")
