@@ -114,18 +114,18 @@ class ConvolutionalNeuralNetwork(object):
 		return data
 
 	def save_all_weights(self):
-		self.save_weights(self.w1, "weights/w1.ws")
-		self.save_weights(self.w2, "weights/w2.ws")
-		self.save_weights(self.w3, "weights/w3.ws")
-		self.save_weights(self.w4, "weights/w4.ws")
-		self.save_weights(self.wo, "weights/wo.ws")
+		self.save_weights(self.w1, "weights/w1.npy")
+		self.save_weights(self.w2, "weights/w2.npy")
+		self.save_weights(self.w3, "weights/w3.npy")
+		self.save_weights(self.w4, "weights/w4.npy")
+		self.save_weights(self.wo, "weights/wo.npy")
 
 	def load_all_weights(self):
-		self.w1 = self.load_weights("weights/w1.ws")
-		self.w2 = self.load_weights("weights/w2.ws")
-		self.w3 = self.load_weights("weights/w3.ws")
-		self.w4 = self.load_weights("weights/w4.ws")
-		self.wo = self.load_weights("weights/wo.ws")
+		self.w1 = self.load_weights("weights/w1.npy")
+		self.w2 = self.load_weights("weights/w2.npy")
+		self.w3 = self.load_weights("weights/w3.npy")
+		self.w4 = self.load_weights("weights/w4.npy")
+		self.wo = self.load_weights("weights/wo.npy")
 
 	def mnist_example(self, verbose = False, save = False):
 		self.initialize_mnist()
