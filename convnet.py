@@ -64,7 +64,7 @@ class ConvolutionalNeuralNetwork(object):
 		pyx = self.softmax(T.dot(l4, w_o))
 		return l1, l2, l3, l4, pyx
 
-	def train_mnist(self, verbose = False):
+	def train_mnist(self, verbose = False, save = False):
 		self.trX, self.teX, self.trY, self.teY = mnist(onehot=True)
 
 		self.trX = self.trX.reshape(-1, 1, 28, 28)
@@ -90,13 +90,16 @@ class ConvolutionalNeuralNetwork(object):
 		self.train = theano.function(inputs=[self.X, self.Y], outputs=self.cost, updates=self.updates, allow_input_downcast=True)
 		self.predict = theano.function(inputs=[self.X], outputs=self.y_x, allow_input_downcast=True)
 
-		for i in range(100):
+		for i in range(1):
 			for start, end in zip(range(0, len(self.trX), 128), range(128, len(self.trX), 128)):
 				self.cost = self.train(self.trX[start:end], self.trY[start:end])
 			if verbose:
 				print np.mean(np.argmax(self.teY, axis=1) == self.predict(self.teX))
 
+		if save:
+			print(type(self.w))
+
 
 if __name__ == "__main__":
 	cnn = ConvolutionalNeuralNetwork()
-	cnn.train_mnist(verbose = True)
+	cnn.train_mnist(verbose = True, save = True)
