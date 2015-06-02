@@ -11,7 +11,10 @@ from cPickle import dump, load
 class ConvolutionalNeuralNetwork(object):
 	def __init__(self):
 		theano.config.floatX = "float32"
+		theano.config.experimental.unpickle_gpu_on_cpu = True
 		self.srng = RandomStreams()
+		self.X = T.ftensor4()
+		self.Y = T.fmatrix()
 
 	def floatX(self, X):
 		return np.asarray(X, dtype=theano.config.floatX)
@@ -70,9 +73,6 @@ class ConvolutionalNeuralNetwork(object):
 
 		self.trX = self.trX.reshape(-1, 1, 28, 28)
 		self.teX = self.teX.reshape(-1, 1, 28, 28)
-
-		self.X = T.ftensor4()
-		self.Y = T.fmatrix()
 
 		self.w1 = self.init_weights((32, 1, 3, 3))
 		self.w2 = self.init_weights((64, 32, 3, 3))

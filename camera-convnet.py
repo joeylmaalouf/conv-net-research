@@ -8,9 +8,9 @@ class VideoWindow(object):
 	def __init__(self, window_root, video_capture):
 		super(VideoWindow, self).__init__()
 
-		#self.cnn = convnet.ConvolutionalNeuralNetwork()
-		#self.cnn.load_all_weights()
-		#self.cnn.create_model_functions()
+		self.cnn = convnet.ConvolutionalNeuralNetwork()
+		self.cnn.load_all_weights()
+		self.cnn.create_model_functions()
 
 		self.root = window_root
 		self.cap = video_capture
