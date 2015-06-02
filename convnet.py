@@ -11,7 +11,7 @@ from cPickle import dump, load
 class ConvolutionalNeuralNetwork(object):
 	def __init__(self):
 		theano.config.floatX = "float32"
-		theano.config.experimental.unpickle_gpu_on_cpu = True
+		theano.config.experimental.unpickle_gpu_on_cpu = True # THEANO PLEASE IMPLEMENT THIS
 		self.srng = RandomStreams()
 		self.X = T.ftensor4()
 		self.Y = T.fmatrix()
