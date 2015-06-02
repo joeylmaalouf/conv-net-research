@@ -93,7 +93,7 @@ class ConvolutionalNeuralNetwork(object):
 		self.predict = theano.function(inputs=[self.X], outputs=self.y_x, allow_input_downcast=True)
 
 	def train_mnist(self, verbose = False):
-		for i in range(1):
+		for i in range(1): # change back to 100
 			for start, end in zip(range(0, len(self.trX), 128), range(128, len(self.trX), 128)):
 				self.cost = self.train(self.trX[start:end], self.trY[start:end])
 			if verbose:
@@ -105,16 +105,32 @@ class ConvolutionalNeuralNetwork(object):
 		dump(data, f)
 		f.close()
 
+	def load_weights(self, filename):
+		f = open(filename, "rb")
+		data = load(f)
+		f.close()
+		return data
+
+	def save_all_weights(self):
+		self.save_weights(self.w1, "weights/w1.ws")
+		self.save_weights(self.w2, "weights/w2.ws")
+		self.save_weights(self.w3, "weights/w3.ws")
+		self.save_weights(self.w4, "weights/w4.ws")
+		self.save_weights(self.wo, "weights/wo.ws")
+
+	def load_all_weights(self):
+		self.w1 = self.load_weights("weights/w1.ws")
+		self.w2 = self.load_weights("weights/w2.ws")
+		self.w3 = self.load_weights("weights/w3.ws")
+		self.w4 = self.load_weights("weights/w4.ws")
+		self.wo = self.load_weights("weights/wo.ws")
+
 	def train_mnist(self, verbose = False, save = False):
 		self.initialize_mnist()
 		self.create_model_functions()
 		self.train_mnist(verbose)
 		if save:
-			self.save_weights(self.w1, "w1.ws")
-			self.save_weights(self.w2, "w2.ws")
-			self.save_weights(self.w3, "w3.ws")
-			self.save_weights(self.w4, "w4.ws")
-			self.save_weights(self.wo, "wo.ws")
+			self.save_all_weights()
 
 
 if __name__ == "__main__":

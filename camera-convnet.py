@@ -7,9 +7,11 @@ import convnet
 class VideoWindow(object):
 	def __init__(self, window_root, video_capture):
 		super(VideoWindow, self).__init__()
-		print("Please wait while the model is trained on sample data.") # change once we get model to load from weights
+
 		self.cnn = convnet.ConvolutionalNeuralNetwork()
-		self.cnn.train_mnist()
+		self.cnn.load_all_weights()
+		self.cnn.create_model_functions()
+
 		self.root = window_root
 		self.cap = video_capture
 		root.bind("<Escape>", lambda e: root.quit())
@@ -17,7 +19,6 @@ class VideoWindow(object):
 		self.label.pack()
 		self.button = tk.Button(self.root, text = "Send image to convnet as 28x28 digit picture.", command = self.predict_class)
 		self.button.pack()
-		# cam_width, cam_height = int(cap.get(3)), int(cap.get(4)) # 640x480 on our school laptops
 
 	def getFrame(self):
 		ret, frame = self.cap.read()
