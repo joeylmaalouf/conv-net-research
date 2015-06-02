@@ -8,13 +8,13 @@ class VideoWindow(object):
 	def __init__(self, window_root, video_capture):
 		super(VideoWindow, self).__init__()
 
-		self.cnn = convnet.ConvolutionalNeuralNetwork()
-		self.cnn.load_all_weights()
-		self.cnn.create_model_functions()
+		#self.cnn = convnet.ConvolutionalNeuralNetwork()
+		#self.cnn.load_all_weights()
+		#self.cnn.create_model_functions()
 
 		self.root = window_root
 		self.cap = video_capture
-		root.bind("<Escape>", lambda e: root.quit())
+		self.root.bind("<Escape>", lambda e: self.root.quit())
 		self.label = tk.Label(self.root, image = None)
 		self.label.pack()
 		self.button = tk.Button(self.root, text = "Send image to convnet as 28x28 digit picture.", command = self.predict_class)
@@ -23,6 +23,15 @@ class VideoWindow(object):
 	def getFrame(self):
 		ret, frame = self.cap.read()
 		frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+
+		w = self.cap.get(3)
+		h = self.cap.get(4)
+		if w > h:
+			offset = (w-h)/2
+			frame = frame[:, offset:w-offset]
+		elif w < h:
+			offset = (h-w)/2
+			frame = frame[offset:h-offset, :]
 		return frame
 
 	def updateFrame(self):
@@ -34,7 +43,7 @@ class VideoWindow(object):
 	def run(self):
 		self.updateFrame()
 		self.root.mainloop()
-		cap.release()
+		self.cap.release()
 
 	def predict_class(self):
 		frame = cv2.resize(self.getFrame(), (28, 28)).reshape(-1, 1, 28, 28)

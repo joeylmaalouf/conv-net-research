@@ -127,14 +127,17 @@ class ConvolutionalNeuralNetwork(object):
 
 	def train_mnist(self, verbose = False, save = False):
 		self.initialize_mnist()
+		print("Initialized successfully. Now creating model functions...")
 		self.create_model_functions()
+		print("Created successfully. Now training...")
 		self.train_mnist(verbose)
 		if save:
-			print("Finished training. Now saving weights...")
+			print("Trained successfully. Now saving weights...")
 			self.save_all_weights()
+		else:
+			print("Trained successfully. Now exiting...")
 
 
 if __name__ == "__main__":
 	cnn = ConvolutionalNeuralNetwork()
-	print("Initialized successfully. Now training...")
 	cnn.train_mnist(verbose = True, save = True)
