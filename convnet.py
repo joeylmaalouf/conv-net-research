@@ -130,6 +130,7 @@ class ConvolutionalNeuralNetwork(object):
 		self.create_model_functions()
 		self.train_mnist(verbose)
 		if save:
+			print("Finished training. Now saving weights...")
 			self.save_all_weights()
 
 
