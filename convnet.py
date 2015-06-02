@@ -92,7 +92,7 @@ class ConvolutionalNeuralNetwork(object):
 		self.train = theano.function(inputs=[self.X, self.Y], outputs=self.cost, updates=self.updates, allow_input_downcast=True)
 		self.predict = theano.function(inputs=[self.X], outputs=self.y_x, allow_input_downcast=True)
 
-	def train_mnist(self, verbose = False):
+	def train_mnist(self, verbose):
 		for i in range(1): # change back to 100
 			for start, end in zip(range(0, len(self.trX), 128), range(128, len(self.trX), 128)):
 				self.cost = self.train(self.trX[start:end], self.trY[start:end])
@@ -135,4 +135,5 @@ class ConvolutionalNeuralNetwork(object):
 
 if __name__ == "__main__":
 	cnn = ConvolutionalNeuralNetwork()
+	print("Initialized successfully. Now training...")
 	cnn.train_mnist(verbose = True, save = True)

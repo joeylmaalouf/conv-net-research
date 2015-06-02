@@ -43,7 +43,5 @@ class VideoWindow(object):
 		return prediction
 
 if __name__ == "__main__":
-	root = tk.Tk()
-	cap = cv2.VideoCapture(0)
-	win = VideoWindow(root, cap)
-	win.run()
+	vwin = VideoWindow(tk.Tk(), cv2.VideoCapture(0))
+	vwin.run()
