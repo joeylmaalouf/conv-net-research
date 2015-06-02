@@ -11,7 +11,6 @@ from cPickle import dump, load
 class ConvolutionalNeuralNetwork(object):
 	def __init__(self):
 		theano.config.floatX = "float32"
-		theano.config.experimental.unpickle_gpu_on_cpu = True # THEANO PLEASE IMPLEMENT THIS
 		self.srng = RandomStreams()
 		self.X = T.ftensor4()
 		self.Y = T.fmatrix()
@@ -26,8 +25,8 @@ class ConvolutionalNeuralNetwork(object):
 		return T.maximum(X, 0.)
 
 	def softmax(self, X):
-		e_x = T.exp(X - X.max(axis=1).dimshuffle(0, 'x'))
-		return e_x / e_x.sum(axis=1).dimshuffle(0, 'x')
+		e_x = T.exp(X - X.max(axis=1).dimshuffle(0, "x"))
+		return e_x / e_x.sum(axis=1).dimshuffle(0, "x")
 
 	def dropout(self, X, p=0.):
 		if p > 0:
