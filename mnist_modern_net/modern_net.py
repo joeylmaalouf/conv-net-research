@@ -52,8 +52,9 @@ def model(X, w_h, w_h2, w_o, p_drop_input, p_drop_hidden):
 
 def add_noise(matrix):
     shape = matrix.shape
-    noise = floatX(np.random.random(shape) * 25)
-    matrix = matrix + noise
+    noise = floatX(np.random.random(shape) * 2.5)
+    other_noise = floatX(np.ones(shape)*25 * np.random.random())
+    matrix = matrix + noise + other_noise
     result = np.minimum(matrix, 255)
     return result
 
