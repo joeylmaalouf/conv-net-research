@@ -1,11 +1,11 @@
 import theano
 from theano import tensor as T
 from theano.sandbox.rng_mrg import MRG_RandomStreams as RandomStreams
+from theano.sandbox.cuda.basic_ops import host_from_gpu
 from theano.tensor.nnet.conv import conv2d
 from theano.tensor.signal.downsample import max_pool_2d
 import numpy as np
 from load import mnist
-import cPickle
 
 
 class ConvolutionalNeuralNetwork(object):
@@ -99,20 +99,22 @@ class ConvolutionalNeuralNetwork(object):
 				print np.mean(np.argmax(self.teY, axis=1) == self.predict(self.teX))
 
 	def save_weights(self, weights, filename):
-		# print(weights.shape.eval())
-		data = np.asarray(weights)
-		# print(weights.shape)
-		length = reduce(lambda x,y: x*y, data.shape)
-		data.reshape(length)
+		length = reduce(lambda x,y: x*y, weights.shape.eval())
+		data = host_from_gpu(weights).eval()
+		data = np.asarray(data)
+		# print(data.shape)
+		# print(length)
+		data = data.reshape(length)
 		data = "\n".join([str(i) for i in data])
 		f = open(filename, "w")
 		f.write(data)
 		f.close()
 
-	def load_weights(self, filename):
+	def load_weights(self, filename, shape):
 		f = open(filename, "r")
 		data = [float(i) for i in f.read().split("\n")]
 		f.close()
+		data = theano.shared(self.floatX(data).reshape(shape))
 		return data
 
 	def save_all_weights(self):
@@ -123,16 +125,16 @@ class ConvolutionalNeuralNetwork(object):
 		self.save_weights(self.wo, "weights/wo.txt")
 
 	def load_all_weights(self):
-		self.w1 = self.load_weights("weights/w1.txt")
-		self.w2 = self.load_weights("weights/w2.txt")
-		self.w3 = self.load_weights("weights/w3.txt")
-		self.w4 = self.load_weights("weights/w4.txt")
-		self.wo = self.load_weights("weights/wo.txt")
+		self.w1 = self.load_weights("weights/w1.txt", (32, 1, 3, 3))
+		self.w2 = self.load_weights("weights/w2.txt", (64, 32, 3, 3))
+		self.w3 = self.load_weights("weights/w3.txt", (128, 64, 3, 3))
+		self.w4 = self.load_weights("weights/w4.txt", (128 * 3 * 3, 625))
+		self.wo = self.load_weights("weights/wo.txt", (625, 10))
 
 	def mnist_example(self, verbose = False, save = False):
 		self.initialize_mnist()
 		self.create_model_functions()
-		self.train_mnist(verbose, 10)
+		self.train_mnist(verbose, 0)
 		if save:
 			self.save_all_weights()
 			print("Saved weights to \"./weights/*.txt\".")
