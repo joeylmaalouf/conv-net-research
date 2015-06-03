@@ -102,8 +102,6 @@ class ConvolutionalNeuralNetwork(object):
 		length = reduce(lambda x,y: x*y, weights.shape.eval())
 		data = host_from_gpu(weights).eval()
 		data = np.asarray(data)
-		# print(data.shape)
-		# print(length)
 		data = data.reshape(length)
 		data = "\n".join([str(i) for i in data])
 		f = open(filename, "w")
@@ -134,7 +132,7 @@ class ConvolutionalNeuralNetwork(object):
 	def mnist_example(self, verbose = False, save = False):
 		self.initialize_mnist()
 		self.create_model_functions()
-		self.train_mnist(verbose, 0)
+		self.train_mnist(verbose, 50)
 		if save:
 			self.save_all_weights()
 			print("Saved weights to \"./weights/*.txt\".")
@@ -143,4 +141,4 @@ class ConvolutionalNeuralNetwork(object):
 if __name__ == "__main__":
 	cnn = ConvolutionalNeuralNetwork()
 	cnn.mnist_example(verbose = True, save = True)
-	print("Demonstration complete.")
+	print("Program complete.")
