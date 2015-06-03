@@ -5,7 +5,7 @@ from theano.tensor.nnet.conv import conv2d
 from theano.tensor.signal.downsample import max_pool_2d
 import numpy as np
 from load import mnist
-from cPickle import dump, load
+import cPickle
 
 
 class ConvolutionalNeuralNetwork(object):
@@ -101,13 +101,13 @@ class ConvolutionalNeuralNetwork(object):
 	def save_weights(self, weights, filename):
 		data = np.asarray(weights)
 		f = open(filename, "wb")
-		# dump(data, f)
+		# cPickle.dump(data, f)
 		np.save(f, data)
 		f.close()
 
 	def load_weights(self, filename):
 		f = open(filename, "rb")
-		# data = load(f)
+		# data = cPickle.load(f)
 		data = np.load(f)
 		f.close()
 		return data
@@ -132,6 +132,7 @@ class ConvolutionalNeuralNetwork(object):
 		self.train_mnist(verbose)
 		if save:
 			self.save_all_weights()
+			print("Saved weights to \"./weights/*.npy\".")
 
 
 if __name__ == "__main__":
