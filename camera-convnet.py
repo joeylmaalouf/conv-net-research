@@ -4,6 +4,7 @@ import numpy as np
 import cv2
 import convnet
 
+
 class VideoWindow(object):
 	def __init__(self, window_root, video_capture):
 		super(VideoWindow, self).__init__()
@@ -32,6 +33,7 @@ class VideoWindow(object):
 		elif w < h:
 			offset = (h-w)/2
 			frame = frame[offset:h-offset, :]
+
 		return frame
 
 	def updateFrame(self):
@@ -47,9 +49,11 @@ class VideoWindow(object):
 
 	def predict_class(self):
 		frame = cv2.resize(self.getFrame(), (28, 28)).reshape(-1, 1, 28, 28)
-		prediction = self.cnn.predict(frame)
-		print(prediction)
+		cv2.bitwise_not(frame, frame) # MNIST is white on black, our examples are black on white
+		prediction = self.cnn.predict(frame)[0]
+		print("Predicted digit: {0}".format(prediction))
 		return prediction
+
 
 if __name__ == "__main__":
 	vwin = VideoWindow(tk.Tk(), cv2.VideoCapture(0))
