@@ -110,10 +110,11 @@ class ConvolutionalNeuralNetwork(object):
 		f.write(data)
 		f.close()
 
-	def load_weights(self, filename):
+	def load_weights(self, filename, shape):
 		f = open(filename, "r")
 		data = [float(i) for i in f.read().split("\n")]
 		f.close()
+		data = theano.shared(self.floatX(data).reshape(shape))
 		return data
 
 	def save_all_weights(self):
@@ -124,11 +125,11 @@ class ConvolutionalNeuralNetwork(object):
 		self.save_weights(self.wo, "weights/wo.txt")
 
 	def load_all_weights(self):
-		self.w1 = self.load_weights("weights/w1.txt")
-		self.w2 = self.load_weights("weights/w2.txt")
-		self.w3 = self.load_weights("weights/w3.txt")
-		self.w4 = self.load_weights("weights/w4.txt")
-		self.wo = self.load_weights("weights/wo.txt")
+		self.w1 = self.load_weights("weights/w1.txt", (32, 1, 3, 3))
+		self.w2 = self.load_weights("weights/w2.txt", (64, 32, 3, 3))
+		self.w3 = self.load_weights("weights/w3.txt", (128, 64, 3, 3))
+		self.w4 = self.load_weights("weights/w4.txt", (128 * 3 * 3, 625))
+		self.wo = self.load_weights("weights/wo.txt", (625, 10))
 
 	def mnist_example(self, verbose = False, save = False):
 		self.initialize_mnist()
