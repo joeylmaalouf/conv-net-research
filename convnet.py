@@ -1,11 +1,11 @@
 import theano
 from theano import tensor as T
 from theano.sandbox.rng_mrg import MRG_RandomStreams as RandomStreams
+from theano.sandbox.cuda.basic_ops import host_from_gpu
 from theano.tensor.nnet.conv import conv2d
 from theano.tensor.signal.downsample import max_pool_2d
 import numpy as np
 from load import mnist
-import cPickle
 
 
 class ConvolutionalNeuralNetwork(object):
@@ -99,11 +99,12 @@ class ConvolutionalNeuralNetwork(object):
 				print np.mean(np.argmax(self.teY, axis=1) == self.predict(self.teX))
 
 	def save_weights(self, weights, filename):
-		# print(weights.shape.eval())
-		data = np.asarray(weights)
-		# print(weights.shape)
-		length = reduce(lambda x,y: x*y, data.shape)
-		data.reshape(length)
+		length = reduce(lambda x,y: x*y, weights.shape.eval())
+		data = host_from_gpu(weights).eval()
+		data = np.asarray(data)
+		print(data.shape)
+		print(length)
+		data = data.reshape(length)
 		data = "\n".join([str(i) for i in data])
 		f = open(filename, "w")
 		f.write(data)
@@ -132,7 +133,7 @@ class ConvolutionalNeuralNetwork(object):
 	def mnist_example(self, verbose = False, save = False):
 		self.initialize_mnist()
 		self.create_model_functions()
-		self.train_mnist(verbose, 10)
+		self.train_mnist(verbose, 0)
 		if save:
 			self.save_all_weights()
 			print("Saved weights to \"./weights/*.txt\".")
