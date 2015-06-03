@@ -50,6 +50,5 @@ if __name__ == "__main__":
 	trX,teX,trY,teY = mnist()
 	trX = trX.reshape(60000, 28, 28)
 	from matplotlib import pyplot as plt
-	plt.set_cmap("gray")
-	plt.imshow(trX[0])
+	plt.imshow(trX[0], "gray")
 	plt.show()
