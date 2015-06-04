@@ -8,10 +8,9 @@ from theano.sandbox.rng_mrg import MRG_RandomStreams as RandomStreams
 import numpy as np
 import cPickle
 
-import modern_net.py
+import modern_net
 
 webcam_video = cv2.VideoCapture(0)
-srng = RandomStreams()
 
 def scale_image(frame):
 	frame = cv2.cvtColor( frame, cv2.COLOR_RGB2GRAY)
@@ -49,7 +48,7 @@ def image_accumulator(tracker, guess):
 
 if __name__ == '__main__':
 	mnn = modern_net.ModernNeuralNetwork()
-	mnn.load_weights("MNIST_Network_CPU.save")
+	mnn.load_weights("MNIST_Weights.save")
 	mnn.create_model_functions()
 
 	tracker = [0 for i in range(180)]

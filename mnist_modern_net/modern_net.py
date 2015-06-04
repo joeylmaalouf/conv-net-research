@@ -82,8 +82,8 @@ class ModernNeuralNetwork(object):
         f.close()
 
     def load_weights(self, filename):
-        f = open(filename, 'wb')
-        weights = cPickle.load()
+        f = open(filename, 'rb')
+        weights = cPickle.load(f)
         self.w_h = weights[0]
         self.w_h2 = weights[1]
         self.w_o = weights[2]
