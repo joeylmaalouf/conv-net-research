@@ -1,0 +1,7 @@
+/home/joey/github/conv-net-ella/catkin_ws/build/CMakeFiles/clean_test_results.dir
+/home/joey/github/conv-net-ella/catkin_ws/build/CMakeFiles/download_extra_data.dir
+/home/joey/github/conv-net-ella/catkin_ws/build/CMakeFiles/doxygen.dir
+/home/joey/github/conv-net-ella/catkin_ws/build/gtest/CMakeFiles/gtest.dir
+/home/joey/github/conv-net-ella/catkin_ws/build/gtest/CMakeFiles/gtest_main.dir
+/home/joey/github/conv-net-ella/catkin_ws/build/CMakeFiles/run_tests.dir
+/home/joey/github/conv-net-ella/catkin_ws/build/CMakeFiles/tests.dir
