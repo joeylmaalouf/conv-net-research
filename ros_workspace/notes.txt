@@ -1,0 +1,15 @@
+# function: boots turtlebot
+# run on robot
+roslaunch turtlebot_bringup minimal.launch
+
+# function: publish camera data
+# run on robot
+roslaunch turtlebot_bringup 3dsensor.launch
+
+# function: vizualize
+# run locally
+rosrun image_view image_view image:=/camera/rgb/image_color compressed
+
+# function: decompress image
+# run locally (?)
+rosrun image_transport republish in:=/camera/rgb/image_color compressed out:=/camera/rgb/image_color raw
