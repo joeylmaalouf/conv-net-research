@@ -33,7 +33,7 @@ if __name__ == '__main__':
 			mask = cv2.imread("./alphabet_Data/English/Img/GoodImg/Msk/" + sample + "/" + listdirmask[j])
 			image = create_image_with_mask(image, mask)
 			image = scale_image(image)
-			if image_array != None:
+			if image_array.any():
 				np.append(image_array,image, axis = 0)
 			else:
 				image_array = np.array(image)
