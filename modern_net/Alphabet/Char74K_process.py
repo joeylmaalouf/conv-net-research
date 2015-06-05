@@ -18,9 +18,17 @@ def create_image_with_mask(image, mask):
 	return cv2.bitwise_and(image, mask)
 
 if __name__ == '__main__':
-	image_array = np.zeros((1,10000))
+	for i in range(1,63):
+		array_size = 0
+		if i<10:
+			sample = 'Sample00' + str(i)
+		else:
+			sample = 'Sample0' + str(i)
+		array_size += len(os.listdir("./alphabet_Data/English/Img/GoodImg/Bmp/" + sample))
+
+	image_array = np.zeros((array_size))
 	values = []
-	"~/Research/alphabet_Data/English/Img/GoodImg"
+	counter = 0
 	for i in range(1,63):
 		if i<10:
 			sample = 'Sample00' + str(i)
@@ -33,7 +41,8 @@ if __name__ == '__main__':
 			mask = cv2.imread("./alphabet_Data/English/Img/GoodImg/Msk/" + sample + "/" + listdirmask[j])
 			image = create_image_with_mask(image, mask)
 			image = scale_image(image)
-			image_array = np.append(image_array,image, axis = 0)
+			image_array[counter] = np.append(image_array,image, axis = 0)
+			counter += 1
 			values.append(i)
 	print image_array.shape
 	f = open("Char74k_data.save", "wb")
