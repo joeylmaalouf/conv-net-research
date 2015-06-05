@@ -26,11 +26,11 @@ if __name__ == '__main__':
 			sample = 'Sample00' + str(i)
 		else:
 			sample = 'Sample0' + str(i)
-		listdirimg = os.listdir("~/Research/alphabet_Data/English/Img/GoodImg/Bmp/" + sample)
-		listdirmask = os.listdir("~/Research/alphabet_Data/English/Img/GoodImg/Msk/" + sample)
+		listdirimg = os.listdir("/Research/alphabet_Data/English/Img/GoodImg/Bmp/" + sample)
+		listdirmask = os.listdir("/Research/alphabet_Data/English/Img/GoodImg/Msk/" + sample)
 		for i in len(listdirimg):
-			image = cv2.imread("~/Research/alphabet_Data/English/Img/GoodImg/Bmp/" + sample + "/" + listdirimg[i])
-			mask = cv2.imread("~/Research/alphabet_Data/English/Img/GoodImg/Msk/" + sample + "/" + listdirMsk[i])
+			image = cv2.imread("/Research/alphabet_Data/English/Img/GoodImg/Bmp/" + sample + "/" + listdirimg[i])
+			mask = cv2.imread("/Research/alphabet_Data/English/Img/GoodImg/Msk/" + sample + "/" + listdirMsk[i])
 			image = create_image_with_mask(image, mask)
 			image = scale_image(image)
 			np.append(image_array,image, axis = 0)
