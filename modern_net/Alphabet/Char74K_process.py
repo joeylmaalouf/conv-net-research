@@ -18,7 +18,7 @@ def create_image_with_mask(image, mask):
 	return cv2.bitwise_and(image, mask)
 
 if __name__ == '__main__':
-	image_array = None
+	image_array = np.zeros((1,10000))
 	values = []
 	"~/Research/alphabet_Data/English/Img/GoodImg"
 	for i in range(1,63):
@@ -33,11 +33,9 @@ if __name__ == '__main__':
 			mask = cv2.imread("./alphabet_Data/English/Img/GoodImg/Msk/" + sample + "/" + listdirmask[j])
 			image = create_image_with_mask(image, mask)
 			image = scale_image(image)
-			if image_array.any():
-				np.append(image_array,image, axis = 0)
-			else:
-				image_array = np.array(image)
+			image_array = np.append(image_array,image, axis = 0)
 			values.append(i)
+	print image_array.shape
 	f = open("Char74k_data.save", "wb")
 	cPickle.dump(image_array,f)
 	cPickle.dump(values, f)
