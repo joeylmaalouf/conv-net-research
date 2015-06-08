@@ -17,7 +17,7 @@ if __name__ == '__main__':
 	print trX.shape
 	print trY.shape
 
-	testing=np.random.randint(10000,size=1000)
+	testing=np.random.randint(len(trX),size=700)
 	teX = trX[testing,:]
 	teY = trY[testing]
 	print teX.shape
