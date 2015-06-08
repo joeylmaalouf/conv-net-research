@@ -36,7 +36,7 @@ if __name__ == '__main__':
 	print "Creating Testing Data"
 	testing=np.random.randint(len(trX),size=700)
 	teX = trX[testing,:]
-	teY = trY[testing]
+	teY = trY[testing,:]
 
 	print "Training Net:"
 	for i in range(10):
