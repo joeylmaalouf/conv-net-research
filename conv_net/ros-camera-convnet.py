@@ -26,7 +26,7 @@ class VideoWindow(object):
 		self.button.pack()
 
 		rospy.init_node("listener", anonymous = True)
-		self.sub = rospy.Subscriber("/camera/rgb/image_raw", Image, self.callback)
+		self.sub = rospy.Subscriber("/camera/rgb/image_color", Image, self.callback)
 		self.bridge = CvBridge()
 		self.frame = np.zeros((480, 480), dtype = np.uint8)
 
@@ -76,6 +76,7 @@ class VideoWindow(object):
 	def run(self):
 		self.update_frames()
 		self.root.mainloop()
+		self.sub.unregister()
 
 	def predict_class(self):
 		frame = self.manipulate(self.frame)
