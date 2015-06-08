@@ -1,0 +1,3 @@
+<launch>
+	<node name="republish" type="republish" pkg="image_transport" output="screen" args="compressed in:=/camera/rgb/image_color raw out:=/camera/rgb/image_color/decompressed"/>
+</launch>
