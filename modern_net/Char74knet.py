@@ -18,10 +18,11 @@ def save_weights(weights, filename):
 if __name__ == '__main__':
 	print "Initilizing network"
 	mnet = mnet_general.ModernNeuralNetwork([784,625,860, 62])
+	mnet.create_model_functions()
 
 	print "Loading Data"
 	f = open("./Alphabet/Char74k_data.save",'rb')
-	trX = cPickle.load(f)
+	trX = cPickle.load(f).reshape(-1,100,100)
 	trY = np.array(cPickle.load(f))
 	f.close()
 
@@ -33,6 +34,7 @@ if __name__ == '__main__':
 	print "Training Net:"
 	for i in range(10):
 		for start, end in zip(range(0, len(trX), 128), range(128, len(trX), 128)):
+			print trX[start:end].shape
 			cost = mnet.train(trX[start:end], trY[start:end])
 		print np.mean(np.argmax(teY, axis=1) == mnet.predict(teX))
 
