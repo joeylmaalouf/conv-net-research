@@ -12,10 +12,12 @@ class Decompresser(object):
 		self.pub = rospy.Publisher("decompressed", Image)
 
 	def callback(self, data):
-		# figure out python version of
+		# figure out Python version of
 		# rosrun image_transport republish in:=/camera/rgb/image_color compressed out:=/camera/rgb/image_color raw
 		# http://wiki.ros.org/image_transport
 		# "image_transport does not yet support Python, though it is on the Roadmap" :(
+		# somehow use roslaunch python API (http://wiki.ros.org/roslaunch/API%20Usage)
+		# to call the command from a .launch file?
 		self.pub.publish(data)
 
 
@@ -30,8 +32,8 @@ class Converter(object):
 		except CvBridgeError, e:
 			rospy.loginfo(e)
 
-		# manipulate self.cv_image, send to convnet for prediction
 		rospy.loginfo(self.cv_image.shape)
+		# manipulate self.cv_image, send to convnet for prediction
 
 
 if __name__ == "__main__":
