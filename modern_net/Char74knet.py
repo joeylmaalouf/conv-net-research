@@ -4,6 +4,7 @@ import theano
 import numpy as np
 import cPickle
 import mnet_general
+import string
 
 def save_weights(weights, filename):
 		length = reduce(lambda x,y: x*y, weights.shape.eval())
@@ -15,6 +16,12 @@ def save_weights(weights, filename):
 		f.write(data)
 		f.close()
 
+def reprocess(data):
+	newdata = np.zeros(len(data), 62)
+	for i in len(data):
+		newdata[i:data[i]] = 1
+	return newdata
+
 if __name__ == '__main__':
 	print "Initilizing network"
 	mnet = mnet_general.ModernNeuralNetwork([784,625,860, 62])
@@ -23,7 +30,7 @@ if __name__ == '__main__':
 	print "Loading Data"
 	f = open("./Alphabet/Char74k_data.save",'rb')
 	trX = cPickle.load(f).reshape(-1,100,100)
-	trY = np.array(cPickle.load(f))
+	trY = reprocess(np.array(cPickle.load(f)))
 	f.close()
 
 	print "Creating Testing Data"
