@@ -31,7 +31,7 @@ def Char74k_initialize_array(filepath):
 	image_array = np.zeros((array_size))
 	return image_array
 
-def Char74k_process_images(BmpDirectory, MskDirectory):
+def Char74k_process_images(BmpDirectory, MskDirectory = None):
 	""" Takes in the directories for the pictures, bitmasks, and 
 		outputs a matrix of images (10000 by number of images),
 		as well as the values they are supposed to have
@@ -48,7 +48,7 @@ def Char74k_process_images(BmpDirectory, MskDirectory):
 		listdirmask = os.listdir(MskDirectory + sample)
 		for j in range(len(listdirimg)):
 			image = cv2.imread(BmpDirectory + sample + "/" + listdirimg[j])
-			mask = cv2.imread(MskDirectory + sample + "/" + listdirmask[j])
+			#mask = cv2.imread(MskDirectory + sample + "/" + listdirmask[j])
 			image = scale_image(image)
 			image_array[counter] = np.append(image_array,image, axis = 0)
 			counter += 1
@@ -56,16 +56,47 @@ def Char74k_process_images(BmpDirectory, MskDirectory):
 	return image_array, values
 
 if __name__ == '__main__':
+	print "Processing 'Good' Image Samples"
+	#Processing easy to see image samples
 	BmpDirectory = "./alphabet_Data/English/Img/GoodImg/Bmp/"
-	MskDirectory = "./alphabet_Data/English/Img/GoodImg/Msk/"
-	image_array1, values1 = Char74k_process_images("./alphabet_Data/English/Img/GoodImg/Bmp/")
-	
+	image_array, values = Char74k_process_images(BmpDirectory)
 	print image_array.shape
-	f = open("Char74k_Imgdata.save", "wb")
+	f = open("./Data/Char74k_GoodImgdata.save", "wb")
 	cPickle.dump(image_array,f)
 	cPickle.dump(values, f)
 	f.close()
 	
-	BmpDirectory = "./alphabet_Data/English/Img/GoodImg/Bmp/"
-	MskDirectory = "./alphabet_Data/English/Img/GoodImg/Msk/"
-	image_array1, values1 = Char74k_process_images("./alphabet_Data/English/Img/GoodImg/Bmp/")
+	print "Processing 'Bad' Image Samples"
+	#Processing hard to recognize image samples
+	BmpDirectory = "./alphabet_Data/English/Img/BadImag/Bmp/"
+	image_array, values = Char74k_process_images(BmpDirectory)
+	print image_array.shape
+	f = open("./Data/Char74k_BadImgdata.save", "wb")
+	cPickle.dump(image_array,f)
+	cPickle.dump(values, f)
+	f.close()
+
+	print "Processing Computer Fonts"
+	#Processing computer fonts
+	BmpDirectory = "./alphabet_Data/English/Fnt/"
+	image_array, values = Char74k_process_images(BmpDirectory)
+	print image_array.shape
+	f = open("./Data/Char74k_Fnt.save", "wb")
+	cPickle.dump(image_array,f)
+	cPickle.dump(values, f)
+
+	print "Processing Handwritten Samples"
+	#Processing handwritten samples
+	BmpDirectory = "./alphabet_Data/English/Hnd/Img/"
+	image_array, values = Char74k_process_images(BmpDirectory)
+	print image_array.shape
+	f = open("./Data/Char74k_HndImg.save", "wb")
+	cPickle.dump(image_array,f)
+	cPickle.dump(values, f)
+
+	BmpDirectory = "./alphabet_Data/English/Hnd/Trj/"
+	image_array, values = Char74k_process_images(BmpDirectory)
+	print image_array.shape
+	f = open("./Data/Char74k_HndTrj.save", "wb")
+	cPickle.dump(image_array,f)
+	cPickle.dump(values, f)
