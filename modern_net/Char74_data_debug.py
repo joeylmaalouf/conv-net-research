@@ -2,25 +2,23 @@ import cv2
 import numpy as np
 import sys
 import cPickle
+import Image
 
-def shuffle_in_unison_scary(a, b):
-    rng_state = np.random.get_state()
-    np.random.shuffle(a)
-    np.random.set_state(rng_state)
-    np.random.shuffle(b)
 
 
 if __name__ == '__main__':
 
 	print "Loading Data"
-	f = open("./Alphabet/Char74k_data.save",'rb')
+	f = open("data_sample.save",'r')
 	trX = cPickle.load(f)
-	trY = cPickle.load(f)
 	f.close()
 
-	shuffle_in_unison_scary(trX, trY)
-	image_index = 0
+	image_index = 15
 
 	image = trX[image_index].reshape((100,100))
+	#image = np.random.randint(0, 255, size = (2,2))
 
-	cv2.imshow("window", image)
+	img = Image.fromarray(image.astype("uint8")).convert("LA")
+	img = img.resize((600,600), Image.ANTIALIAS)
+	img.show()
+	print(image)
