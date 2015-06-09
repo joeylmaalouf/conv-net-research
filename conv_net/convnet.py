@@ -99,10 +99,14 @@ class ConvolutionalNeuralNetwork(object):
 			if verbose:
 				print(np.mean(np.argmax(self.teY, axis = 1) == self.predict(self.teX)))
 
-	def save_data(self, filename, data):
-		length = reduce(lambda x,y: x*y, data.shape.eval())
-		data = host_from_gpu(data).eval()
-		data = np.asarray(data)
+	def save_data(self, filename, data, gpu = False):
+		mult = lambda x, y: x * y
+		if gpu:
+			length = reduce(mult, data.shape.eval())
+			data = host_from_gpu(data).eval()
+			data = np.asarray(data)
+		else:
+			length = reduce(mult, data.shape)
 		data = data.reshape(length)
 		data = "\n".join([str(i) for i in data])
 		f = open(filename, "w")
@@ -117,18 +121,18 @@ class ConvolutionalNeuralNetwork(object):
 		return data
 
 	def save_all_weights(self):
-		self.save_data("weights/w1.txt", self.w1)
-		self.save_data("weights/w2.txt", self.w2)
-		self.save_data("weights/w3.txt", self.w3)
-		self.save_data("weights/w4.txt", self.w4)
-		self.save_data("weights/wo.txt", self.wo)
+		self.save_data("weights/w1.txt", self.w1, gpu = True)
+		self.save_data("weights/w2.txt", self.w2, gpu = True)
+		self.save_data("weights/w3.txt", self.w3, gpu = True)
+		self.save_data("weights/w4.txt", self.w4, gpu = True)
+		self.save_data("weights/wo.txt", self.wo, gpu = True)
 
 	def load_all_weights(self):
-		self.w1 = self.load_data("weights/w1.txt", (32, 1, 3, 3))
-		self.w2 = self.load_data("weights/w2.txt", (64, 32, 3, 3))
-		self.w3 = self.load_data("weights/w3.txt", (128, 64, 3, 3))
-		self.w4 = self.load_data("weights/w4.txt", (128 * 3 * 3, 625))
-		self.wo = self.load_data("weights/wo.txt", (625, 10))
+		self.w1 = self.load_cpu_data("weights/w1.txt", (32, 1, 3, 3))
+		self.w2 = self.load_cpu_data("weights/w2.txt", (64, 32, 3, 3))
+		self.w3 = self.load_cpu_data("weights/w3.txt", (128, 64, 3, 3))
+		self.w4 = self.load_cpu_data("weights/w4.txt", (128 * 3 * 3, 625))
+		self.wo = self.load_cpu_data("weights/wo.txt", (625, 10))
 
 	def mnist_example(self, verbose = False, save = False):
 		self.initialize_mnist()
@@ -138,8 +142,8 @@ class ConvolutionalNeuralNetwork(object):
 			self.save_all_weights()
 			print("Saved weights to \"./weights/*.txt\".")
 			self.save_data("activations.txt", self.activate(self.teX))
-			print(self.l4.shape)
 			print("Saved penultimate activations to \"./activations.txt\".")
+			print(self.l4.shape) # remove once verified to be (128 * 3 * 3, 625)
 
 
 if __name__ == "__main__":
