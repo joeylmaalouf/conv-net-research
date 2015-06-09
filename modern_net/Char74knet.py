@@ -9,22 +9,29 @@ from theano.sandbox.cuda.basic_ops import host_from_gpu
 
 
 def save_weights(weights, filename):
-		length = reduce(lambda x,y: x*y, weights.shape.eval())
-		data = host_from_gpu(weights).eval()
-		data = np.asarray(data)
-		data = data.reshape(length)
-		data = "\n".join([str(i) for i in data])
-		f = open(filename, "w")
-		f.write(data)
-		f.close()
+	""" Taken from the convnet code. Deals with network calculated
+		on a gpu
+	"""
+	length = reduce(lambda x,y: x*y, weights.shape.eval())
+	data = host_from_gpu(weights).eval()
+	data = np.asarray(data)
+	data = data.reshape(length)
+	data = "\n".join([str(i) for i in data])
+	f = open(filename, "w")
+	f.write(data)
+	f.close()
 
 def reprocess(data):
+	""" Turns the 'values' into something that looks like neural network output
+	"""
 	newdata = np.zeros((len(data), 62))
 	for i in xrange(len(data)):
 		newdata[i:data[i]] = 1
 	return newdata
 
 def shuffle_in_unison(a, b):
+	""" Shuffles two arrays in the same way - to ransomize the data/examples
+	"""
 	rng_state = np.random.get_state()
 	np.random.shuffle(a)
 	np.random.set_state(rng_state)

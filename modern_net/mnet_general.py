@@ -8,6 +8,11 @@ import cPickle
 srng = RandomStreams()
 
 class ModernNeuralNetwork(object):
+	""" A neural network that accepts arbitrary sizes of neuron
+		layers. Requires at least 3 layers (input, hidden, output)
+		and its functions must be initialized before use, with
+		"create_model_functions".	
+	"""
 	def __init__(self, sizes):
 		theano.config.floatX = "float32"
 		self.srng = RandomStreams()
@@ -60,6 +65,9 @@ class ModernNeuralNetwork(object):
 		return output
 
 	def create_model_functions(self):
+		""" Makes the theano functions for training the model
+			and making predictions
+		"""
 		self.noise = self.model(self.X, self.weights, 0.2, 0.5)
 		self.noise_py_x = self.noise[-1]
 		self.nodes = self.model(self.X, self.weights, 0., 0.)
@@ -72,6 +80,9 @@ class ModernNeuralNetwork(object):
 		self.predict = theano.function(inputs=[self.X], outputs=self.y_x, allow_input_downcast=True)
 
 	def initialize_weight_list(self, sizes):
+		""" Creates arbitrary weights to start training
+			the network
+		"""
 		self.weights = []
 		for i in range(len(sizes)-1):
 			self.weights.append(self.init_weights((sizes[i],sizes[i+1])))
@@ -95,6 +106,7 @@ def mnist_example(epochs = 10, verbose = False, save = False):
 	print "Training Network"
 	for i in range(10):
 		for start, end in zip(range(0, len(trX), 128), range(128, len(trX), 128)):
+			print trY[start:end].shape
 			cost = mnet.train(trX[start:end], trY[start:end])
 		if verbose:
 			print np.mean(np.argmax(teY, axis=1) == mnet.predict(teX))
