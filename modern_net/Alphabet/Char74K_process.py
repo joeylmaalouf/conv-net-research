@@ -21,14 +21,14 @@ def Char74k_initialize_array(filepath):
 	""" Takes in a filepath to find the images in the Char74k database, and
 		then counts the number of images there, to create an array of size 
 		(10000, n), where n is the number of samples"""
+	array_size = 0
 	for i in range(1,63):
-		array_size = 0
 		if i<10:
 			sample = 'Sample00' + str(i)
 		else:
 			sample = 'Sample0' + str(i)
 		array_size += len(os.listdir(filepath + sample)) #add the number of images to the array size
-	image_array = np.zeros((array_size))
+	image_array = np.zeros((array_size, 10000))
 	return image_array
 
 def Char74k_process_images(BmpDirectory, MskDirectory = None):
@@ -37,6 +37,8 @@ def Char74k_process_images(BmpDirectory, MskDirectory = None):
 		as well as the values they are supposed to have
 	"""
 	image_array = Char74k_initialize_array(BmpDirectory)
+	print "Image Array size is:"
+	print image_array.shape
 	values = []
 	counter = 0 #to keep track of the absolute number of images processed
 	for i in range(1,63):
@@ -45,12 +47,11 @@ def Char74k_process_images(BmpDirectory, MskDirectory = None):
 		else:
 			sample = 'Sample0' + str(i)
 		listdirimg = os.listdir(BmpDirectory + sample)
-		listdirmask = os.listdir(MskDirectory + sample)
 		for j in range(len(listdirimg)):
 			image = cv2.imread(BmpDirectory + sample + "/" + listdirimg[j])
 			#mask = cv2.imread(MskDirectory + sample + "/" + listdirmask[j])
 			image = scale_image(image)
-			image_array[counter] = np.append(image_array,image, axis = 0)
+			image_array[counter,:] = image
 			counter += 1
 			values.append(i)
 	return image_array, values
