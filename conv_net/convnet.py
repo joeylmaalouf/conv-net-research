@@ -128,11 +128,11 @@ class ConvolutionalNeuralNetwork(object):
 		self.save_data("weights/wo.txt", self.wo, gpu = True)
 
 	def load_all_weights(self):
-		self.w1 = self.load_cpu_data("weights/w1.txt", (32, 1, 3, 3))
-		self.w2 = self.load_cpu_data("weights/w2.txt", (64, 32, 3, 3))
-		self.w3 = self.load_cpu_data("weights/w3.txt", (128, 64, 3, 3))
-		self.w4 = self.load_cpu_data("weights/w4.txt", (128 * 3 * 3, 625))
-		self.wo = self.load_cpu_data("weights/wo.txt", (625, 10))
+		self.w1 = self.load_data("weights/w1.txt", (32, 1, 3, 3))
+		self.w2 = self.load_data("weights/w2.txt", (64, 32, 3, 3))
+		self.w3 = self.load_data("weights/w3.txt", (128, 64, 3, 3))
+		self.w4 = self.load_data("weights/w4.txt", (128 * 3 * 3, 625))
+		self.wo = self.load_data("weights/wo.txt", (625, 10))
 
 	def mnist_example(self, verbose = False, save = False):
 		self.initialize_mnist()
