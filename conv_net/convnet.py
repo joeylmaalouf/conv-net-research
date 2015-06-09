@@ -99,8 +99,8 @@ class ConvolutionalNeuralNetwork(object):
 				print np.mean(np.argmax(self.teY, axis=1) == self.predict(self.teX))
 
 	def save_data(self, filename, data):
-		length = reduce(lambda x,y: x*y, weights.shape.eval())
-		data = host_from_gpu(weights).eval()
+		length = reduce(lambda x,y: x*y, data.shape.eval())
+		data = host_from_gpu(data).eval()
 		data = np.asarray(data)
 		data = data.reshape(length)
 		data = "\n".join([str(i) for i in data])
@@ -137,7 +137,7 @@ class ConvolutionalNeuralNetwork(object):
 		self.save_data("activations/py_x.txt", self.py_x)
 
 	def load_all_activations(self):
-		self.l1 = self.load_data("activations/l1.txt", (32, 1, 3, 3))  # check these dimensions by printing shapes above
+		self.l1 = self.load_data("activations/l1.txt", (32, 1, 3, 3))
 		self.l2 = self.load_data("activations/l2.txt", (64, 32, 3, 3))
 		self.l3 = self.load_data("activations/l3.txt", (128, 64, 3, 3))
 		self.l4 = self.load_data("activations/l4.txt", (128 * 3 * 3, 625))
@@ -148,7 +148,6 @@ class ConvolutionalNeuralNetwork(object):
 		self.create_model_functions()
 		self.train_mnist(verbose, 0)
 		if save:
-			print(self.l1.shape)
 			self.save_all_weights()
 			print("Saved weights to \"./weights/*.txt\".")
 			self.save_all_activations()
