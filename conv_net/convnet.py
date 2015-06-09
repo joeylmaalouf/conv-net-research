@@ -98,7 +98,7 @@ class ConvolutionalNeuralNetwork(object):
 			if verbose:
 				print np.mean(np.argmax(self.teY, axis=1) == self.predict(self.teX))
 
-	def save_weights(self, weights, filename):
+	def save_data(self, filename, data):
 		length = reduce(lambda x,y: x*y, weights.shape.eval())
 		data = host_from_gpu(weights).eval()
 		data = np.asarray(data)
@@ -108,7 +108,7 @@ class ConvolutionalNeuralNetwork(object):
 		f.write(data)
 		f.close()
 
-	def load_weights(self, filename, shape):
+	def load_data(self, filename, shape):
 		f = open(filename, "r")
 		data = [float(i) for i in f.read().split("\n")]
 		f.close()
@@ -116,26 +116,43 @@ class ConvolutionalNeuralNetwork(object):
 		return data
 
 	def save_all_weights(self):
-		self.save_weights(self.w1, "weights/w1.txt")
-		self.save_weights(self.w2, "weights/w2.txt")
-		self.save_weights(self.w3, "weights/w3.txt")
-		self.save_weights(self.w4, "weights/w4.txt")
-		self.save_weights(self.wo, "weights/wo.txt")
+		self.save_data("weights/w1.txt", self.w1)
+		self.save_data("weights/w2.txt", self.w2)
+		self.save_data("weights/w3.txt", self.w3)
+		self.save_data("weights/w4.txt", self.w4)
+		self.save_data("weights/wo.txt", self.wo)
 
 	def load_all_weights(self):
-		self.w1 = self.load_weights("weights/w1.txt", (32, 1, 3, 3))
-		self.w2 = self.load_weights("weights/w2.txt", (64, 32, 3, 3))
-		self.w3 = self.load_weights("weights/w3.txt", (128, 64, 3, 3))
-		self.w4 = self.load_weights("weights/w4.txt", (128 * 3 * 3, 625))
-		self.wo = self.load_weights("weights/wo.txt", (625, 10))
+		self.w1 = self.load_data("weights/w1.txt", (32, 1, 3, 3))
+		self.w2 = self.load_data("weights/w2.txt", (64, 32, 3, 3))
+		self.w3 = self.load_data("weights/w3.txt", (128, 64, 3, 3))
+		self.w4 = self.load_data("weights/w4.txt", (128 * 3 * 3, 625))
+		self.wo = self.load_data("weights/wo.txt", (625, 10))
+
+	def save_all_activations(self):
+		self.save_data("activations/l1.txt", self.l1)
+		self.save_data("activations/l2.txt", self.l2)
+		self.save_data("activations/l3.txt", self.l3)
+		self.save_data("activations/l4.txt", self.l4)
+		self.save_data("activations/py_x.txt", self.py_x)
+
+	def load_all_activations(self):
+		self.l1 = self.load_data("activations/l1.txt", (32, 1, 3, 3))  # check these dimensions by printing shapes above
+		self.l2 = self.load_data("activations/l2.txt", (64, 32, 3, 3))
+		self.l3 = self.load_data("activations/l3.txt", (128, 64, 3, 3))
+		self.l4 = self.load_data("activations/l4.txt", (128 * 3 * 3, 625))
+		self.py_x = self.load_data("activations/py_x.txt", (625, 10))
 
 	def mnist_example(self, verbose = False, save = False):
 		self.initialize_mnist()
 		self.create_model_functions()
-		self.train_mnist(verbose, 50)
+		self.train_mnist(verbose, 0)
 		if save:
+			print(self.l1.shape)
 			self.save_all_weights()
 			print("Saved weights to \"./weights/*.txt\".")
+			self.save_all_activations()
+			print("Saved activations to \"./activations/*.txt\".")
 
 
 if __name__ == "__main__":
