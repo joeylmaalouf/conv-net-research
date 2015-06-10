@@ -139,15 +139,13 @@ class ConvolutionalNeuralNetwork(object):
 	def mnist_example(self, verbose = False, save = False):
 		self.initialize_mnist()
 		self.create_model_functions()
-		self.train_mnist(verbose, 50)
+		self.train_mnist(verbose, 1)
 		if save:
 			self.save_all_weights()
 			print("Saved weights to \"./saved/W*.txt\".")
-			self.training_activations = self.activate(self.trX)
-			self.testing_activations = self.activate(self.teX)
 			for i in range(4):
-				self.save_data("saved/trA-{0}.txt".format(i), self.training_activations[i*60000/4:(i+1)*60000/4])
-			self.save_data("saved/teA.txt", self.testing_activations)
+				self.save_data("saved/trA-{0}.txt".format(i), self.activate(self.trX[i*60000/4:(i+1)*60000/4]))
+			self.save_data("saved/teA.txt", self.activate(self.teX))
 			print("Saved penultimate activations to \"./saved/*A.txt\".")
 
 
