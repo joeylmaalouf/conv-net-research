@@ -145,8 +145,8 @@ class ConvolutionalNeuralNetwork(object):
 			print("Saved weights to \"./saved/W*.txt\".")
 			self.training_activations = self.activate(self.trX)
 			self.testing_activations = self.activate(self.teX)
-			self.save_data("saved/trA-1.txt", self.training_activations[:30000])
-			self.save_data("saved/trA-2.txt", self.training_activations[30000:])
+			for i in range(4):
+				self.save_data("saved/trA-{0}.txt".format(i), self.training_activations[i*60000/4:(i+1)*60000/4])
 			self.save_data("saved/teA.txt", self.testing_activations)
 			print("Saved penultimate activations to \"./saved/*A.txt\".")
 
