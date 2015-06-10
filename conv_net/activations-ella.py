@@ -6,14 +6,17 @@ from sklearn.linear_model import LogisticRegression
 
 
 if __name__ == "__main__":
-	activations = convnet.ConvolutionalNeuralNetwork().load_data("saved/activations.txt", (10000, 625)) # (10000 individual 25x25 images? weren't they 28x28?)
+	load_activations = convnet.ConvolutionalNeuralNetwork().load_data
+	trA = load_activations("saved/trA.txt", (60000, 625))
+	teA = load_activations("saved/teA.txt", (10000, 625))
+	print("trA.shape: {0}".format(trA.shape))
 	trX, teX, trY, teY = load.mnist(onehot = True)
-	classes = np.argmax(teY, 1)
-	print("activations.shape: {0}".format(activations.shape))
+	classes = np.argmax(trY, axis = 1)
 	print("classes.shape: {0}".format(classes.shape))
 	lr = LogisticRegression()
-	lr.fit(activations, classes)
-	predictions = lr.predict(activations)
-	accuracy = np.mean([int(i) for i in (predictions == classes)])
+	lr.fit(trA, classes)
+	print("teA.shape: {0}".format(teA.shape))
+	predictions = lr.predict(teA)
+	print("predictions.shape: {0}".format(predictions.shape))
+	accuracy = np.mean(predictions == classes)
 	print("accuracy: {0}".format(accuracy))
-	# resave activations of trX and teX, train on trX and trY then predict on teX and compare to teY?
