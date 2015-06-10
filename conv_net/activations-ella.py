@@ -7,7 +7,9 @@ from sklearn.linear_model import LogisticRegression
 
 if __name__ == "__main__":
 	load_activations = convnet.ConvolutionalNeuralNetwork().load_data
-	trA = load_activations("saved/trA.txt", (60000, 625))
+	trA1 = load_activations("saved/trA-1.txt", (30000, 625))
+	trA2 = load_activations("saved/trA-2.txt", (30000, 625))
+	trA = np.concatenate((trA1, trA2))
 	teA = load_activations("saved/teA.txt", (10000, 625))
 	print("trA.shape: {0}".format(trA.shape))
 	trX, teX, trY, teY = load.mnist(onehot = True)
