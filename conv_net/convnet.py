@@ -121,29 +121,29 @@ class ConvolutionalNeuralNetwork(object):
 		return data
 
 	def save_all_weights(self):
-		self.save_data("weights/w1.txt", self.w1, gpu = True)
-		self.save_data("weights/w2.txt", self.w2, gpu = True)
-		self.save_data("weights/w3.txt", self.w3, gpu = True)
-		self.save_data("weights/w4.txt", self.w4, gpu = True)
-		self.save_data("weights/wo.txt", self.wo, gpu = True)
+		self.save_data("saved/w1.txt", self.w1, gpu = True)
+		self.save_data("saved/w2.txt", self.w2, gpu = True)
+		self.save_data("saved/w3.txt", self.w3, gpu = True)
+		self.save_data("saved/w4.txt", self.w4, gpu = True)
+		self.save_data("saved/wo.txt", self.wo, gpu = True)
 
 	def load_all_weights(self):
-		self.w1 = self.load_data("weights/w1.txt", (32, 1, 3, 3))
-		self.w2 = self.load_data("weights/w2.txt", (64, 32, 3, 3))
-		self.w3 = self.load_data("weights/w3.txt", (128, 64, 3, 3))
-		self.w4 = self.load_data("weights/w4.txt", (128 * 3 * 3, 625))
-		self.wo = self.load_data("weights/wo.txt", (625, 10))
+		self.w1 = self.load_data("saved/w1.txt", (32, 1, 3, 3))
+		self.w2 = self.load_data("saved/w2.txt", (64, 32, 3, 3))
+		self.w3 = self.load_data("saved/w3.txt", (128, 64, 3, 3))
+		self.w4 = self.load_data("saved/w4.txt", (128 * 3 * 3, 625))
+		self.wo = self.load_data("saved/wo.txt", (625, 10))
 
 	def mnist_example(self, verbose = False, save = False):
 		self.initialize_mnist()
 		self.create_model_functions()
-		self.train_mnist(verbose, 10)
+		self.train_mnist(verbose, 50)
 		if save:
 			self.save_all_weights()
-			print("Saved weights to \"./weights/*.txt\".")
+			print("Saved weights to \"./saved/w*.txt\".")
 			self.activations = self.activate(self.teX)
-			self.save_data("activations.txt", self.activations)
-			print("Saved penultimate activations to \"./activations.txt\".")
+			self.save_data("saved/activations.txt", self.activations)
+			print("Saved penultimate activations to \"./saved/activations.txt\".")
 
 
 if __name__ == "__main__":
