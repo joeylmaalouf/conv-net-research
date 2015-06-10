@@ -141,9 +141,9 @@ class ConvolutionalNeuralNetwork(object):
 		if save:
 			self.save_all_weights()
 			print("Saved weights to \"./weights/*.txt\".")
-			self.save_data("activations.txt", self.activate(self.teX))
+			self.activations = self.activate(self.teX)
+			self.save_data("activations.txt", self.activations)
 			print("Saved penultimate activations to \"./activations.txt\".")
-			print(self.l4.shape) # remove once verified to be (128 * 3 * 3, 625)
 
 
 if __name__ == "__main__":
