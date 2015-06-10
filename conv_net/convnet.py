@@ -113,11 +113,13 @@ class ConvolutionalNeuralNetwork(object):
 		f.write(data)
 		f.close()
 
-	def load_data(self, filename, shape):
+	def load_data(self, filename, shape, gpu = False):
 		f = open(filename, "r")
 		data = [float(i) for i in f.read().split("\n")]
 		f.close()
-		data = theano.shared(self.floatX(data).reshape(shape))
+		data = self.floatX(data).reshape(shape)
+		if gpu:
+			data = theano.shared(data)
 		return data
 
 	def save_all_weights(self):
@@ -128,11 +130,11 @@ class ConvolutionalNeuralNetwork(object):
 		self.save_data("saved/wo.txt", self.wo, gpu = True)
 
 	def load_all_weights(self):
-		self.w1 = self.load_data("saved/w1.txt", (32, 1, 3, 3))
-		self.w2 = self.load_data("saved/w2.txt", (64, 32, 3, 3))
-		self.w3 = self.load_data("saved/w3.txt", (128, 64, 3, 3))
-		self.w4 = self.load_data("saved/w4.txt", (128 * 3 * 3, 625))
-		self.wo = self.load_data("saved/wo.txt", (625, 10))
+		self.w1 = self.load_data("saved/w1.txt", (32, 1, 3, 3), gpu = True)
+		self.w2 = self.load_data("saved/w2.txt", (64, 32, 3, 3), gpu = True)
+		self.w3 = self.load_data("saved/w3.txt", (128, 64, 3, 3), gpu = True)
+		self.w4 = self.load_data("saved/w4.txt", (128 * 3 * 3, 625), gpu = True)
+		self.wo = self.load_data("saved/wo.txt", (625, 10), gpu = True)
 
 	def mnist_example(self, verbose = False, save = False):
 		self.initialize_mnist()
