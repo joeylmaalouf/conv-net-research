@@ -1,5 +1,5 @@
 import numpy as np
-import ELLA
+from sklearn.linear_model import LogisticRegression
 import convnet
 import load
 
@@ -20,16 +20,23 @@ if __name__ == "__main__":
 	print("teC.shape: {0}".format(teC.shape))
 	print("Done.")
 
-	print("\nCreating ELLA Model...")
-	pass
+	print("\nCreating Regression Model...")
+	lr = LogisticRegression()
+	lr.fit(trA, trC)
 	print("Done.")
 
 	print("\nAnalyzing Training Data...")
-	pass
+	predictions = lr.predict(trA)
+	print("predictions.shape: {0}".format(predictions.shape))
+	accuracy = np.mean(predictions == trC)
+	print("accuracy: {0}".format(accuracy))
 	print("Done.")
 
 	print("\nAnalyzing Testing Data...")
-	pass
+	predictions = lr.predict(teA)
+	print("predictions.shape: {0}".format(predictions.shape))
+	accuracy = np.mean(predictions == teC)
+	print("accuracy: {0}".format(accuracy))
 	print("Done.")
 
 	print("\nExecution complete.\nProgram terminated successfully.\n")
