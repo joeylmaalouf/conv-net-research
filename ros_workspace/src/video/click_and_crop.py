@@ -76,5 +76,5 @@ def image_cropping(image):
 	cv2.destroyAllWindows()
 
 if __name__=="__main__":
-	image = cv2.imread('jurassic_park_kitchen.jpg',-1)
+	image = cv2.imread('testing.png',-1)
 	image_cropping(image)
