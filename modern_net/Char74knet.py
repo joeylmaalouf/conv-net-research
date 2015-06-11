@@ -30,7 +30,7 @@ def reprocess(data):
 	return newdata
 
 def shuffle_in_unison(a, b):
-	""" Shuffles two arrays in the same way - to ransomize the data/examples
+	""" Shuffles two arrays in the same way - to randomize the data/examples
 	"""
 	rng_state = np.random.get_state()
 	np.random.shuffle(a)
@@ -39,13 +39,13 @@ def shuffle_in_unison(a, b):
 
 if __name__ == '__main__':
 	print "Initilizing network"
-	mnet = mnet_general.ModernNeuralNetwork([10000,625,860, 62])
+	mnet = mnet_general.ModernNeuralNetwork([10000,625,860,62])
 	mnet.create_model_functions()
 
 	print "Loading Data"
 	f = open("./Alphabet/Char74k_data.save",'rb')
-	trX = cPickle.load(f).reshape(-1,100,100).reshape(-1,10000)
-	trY = reprocess(np.array(cPickle.load(f)))
+	trX = cPickle.load(f)
+	trY = cPickle.load(f)
 	shuffle_in_unison(trX, trY)
 	f.close()
 
@@ -59,7 +59,7 @@ if __name__ == '__main__':
 	for i in range(10):
 		for start, end in zip(range(0, len(trX), 128), range(128, len(trX), 128)):
 			cost = mnet.train(trX[start:end], trY[start:end])
-		print np.mean(np.argmax(teY, axis=1) == mnet.predict(teX))
+		print np.mean(teY == mnet.predict(teX))
 		#print mnet.predict(teX)
 
 	print "Saving Data"
