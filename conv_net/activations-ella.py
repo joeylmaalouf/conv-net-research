@@ -40,4 +40,4 @@ if __name__ == "__main__":
 	print("accuracy: {0}".format(accuracy))
 	print("Done.")
 
-	print("\nExecution complete. Program terminated.\n")
+	print("\nExecution complete.\nProgram terminated successfully.\n")
