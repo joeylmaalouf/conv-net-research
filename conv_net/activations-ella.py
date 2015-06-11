@@ -1,7 +1,8 @@
 import numpy as np
-import ELLA
-import convnet
+from sklearn.linear_model import LogisticRegression
 import load
+import convnet
+import ELLA
 
 
 if __name__ == "__main__":
@@ -21,7 +22,9 @@ if __name__ == "__main__":
 	print("Done.")
 
 	print("\nCreating ELLA Model...")
-	pass
+	num_params = 625
+	num_latent = 20
+	ella = ELLA.ELLA(num_params, num_latent, LogisticRegression)
 	print("Done.")
 
 	print("\nAnalyzing Training Data...")

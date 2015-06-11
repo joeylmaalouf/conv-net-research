@@ -1,7 +1,7 @@
 import numpy as np
 from sklearn.linear_model import LogisticRegression
-import convnet
 import load
+import convnet
 
 
 if __name__ == "__main__":
