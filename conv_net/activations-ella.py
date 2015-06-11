@@ -7,7 +7,8 @@ from sklearn.linear_model import LogisticRegression
 
 if __name__ == "__main__":
 	load_activations = convnet.ConvolutionalNeuralNetwork().load_data
-	trAs = [load_activations("saved/trA{0}.txt".format(i), (60000/10, 625)) for i in range(10)]
+	num_chunks = 20
+	trAs = [load_activations("saved/trA{0}.txt".format(i), (60000/num_chunks, 625)) for i in range(num_chunks)]
 	trA = np.concatenate(trAs)
 	print("trA.shape: {0}".format(trA.shape))
 	teA = load_activations("saved/teA.txt", (10000, 625))
