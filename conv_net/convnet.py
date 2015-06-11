@@ -113,37 +113,42 @@ class ConvolutionalNeuralNetwork(object):
 		f.write(data)
 		f.close()
 
-	def load_data(self, filename, shape):
+	def load_data(self, filename, shape, gpu = False):
 		f = open(filename, "r")
 		data = [float(i) for i in f.read().split("\n")]
 		f.close()
-		data = theano.shared(self.floatX(data).reshape(shape))
+		data = self.floatX(data).reshape(shape)
+		if gpu:
+			data = theano.shared(data)
 		return data
 
 	def save_all_weights(self):
-		self.save_data("saved/w1.txt", self.w1, gpu = True)
-		self.save_data("saved/w2.txt", self.w2, gpu = True)
-		self.save_data("saved/w3.txt", self.w3, gpu = True)
-		self.save_data("saved/w4.txt", self.w4, gpu = True)
-		self.save_data("saved/wo.txt", self.wo, gpu = True)
+		self.save_data("saved/W1.txt", self.w1, gpu = True)
+		self.save_data("saved/W2.txt", self.w2, gpu = True)
+		self.save_data("saved/W3.txt", self.w3, gpu = True)
+		self.save_data("saved/W4.txt", self.w4, gpu = True)
+		self.save_data("saved/Wo.txt", self.wo, gpu = True)
 
 	def load_all_weights(self):
-		self.w1 = self.load_data("saved/w1.txt", (32, 1, 3, 3))
-		self.w2 = self.load_data("saved/w2.txt", (64, 32, 3, 3))
-		self.w3 = self.load_data("saved/w3.txt", (128, 64, 3, 3))
-		self.w4 = self.load_data("saved/w4.txt", (128 * 3 * 3, 625))
-		self.wo = self.load_data("saved/wo.txt", (625, 10))
+		self.w1 = self.load_data("saved/W1.txt", (32, 1, 3, 3), gpu = True)
+		self.w2 = self.load_data("saved/W2.txt", (64, 32, 3, 3), gpu = True)
+		self.w3 = self.load_data("saved/W3.txt", (128, 64, 3, 3), gpu = True)
+		self.w4 = self.load_data("saved/W4.txt", (128 * 3 * 3, 625), gpu = True)
+		self.wo = self.load_data("saved/Wo.txt", (625, 10), gpu = True)
 
 	def mnist_example(self, verbose = False, save = False):
 		self.initialize_mnist()
 		self.create_model_functions()
-		self.train_mnist(verbose, 50)
+		self.train_mnist(verbose, epochs = 20)
 		if save:
 			self.save_all_weights()
-			print("Saved weights to \"./saved/w*.txt\".")
-			self.activations = self.activate(self.teX)
-			self.save_data("saved/activations.txt", self.activations)
-			print("Saved penultimate activations to \"./saved/activations.txt\".")
+			print("Saved weights to \"./saved/W*.txt\".")
+			num_chunks = 20
+			for i in range(num_chunks):
+				data_chunk = self.trX[(60000/num_chunks*i):(60000/num_chunks*(i+1))]
+				self.save_data("saved/trA{0:02d}.txt".format(i), self.activate(data_chunk))
+			self.save_data("saved/teA.txt", self.activate(self.teX))
+			print("Saved penultimate activations to \"./saved/*A*.txt\".")
 
 
 if __name__ == "__main__":
