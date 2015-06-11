@@ -147,7 +147,7 @@ class ConvolutionalNeuralNetwork(object):
 				data_chunk = self.trX[(60000/10*i):(60000/10*(i+1))]
 				self.save_data("saved/trA{0}.txt".format(i), self.activate(data_chunk))
 			self.save_data("saved/teA.txt", self.activate(self.teX))
-			print("Saved penultimate activations to \"./saved/*A.txt\".")
+			print("Saved penultimate activations to \"./saved/*A*.txt\".")
 
 
 if __name__ == "__main__":
