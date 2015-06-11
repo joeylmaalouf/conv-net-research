@@ -26,7 +26,7 @@ def reprocess(data):
 	"""
 	newdata = np.zeros((len(data), 62))
 	for i in xrange(len(data)):
-		newdata[i:data[i]] = 1
+		newdata[i,data[i]-1] = 1
 	return newdata
 
 def shuffle_in_unison(a, b):
@@ -45,22 +45,27 @@ if __name__ == '__main__':
 	print "Loading Data"
 	f = open("./Alphabet/Char74k_data.save",'rb')
 	trX = cPickle.load(f)
-	trY = cPickle.load(f)
+	trY = reprocess(np.asarray(cPickle.load(f)))
 	shuffle_in_unison(trX, trY)
 	f.close()
 
 	print "Creating Testing Data"
-	testing=np.random.randint(len(trX),size=700)
+	testing=np.random.randint(len(trX),size=5000)
 	teX = trX[testing,:]
 	teY = trY[testing,:]
 	shuffle_in_unison(teX, teY)
 
 	print "Training Net:"
-	for i in range(10):
+	for i in range(100):
 		for start, end in zip(range(0, len(trX), 128), range(128, len(trX), 128)):
 			cost = mnet.train(trX[start:end], trY[start:end])
+<<<<<<< HEAD
 		print np.mean(teY == mnet.predict(teX))
 		#print mnet.predict(teX)
+=======
+		print np.mean(np.argmax(teY, axis=1) == mnet.predict(teX))
+		print mnet.predict(teX)
+>>>>>>> c55e602ef8063cb14ca6d803c8d984e9026d3d39
 
 	print "Saving Data"
 	for counter, weight in enumerate(mnet.weights):
