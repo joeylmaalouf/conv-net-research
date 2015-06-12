@@ -5,6 +5,10 @@ import convnet
 import ELLA
 
 
+def binarize(classifications, task_id):
+	return np.asarray([int(elem == task_id) for elem in classifications])
+
+
 if __name__ == "__main__":
 	print("\nLoading Data...")
 	load_activations = convnet.ConvolutionalNeuralNetwork().load_data
@@ -25,6 +29,10 @@ if __name__ == "__main__":
 	num_params = 625
 	num_latent = 20
 	ella = ELLA.ELLA(num_params, num_latent, LogisticRegression)
+	for task in range(10):
+		result_vector = binarize(trC, task)
+		ella.fit(trA, result_vector, task)
+		print("Trained task {0:02d}".format(task))
 	print("Done.")
 
 	print("\nAnalyzing Training Data...")
