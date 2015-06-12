@@ -29,14 +29,14 @@ if __name__ == "__main__":
 	predictions = lr.predict(trA)
 	print("predictions.shape: {0}".format(predictions.shape))
 	accuracy = np.mean(predictions == trC)
-	print("accuracy: {0}".format(accuracy))
+	print("accuracy: {0:0.04f}".format(accuracy))
 	print("Done.")
 
 	print("\nAnalyzing Testing Data...")
 	predictions = lr.predict(teA)
 	print("predictions.shape: {0}".format(predictions.shape))
 	accuracy = np.mean(predictions == teC)
-	print("accuracy: {0}".format(accuracy))
+	print("accuracy: {0:0.04f}".format(accuracy))
 	print("Done.")
 
 	print("\nExecution complete.\nProgram terminated successfully.\n")
