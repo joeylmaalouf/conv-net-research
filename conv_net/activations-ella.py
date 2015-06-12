@@ -32,6 +32,7 @@ if __name__ == "__main__":
 	for task in range(10):
 		result_vector = binarize(trC, task)
 		ella.fit(trA, result_vector, task)
+		print("Trained task {0:02d}".format(task))
 	print("Done.")
 
 	print("\nAnalyzing Training Data...")
