@@ -43,7 +43,7 @@ if __name__ == '__main__':
 	mnet.create_model_functions()
 
 	print "Loading Data"
-	f = open("./Alphabet/Char74k_data.save",'rb')
+	f = open("./Alphabet/Data/Char74k_Fnt.save",'rb')
 	trX = cPickle.load(f)
 	trY = reprocess(np.asarray(cPickle.load(f)))
 	shuffle_in_unison(trX, trY)
@@ -51,23 +51,19 @@ if __name__ == '__main__':
 
 	print "Creating Testing Data"
 	testing=np.random.randint(len(trX),size=5000)
-	teX = trX[testing,:]
-	teY = trY[testing,:]
+	teX = trX[60000:,:]
+	teY = trY[60000:,:]
+	trX = trX[:60000,:]
+	trY = trY[:60000,:]
 	shuffle_in_unison(teX, teY)
 
 	print "Training Net:"
 	for i in range(100):
 		for start, end in zip(range(0, len(trX), 128), range(128, len(trX), 128)):
 			cost = mnet.train(trX[start:end], trY[start:end])
-<<<<<<< HEAD
-		print np.mean(teY == mnet.predict(teX))
-		#print mnet.predict(teX)
-=======
 		print np.mean(np.argmax(teY, axis=1) == mnet.predict(teX))
-		print mnet.predict(teX)
->>>>>>> c55e602ef8063cb14ca6d803c8d984e9026d3d39
 
 	print "Saving Data"
 	for counter, weight in enumerate(mnet.weights):
-		save_weights(weight, "./weights/Weight{0}.save".format(counter))
+		save_weights(weight, "./weights/WeightFnt{0}.save".format(counter))
 
