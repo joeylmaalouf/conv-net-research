@@ -43,7 +43,7 @@ if __name__ == '__main__':
 	mnet.create_model_functions()
 
 	print "Loading Data"
-	f = open("./Alphabet/Data/Char74k_Fnt.save",'rb')
+	f = open("./Alphabet/Data/Char74k_.save",'rb')
 	trX = cPickle.load(f)
 	trY = reprocess(np.asarray(cPickle.load(f)))
 	shuffle_in_unison(trX, trY)
@@ -51,10 +51,10 @@ if __name__ == '__main__':
 
 	print "Creating Testing Data"
 	testing=np.random.randint(len(trX),size=5000)
-	teX = trX[60000:,:]
-	teY = trY[60000:,:]
-	trX = trX[:60000,:]
-	trY = trY[:60000,:]
+	teX = trX[7000:,:]
+	teY = trY[7000:,:]
+	trX = trX[:7000,:]
+	trY = trY[:7000,:]
 	shuffle_in_unison(teX, teY)
 
 	print "Training Net:"
