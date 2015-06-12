@@ -64,7 +64,6 @@ def Char74kMnetRunner():
 	image_dict = {i:str(i) for i in range(10)}
 	image_dict.update({i:string.ascii_uppercase[i-10] for i in range(10,36)})
 	image_dict.update({i:string.ascii_lowercase[i-36] for i in range(36,62)})
-	print image_dict
 
 	while(True):
 		# Capture frame-by-frame
@@ -73,8 +72,8 @@ def Char74kMnetRunner():
 		# Display the resulting frame
 		
 		print int(mnet.predict(image.reshape(1, 10000)))
-		tracker, guess = image_accumulator(tracker, int(mnet.predict(image.reshape(1, 10000))))
-		print image_dict[guess]
+		# tracker, guess = image_accumulator(tracker, int(mnet.predict(image.reshape(1, 10000))))
+		# print image_dict[guess]
 
 		cv2.imshow('frame', cv2.resize(image, (640,640)))
 		if cv2.waitKey(1) & 0xFF == ord('q'):

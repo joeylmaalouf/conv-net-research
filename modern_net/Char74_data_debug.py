@@ -13,7 +13,7 @@ if __name__ == '__main__':
 	trX = cPickle.load(f)
 	f.close()
 
-	image_index = 15
+	image_index = 51
 
 	image = trX[image_index].reshape((100,100))
 	#image = np.random.randint(0, 255, size = (2,2))
