@@ -27,7 +27,7 @@ if __name__ == "__main__":
 
 	print("\nCreating ELLA Model...")
 	num_params = 625
-	num_latent = 20
+	num_latent = 1
 	ella = ELLA.ELLA(num_params, num_latent, LogisticRegression)
 	for task in range(10):
 		result_vector = binarize(trC, task)
