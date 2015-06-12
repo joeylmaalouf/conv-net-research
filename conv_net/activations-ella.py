@@ -27,12 +27,12 @@ if __name__ == "__main__":
 
 	print("\nCreating ELLA Model...")
 	num_params = 625
-	num_latent = 1
+	num_latent = 5
 	ella = ELLA.ELLA(num_params, num_latent, LogisticRegression)
 	for task in range(10):
 		result_vector = binarize(trC, task)
 		ella.fit(trA, result_vector, task)
-		print("Trained task {0:02d}".format(task))
+		print("Trained task {0}".format(task))
 	print("Done.")
 
 	print("\nAnalyzing Training Data...")

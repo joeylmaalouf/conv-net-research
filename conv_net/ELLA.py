@@ -128,11 +128,6 @@ class ELLA(object):
 			return X.T.dot(X)/(2.0*X.shape[0]) + model.alpha*np.eye(self.d,self.d)
 		elif self.base_learner == LogisticRegression:
 			preds = 1./(1.0+np.exp(-X.dot(theta_t.T)))
-			overall_hessian = np.zeros((X.shape[1], X.shape[1]))
-			for i in range(X.shape[0]):
-				col = X[i, :][np.newaxis].T
-				row = X[i, :][np.newaxis]
-				mat = np.dot(col, row)
-				overall_hessian += mat*preds[i]*(1-preds[i])/(2.0*X.shape[0])
-				print(overall_hessian)
-			return overall_hessian + np.eye(self.d,self.d)/(2.0*model.C)
+			base = np.tile(preds*(1-preds), (1, X.shape[1]))
+			hessian = (np.multiply(X, base)).T.dot(X)/(2.0*X.shape[0])
+			return hessian + np.eye(self.d,self.d)/(2.0*model.C)
