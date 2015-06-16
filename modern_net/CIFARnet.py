@@ -1,6 +1,6 @@
 import cPickle
 import numpy as np 
-from mnet_general import ModernNeuralNetwork
+import mnet_general
 
 def unpickle(filename):
     import cPickle
