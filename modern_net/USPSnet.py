@@ -1,6 +1,6 @@
 import cPickle
 import numpy as np 
-from mnet_general import ModernNeuralNetwork
+import mnet_general
 
 def load_data(filename):
 	""" Opens the data file, and processes the data for each number
@@ -12,12 +12,12 @@ def load_data(filename):
 	Y = []
 	for i, line in enumerate(data):
 		line = line.split()
-		Y.append(int(line[0])) #first number is value
+		Y.append(int(float(line[0]))) #first number is value
 		X[i,:] = line_to_float(line[1:]) #rest are the image
 	Y = reprocess(Y)
 	return X, Y
 
-def reprocess(values):
+def reprocess(data):
 	""" Turns the 'values' into something that looks like neural network output
 	"""
 	newdata = np.zeros((len(data), 10))
