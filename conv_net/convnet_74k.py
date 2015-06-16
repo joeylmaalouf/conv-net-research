@@ -1,10 +1,11 @@
-bimport theano
+import theano
 from theano import tensor as T
 from theano.sandbox.rng_mrg import MRG_RandomStreams as RandomStreams
 from theano.sandbox.cuda.basic_ops import host_from_gpu
 from theano.tensor.nnet.conv import conv2d
 from theano.tensor.signal.downsample import max_pool_2d
 import numpy as np
+import cPickle
 from load import mnist
 
 def reprocess(data):
@@ -37,7 +38,7 @@ def create_examples(data, values, ptesting):
 	return trX,trY,teX,teY
 
 def load_74k_data():
-	f = open("~/Research/conv-net-ella/modern_net/Alphabet/Data/Char74k_HndImg.save",'rb')
+	f = open("/home/scarter/Research/conv-net-ella/modern_net/Alphabet/Data/Char74k_HndImg.save",'rb')
 	trX = cPickle.load(f)
 	trY = reprocess(np.asarray(cPickle.load(f)))
 	shuffle_in_unison(trX, trY)
@@ -106,7 +107,7 @@ class ConvolutionalNeuralNetwork(object):
 
 	def initialize_74k(self):
 
-		self.trX, self.teX, self.trY, self.teY
+		self.trX, self.teX, self.trY, self.teY = load_74k_data()
 
 		self.trX = self.trX.reshape(-1, 1, 28, 28)
 		self.teX = self.teX.reshape(-1, 1, 28, 28)
@@ -175,9 +176,8 @@ class ConvolutionalNeuralNetwork(object):
 		self.wo = self.load_data("74kweights/Wo.txt", (9409, 62), gpu = True)
 
 	def char74k_example(self, verbose = False, save = False):
-		self.initialize_mnist()
+		self.initialize_74k()
 		self.create_model_functions()
-		trX,trY,teX,teY = load_74k_data()
 		self.train_data(verbose, epochs = 20)
 		self.save_all_weights()
 
