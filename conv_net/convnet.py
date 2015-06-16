@@ -93,11 +93,15 @@ class ConvolutionalNeuralNetwork(object):
 		self.activate = theano.function(inputs = [self.X], outputs = self.l4, allow_input_downcast = True)
 
 	def train_mnist(self, verbose, epochs = 10, batch_size = 128):
+		accuracies = []
 		for i in range(epochs):
 			for start, end in zip(range(0, len(self.trX), batch_size), range(batch_size, len(self.trX), batch_size)):
 				self.cost = self.train(self.trX[start:end], self.trY[start:end])
+			accuracy = np.mean(np.argmax(self.teY, axis = 1) == self.predict(self.teX))
+			accuracies.append(accuracy)
 			if verbose:
-				print(np.mean(np.argmax(self.teY, axis = 1) == self.predict(self.teX)))
+				print(accuracy)
+		return np.asarray(accuracies)
 
 	def save_data(self, filename, data, gpu = False):
 		mult = lambda x, y: x * y
