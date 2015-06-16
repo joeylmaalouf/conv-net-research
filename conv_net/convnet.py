@@ -92,9 +92,9 @@ class ConvolutionalNeuralNetwork(object):
 		self.predict = theano.function(inputs = [self.X], outputs = self.y_x, allow_input_downcast = True)
 		self.activate = theano.function(inputs = [self.X], outputs = self.l4, allow_input_downcast = True)
 
-	def train_mnist(self, verbose, epochs = 10):
+	def train_mnist(self, verbose, epochs = 10, batch_size = 128):
 		for i in range(epochs):
-			for start, end in zip(range(0, len(self.trX), 128), range(128, len(self.trX), 128)):
+			for start, end in zip(range(0, len(self.trX), batch_size), range(batch_size, len(self.trX), batch_size)):
 				self.cost = self.train(self.trX[start:end], self.trY[start:end])
 			if verbose:
 				print(np.mean(np.argmax(self.teY, axis = 1) == self.predict(self.teX)))

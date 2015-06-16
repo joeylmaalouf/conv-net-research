@@ -1,5 +1,4 @@
 """ Alpha version of a version of ELLA that plays nicely with sklearn
-
 	@author: Paul Ruvolo
 """
 
