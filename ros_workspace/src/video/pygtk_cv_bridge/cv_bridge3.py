@@ -115,10 +115,10 @@ def main(args):
         cvBridgeDemo()
         r = rospy.Rate(10)
         while not rospy.is_shutdown():
-            cv2.waitKey(5)
+            # cv2.waitKey(5)
             r.sleep()
-    except KeyboardInterrupt:
-        print "Shutting down vision node."
+    # except KeyboardInterrupt:
+    #     print "Shutting down vision node."
         # cv.DestroyAllWindows()
     gtk.main()
     return 0
