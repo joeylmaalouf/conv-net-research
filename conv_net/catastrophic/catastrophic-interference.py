@@ -100,7 +100,7 @@ def generate_accuracy_graphs(num_tasks, exclude):
 	b = 100
 	colors = ["#00FF00", "#0000FF", "#00FFFF", "#FFFF00", "#FF00FF", "#000000", "#888888", "#FF8800", "#88FF00", "#FF0088"]
 
-	print("Training an all tasks except {0}".format(exclude))
+	print("Training on all tasks except {0}".format(exclude))
 	accuracies = train_per_task(cnn, num_tasks, v, e, b)
 	for t in task_nums:
 		plt.plot(np.arange(0, e), accuracies[t], color = colors[t])
