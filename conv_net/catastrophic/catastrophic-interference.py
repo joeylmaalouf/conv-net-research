@@ -111,7 +111,7 @@ def generate_accuracy_graphs(num_tasks, exclude):
 	plt.title("Model Accuracy (all tasks except {0})".format(exclude))
 	plt.legend(["Task {0}".format(t) for t in task_nums]+["Total"], loc = "lower right")
 	plt.savefig("all but {0}.png".format(exclude), bbox_inches = "tight")
-
+	plt.close()
 
 	total_trX = np.concatenate((cnn.trX, trXE), axis = 0)
 	total_trY = np.concatenate((cnn.trY, trYE), axis = 0)
@@ -129,6 +129,7 @@ def generate_accuracy_graphs(num_tasks, exclude):
 	plt.title("Model Accuracy (all tasks except {0}, then all tasks)".format(exclude))
 	plt.legend(["Task {0}".format(t) for t in task_nums]+["Total"], loc = "lower right")
 	plt.savefig("all but {0}, then all.png".format(exclude), bbox_inches = "tight")
+	plt.close()
 
 
 if __name__ == "__main__":
