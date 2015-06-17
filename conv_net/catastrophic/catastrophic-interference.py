@@ -28,7 +28,12 @@ def get_task_accuracy(cnn, X, Y, task = None):
 			if classes[i] == task:
 				task_data.append(X[i])
 				task_labels.append(task)
-		return np.mean(cnn.predict(task_data) == task_labels)
+		task_data = np.asarray(task_data)
+		task_labels = np.asarray(task_labels)
+		if task_data.any() and task_labels.any():
+			return np.mean(cnn.predict(np.asarray(task_data)) == np.asarray(task_labels))
+		else:
+			return 0.0
 
 
 def train_per_task(cnn, num_tasks, verbose, epochs, batch_size):
@@ -53,7 +58,7 @@ def train_per_task(cnn, num_tasks, verbose, epochs, batch_size):
 	return accuracies
 
 
-def add_task(cnn, trXT, trYT, teXT, teYT, num_tasks, verbose, epochs, batch_size):
+def train_new_task(cnn, trXT, trYT, teXT, teYT, num_tasks, verbose, epochs, batch_size):
 	accuracies = {}
 	accuracies["total"] = []
 	for t in range(num_tasks):
@@ -89,11 +94,14 @@ def main(argv):
 
 	cnn.create_model_functions()
 
-	e = 20
 	n_t = 9
+	v = True
+	e = 20
 	b = 100
-	accuracies = train_per_task(cnn, n_t, False, e, b)
 	colors = ["#00FF00", "#0000FF", "#00FFFF", "#FFFF00", "#FF00FF", "#000000", "#888888", "#0088FF", "#88FF00"]
+
+	print("Training on tasks 0-8")
+	accuracies = train_per_task(cnn, n_t, v, e, b)
 	for t in range(n_t):
 		plt.plot(np.arange(0, e), accuracies[t], color = colors[t])
 	plt.plot(np.arange(0, e), accuracies["total"], color = "#FF0000", marker = "o")
@@ -104,16 +112,23 @@ def main(argv):
 	plt.legend(["Task {0}".format(t) for t in range(n_t)]+["Total"], loc = "lower right")
 	plt.show()
 
+
 	n_t += 1
-	accuracies = add_task(cnn, trX9, trY9, teX9, teY9, n_t, False, e, b)
 	colors.append("#FF0088")
+	total_trX = np.concatenate((cnn.trX, trX9), axis = 0)
+	total_trY = np.concatenate((cnn.trY, trY9), axis = 0)
+	total_teX = np.concatenate((cnn.teX, teX9), axis = 0)
+	total_teY = np.concatenate((cnn.teY, teY9), axis = 0)
+
+	print("Retraining on tasks 0-9") # try training with just new task?
+	accuracies = train_new_task(cnn, total_trX, total_trY, total_teX, total_teY, n_t, v, e, b)
 	for t in range(n_t):
 		plt.plot(np.arange(0, e), accuracies[t], color = colors[t])
 	plt.plot(np.arange(0, e), accuracies["total"], color = "#FF0000", marker = "o")
 	plt.axis([0, e-1, 0, 1])
 	plt.xlabel("Epoch")
 	plt.ylabel("Accuracy")
-	plt.title("Model Accuracy (Tasks 0-9)")
+	plt.title("Model Accuracy (Tasks 0-8 then 0-9)")
 	plt.legend(["Task {0}".format(t) for t in range(n_t)]+["Total"], loc = "lower right")
 	plt.show()
 
