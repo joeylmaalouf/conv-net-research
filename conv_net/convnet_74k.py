@@ -109,8 +109,8 @@ class ConvolutionalNeuralNetwork(object):
 
 		self.trX, self.teX, self.trY, self.teY = load_74k_data()
 
-		self.trX = self.trX.reshape(-1, 1, 28, 28)
-		self.teX = self.teX.reshape(-1, 1, 28, 28)
+		self.trX = self.trX.reshape(-1, 1, 100, 100)
+		self.teX = self.teX.reshape(-1, 1, 100, 100)
 
 		self.w1 = self.init_weights((32, 1, 3, 3))
 		self.w2 = self.init_weights((64, 32, 3, 3))
@@ -133,6 +133,7 @@ class ConvolutionalNeuralNetwork(object):
 
 	def train_data(self, verbose, epochs = 10):
 		for i in range(epochs):
+			print "Starting epoch: {0}".format(str(i))
 			for start, end in zip(range(0, len(self.trX), 128), range(128, len(self.trX), 128)):
 				self.cost = self.train(self.trX[start:end], self.trY[start:end])
 			if verbose:
@@ -176,12 +177,18 @@ class ConvolutionalNeuralNetwork(object):
 		self.wo = self.load_data("74kweights/Wo.txt", (9409, 62), gpu = True)
 
 	def char74k_example(self, verbose = False, save = False):
+		print "Initializing the network."
 		self.initialize_74k()
+		print "Print Creating model functions."
 		self.create_model_functions()
+		print "Training on dataset."
 		self.train_data(verbose, epochs = 20)
+		print "Save weights."
 		self.save_all_weights()
 
 if __name__ == "__main__":
+	print "Creating conv-net"
 	cnn = ConvolutionalNeuralNetwork()
+	print "Conv-net created. Running network."
 	cnn.char74k_example(verbose = True, save = True)
 	print("Program complete.")
