@@ -120,7 +120,7 @@ def generate_accuracy_graphs(num_tasks, exclude):
 
 	print("Retraining on all tasks")
 	accuracies = train_new_task(cnn, total_trX, total_trY, total_teX, total_teY, num_tasks, v, e, b)
-	for t in task_nums:
+	for t in range(num_tasks):
 		plt.plot(np.arange(0, e), accuracies[t], color = colors[t])
 	plt.plot(np.arange(0, e), accuracies["total"], color = "#FF0000", marker = "o")
 	plt.axis([0, e-1, 0, 1])
