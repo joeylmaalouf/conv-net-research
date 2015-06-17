@@ -5,8 +5,46 @@ from theano.sandbox.cuda.basic_ops import host_from_gpu
 from theano.tensor.nnet.conv import conv2d
 from theano.tensor.signal.downsample import max_pool_2d
 import numpy as np
+import cPickle
 from load import mnist
 
+def reprocess(data):
+	""" Turns the 'values' into something that looks like neural network output
+	"""
+	newdata = np.zeros((len(data), 62))
+	for i in xrange(len(data)):
+		newdata[i,data[i]-1] = 1
+	return newdata
+
+def shuffle_in_unison(a, b):
+	""" Shuffles two arrays in the same way - to randomize the data/examples
+	"""
+	rng_state = np.random.get_state()
+	np.random.shuffle(a)
+	np.random.set_state(rng_state)
+	np.random.shuffle(b)
+
+def create_examples(data, values, ptesting):
+	""" Creates trX, trY, teX, teY all from two matrices, with the 
+	    percentage used for tesiting as ptesting
+	"""
+	shuffle_in_unison(data, values)
+	nexamples = data.shape[0]
+	testindex = int((1-ptesting)*nexamples)
+	trX = data[testindex:,:]
+	trY = values[testindex:,:]
+	teX = data[:testindex,:]
+	teY = values[:testindex,:]
+	return trX,trY,teX,teY
+
+def load_74k_data():
+	f = open("/home/scarter/Research/conv-net-ella/modern_net/Alphabet/Data/Char74k_HndImg.save",'rb')
+	trX = cPickle.load(f)
+	trY = reprocess(np.asarray(cPickle.load(f)))
+	shuffle_in_unison(trX, trY)
+	f.close()
+	trX,trY,teX,teY = create_examples(trX,trY,.1)
+	return trX, trY, teX, teY
 
 class ConvolutionalNeuralNetwork(object):
 	def __init__(self):
@@ -67,8 +105,9 @@ class ConvolutionalNeuralNetwork(object):
 		pyx = self.softmax(T.dot(l4, wo))
 		return l1, l2, l3, l4, pyx
 
-	def initialize_mnist(self):
-		self.trX, self.teX, self.trY, self.teY = mnist(onehot = True)
+	def initialize_74k(self):
+
+		self.trX, self.teX, self.trY, self.teY = load_74k_data()
 
 		self.trX = self.trX.reshape(-1, 1, 28, 28)
 		self.teX = self.teX.reshape(-1, 1, 28, 28)
@@ -76,8 +115,8 @@ class ConvolutionalNeuralNetwork(object):
 		self.w1 = self.init_weights((32, 1, 3, 3))
 		self.w2 = self.init_weights((64, 32, 3, 3))
 		self.w3 = self.init_weights((128, 64, 3, 3))
-		self.w4 = self.init_weights((128 * 3 * 3, 625))
-		self.wo = self.init_weights((625, 10))
+		self.w4 = self.init_weights((128 * 3 * 3, 9409))
+		self.wo = self.init_weights((9409, 62))
 
 	def create_model_functions(self):
 		self.noise_l1, self.noise_l2, self.noise_l3, self.noise_l4, self.noise_py_x = self.model(self.X, self.w1, self.w2, self.w3, self.w4, self.wo, 0.2, 0.5)
@@ -92,16 +131,12 @@ class ConvolutionalNeuralNetwork(object):
 		self.predict = theano.function(inputs = [self.X], outputs = self.y_x, allow_input_downcast = True)
 		self.activate = theano.function(inputs = [self.X], outputs = self.l4, allow_input_downcast = True)
 
-	def train_mnist(self, verbose, epochs = 10, batch_size = 128):
-		accuracies = []
+	def train_data(self, verbose, epochs = 10):
 		for i in range(epochs):
-			for start, end in zip(range(0, len(self.trX), batch_size), range(batch_size, len(self.trX), batch_size)):
+			for start, end in zip(range(0, len(self.trX), 128), range(128, len(self.trX), 128)):
 				self.cost = self.train(self.trX[start:end], self.trY[start:end])
-			accuracy = np.mean(np.argmax(self.teY, axis = 1) == self.predict(self.teX))
-			accuracies.append(accuracy)
 			if verbose:
-				print(accuracy)
-		return np.asarray(accuracies)
+				print(np.mean(np.argmax(self.teY, axis = 1) == self.predict(self.teX)))
 
 	def save_data(self, filename, data, gpu = False):
 		mult = lambda x, y: x * y
@@ -127,35 +162,26 @@ class ConvolutionalNeuralNetwork(object):
 		return data
 
 	def save_all_weights(self):
-		self.save_data("saved/W1.txt", self.w1, gpu = True)
-		self.save_data("saved/W2.txt", self.w2, gpu = True)
-		self.save_data("saved/W3.txt", self.w3, gpu = True)
-		self.save_data("saved/W4.txt", self.w4, gpu = True)
-		self.save_data("saved/Wo.txt", self.wo, gpu = True)
+		self.save_data("74kweights/W1.txt", self.w1, gpu = True)
+		self.save_data("74kweights/W2.txt", self.w2, gpu = True)
+		self.save_data("74kweights/W3.txt", self.w3, gpu = True)
+		self.save_data("74kweights/W4.txt", self.w4, gpu = True)
+		self.save_data("74kweights/Wo.txt", self.wo, gpu = True)
 
 	def load_all_weights(self):
-		self.w1 = self.load_data("saved/W1.txt", (32, 1, 3, 3), gpu = True)
-		self.w2 = self.load_data("saved/W2.txt", (64, 32, 3, 3), gpu = True)
-		self.w3 = self.load_data("saved/W3.txt", (128, 64, 3, 3), gpu = True)
-		self.w4 = self.load_data("saved/W4.txt", (128 * 3 * 3, 625), gpu = True)
-		self.wo = self.load_data("saved/Wo.txt", (625, 10), gpu = True)
+		self.w1 = self.load_data("74kweights/W1.txt", (32, 1, 3, 3), gpu = True)
+		self.w2 = self.load_data("74kweights/W2.txt", (64, 32, 3, 3), gpu = True)
+		self.w3 = self.load_data("74kweights/W3.txt", (128, 64, 3, 3), gpu = True)
+		self.w4 = self.load_data("74kweights/W4.txt", (128 * 3 * 3, 9409), gpu = True)
+		self.wo = self.load_data("74kweights/Wo.txt", (9409, 62), gpu = True)
 
-	def mnist_example(self, verbose = False, save = False):
-		self.initialize_mnist()
+	def char74k_example(self, verbose = False, save = False):
+		self.initialize_74k()
 		self.create_model_functions()
-		self.train_mnist(verbose, epochs = 20)
-		if save:
-			self.save_all_weights()
-			print("Saved weights to \"./saved/W*.txt\".")
-			num_chunks = 20
-			for i in range(num_chunks):
-				data_chunk = self.trX[(60000/num_chunks*i):(60000/num_chunks*(i+1))]
-				self.save_data("saved/trA{0:02d}.txt".format(i), self.activate(data_chunk))
-			self.save_data("saved/teA.txt", self.activate(self.teX))
-			print("Saved penultimate activations to \"./saved/*A*.txt\".")
-
+		self.train_data(verbose, epochs = 20)
+		self.save_all_weights()
 
 if __name__ == "__main__":
 	cnn = ConvolutionalNeuralNetwork()
-	cnn.mnist_example(verbose = True, save = True)
+	cnn.char74k_example(verbose = True, save = True)
 	print("Program complete.")

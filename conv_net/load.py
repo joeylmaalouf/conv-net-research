@@ -1,6 +1,6 @@
 import numpy as np
 import os
-datasets_dir = "./"
+datasets_dir = "/".join(__file__.split("/")[:-1])
 
 def one_hot(x,n):
 	if type(x) == list:

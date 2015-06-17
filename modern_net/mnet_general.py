@@ -98,15 +98,14 @@ class ModernNeuralNetwork(object):
 		f.close()
 
 def mnist_example(epochs = 10, verbose = False, save = False):
-	print "Initilizing network"
+	print "Initializing network"
 	mnet = ModernNeuralNetwork([784,625,860,10])
 	trX, teX, trY, teY = mnist(onehot=True)
 	print "Creating Model"
 	mnet.create_model_functions()
 	print "Training Network"
-	for i in range(10):
+	for i in range(epochs):
 		for start, end in zip(range(0, len(trX), 128), range(128, len(trX), 128)):
-			print trY[start:end].shape
 			cost = mnet.train(trX[start:end], trY[start:end])
 		if verbose:
 			print np.mean(np.argmax(teY, axis=1) == mnet.predict(teX))

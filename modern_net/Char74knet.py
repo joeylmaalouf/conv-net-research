@@ -37,32 +37,43 @@ def shuffle_in_unison(a, b):
 	np.random.set_state(rng_state)
 	np.random.shuffle(b)
 
+def create_examples(data, values, ptesting):
+	""" Creates trX, trY, teX, teY all from two matrices, with the 
+	    percentage used for tesiting as ptesting
+	"""
+	shuffle_in_unison(data, values)
+	nexamples = data.shape[0]
+	testindex = int((1-ptesting)*nexamples)
+	trX = data[testindex:,:]
+	trY = values[testindex:,:]
+	teX = data[:testindex,:]
+	teY = values[:testindex,:]
+	return trX,trY,teX,teY
+
+
 if __name__ == '__main__':
 	print "Initilizing network"
 	mnet = mnet_general.ModernNeuralNetwork([10000,625,860,62])
 	mnet.create_model_functions()
 
 	print "Loading Data"
-	f = open("./Alphabet/Char74k_data.save",'rb')
+	f = open("./Alphabet/Data/Char74k_HndImg.save",'rb')
 	trX = cPickle.load(f)
 	trY = reprocess(np.asarray(cPickle.load(f)))
 	shuffle_in_unison(trX, trY)
 	f.close()
 
 	print "Creating Testing Data"
-	testing=np.random.randint(len(trX),size=5000)
-	teX = trX[testing,:]
-	teY = trY[testing,:]
-	shuffle_in_unison(teX, teY)
+	trX,trY,teX,teY = create_examples(trX,trY,.1)
+	
 
 	print "Training Net:"
 	for i in range(100):
 		for start, end in zip(range(0, len(trX), 128), range(128, len(trX), 128)):
 			cost = mnet.train(trX[start:end], trY[start:end])
 		print np.mean(np.argmax(teY, axis=1) == mnet.predict(teX))
-		print mnet.predict(teX)
 
 	print "Saving Data"
 	for counter, weight in enumerate(mnet.weights):
-		save_weights(weight, "./weights/Weight{0}.save".format(counter))
+		save_weights(weight, "./weights/WeightHnd{0}.save".format(counter))
 
