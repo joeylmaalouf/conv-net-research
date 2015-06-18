@@ -80,7 +80,7 @@ def train_new_task(cnn, trXT, trYT, teXT, teYT, num_tasks, verbose, epochs, batc
 	return accuracies
 
 
-def generate_accuracy_graphs(num_tasks, exclude):
+def generate_accuracy_graphs(num_tasks, exclude, save_figs, save_acts):
 	task_nums = [i for i in range(num_tasks) if i != exclude]
 	cnn = ConvolutionalNeuralNetwork()
 	cnn.initialize_mnist()
@@ -102,16 +102,18 @@ def generate_accuracy_graphs(num_tasks, exclude):
 
 	print("\nTraining on all tasks except #{0}:".format(exclude))
 	accuracies = train_per_task(cnn, num_tasks, v, e, b)
-	for t in task_nums:
-		plt.plot(np.arange(0, e), accuracies[t], color = colors[t])
-	plt.plot(np.arange(0, e), accuracies["total"], color = "#FF0000", marker = "o")
-	plt.axis([0, e-1, 0, 1])
-	plt.xlabel("Epoch")
-	plt.ylabel("Accuracy")
-	plt.title("Model Accuracy (all tasks except {0})".format(exclude))
-	plt.legend(["Task {0}".format(t) for t in task_nums]+["Total"], loc = "lower right")
-	plt.savefig("all but {0}.png".format(exclude), bbox_inches = "tight")
-	plt.close()
+
+	if save_figs:
+		for t in task_nums:
+			plt.plot(np.arange(0, e), accuracies[t], color = colors[t])
+		plt.plot(np.arange(0, e), accuracies["total"], color = "#FF0000", marker = "o")
+		plt.axis([0, e-1, 0, 1])
+		plt.xlabel("Epoch")
+		plt.ylabel("Accuracy")
+		plt.title("Model Accuracy (all tasks except {0})".format(exclude))
+		plt.legend(["Task {0}".format(t) for t in task_nums]+["Total"], loc = "lower right")
+		plt.savefig("figures/all but {0}.png".format(exclude), bbox_inches = "tight")
+		plt.close()
 
 	total_trX = np.concatenate((cnn.trX, trXE), axis = 0)
 	total_trY = np.concatenate((cnn.trY, trYE), axis = 0)
@@ -120,19 +122,30 @@ def generate_accuracy_graphs(num_tasks, exclude):
 
 	print("\nRetraining on all tasks after excluding #{0}:".format(exclude))
 	accuracies = train_new_task(cnn, total_trX, total_trY, total_teX, total_teY, num_tasks, v, e, b)
-	for t in range(num_tasks):
-		plt.plot(np.arange(0, e), accuracies[t], color = colors[t])
-	plt.plot(np.arange(0, e), accuracies["total"], color = "#FF0000", marker = "o")
-	plt.axis([0, e-1, 0, 1])
-	plt.xlabel("Epoch")
-	plt.ylabel("Accuracy")
-	plt.title("Model Accuracy (all tasks except {0}, then all tasks)".format(exclude))
-	plt.legend(["Task {0}".format(t) for t in range(num_tasks)]+["Total"], loc = "lower right")
-	plt.savefig("all but {0} then all.png".format(exclude), bbox_inches = "tight")
-	plt.close()
+
+	if save_figs:
+		for t in range(num_tasks):
+			plt.plot(np.arange(0, e), accuracies[t], color = colors[t])
+		plt.plot(np.arange(0, e), accuracies["total"], color = "#FF0000", marker = "o")
+		plt.axis([0, e-1, 0, 1])
+		plt.xlabel("Epoch")
+		plt.ylabel("Accuracy")
+		plt.title("Model Accuracy (all tasks except {0}, then all tasks)".format(exclude))
+		plt.legend(["Task {0}".format(t) for t in range(num_tasks)]+["Total"], loc = "lower right")
+		plt.savefig("figures/all but {0} then all.png".format(exclude), bbox_inches = "tight")
+		plt.close()
+
+	if save_acts:
+		num_chunks = 20
+		for i in range(num_chunks):
+			data_chunk = self.trX[(60000/num_chunks*i):(60000/num_chunks*(i+1))]
+			self.save_data("activations/e{0}-tr{1:02d}.txt".format(exclude, i), self.activate(data_chunk))
+		self.save_data("activations/e{0}-te.txt".format(exclude), self.activate(self.teX))
+		print(type(self.activate(self.teX)))
+		print("Saved penultimate activations to \"./activations/t*.txt\".")
 
 
 if __name__ == "__main__":
 	n_t = 10
 	for t in range(n_t):
-		generate_accuracy_graphs(num_tasks = n_t, exclude = t)
+		generate_accuracy_graphs(num_tasks = n_t, exclude = t, save_figs = True, save_acts = True)
