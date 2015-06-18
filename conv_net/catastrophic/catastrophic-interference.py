@@ -2,6 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import random
 import sys
+from sklearn.linear_model import LogisticRegression
 sys.path.append("..")
 from convnet import ConvolutionalNeuralNetwork
 
@@ -80,15 +81,15 @@ def train_new_task(cnn, trXT, trYT, teXT, teYT, num_tasks, verbose, epochs, batc
 	return accuracies
 
 
-def generate_accuracy_graphs(num_tasks, exclude, save_figs, save_acts):
+def generate_accuracy_graphs(num_tasks, exclude, save_figs, do_logreg_comparison):
 	task_nums = [i for i in range(num_tasks) if i != exclude]
 	cnn = ConvolutionalNeuralNetwork()
 	cnn.initialize_mnist()
 
-	cnn.trX = cnn.trX[:len(cnn.trX)*.1]
-	cnn.trY = cnn.trY[:len(cnn.trY)*.1]
-	cnn.teX = cnn.teX[:len(cnn.teX)*.1]
-	cnn.teY = cnn.teY[:len(cnn.teY)*.1]
+	cnn.trX = cnn.trX[:int(len(cnn.trX)*.1)]
+	cnn.trY = cnn.trY[:int(len(cnn.trY)*.1)]
+	cnn.teX = cnn.teX[:int(len(cnn.teX)*.1)]
+	cnn.teY = cnn.teY[:int(len(cnn.teY)*.1)]
 
 	cnn.trX, cnn.trY, trXE, trYE = separate_class_from_dataset(exclude, cnn.trX, cnn.trY)
 	cnn.teX, cnn.teY, teXE, teYE = separate_class_from_dataset(exclude, cnn.teX, cnn.teY)
@@ -135,17 +136,25 @@ def generate_accuracy_graphs(num_tasks, exclude, save_figs, save_acts):
 		plt.savefig("figures/all but {0} then all.png".format(exclude), bbox_inches = "tight")
 		plt.close()
 
-	if save_acts:
+	if do_logreg_comparison:
 		num_chunks = 20
-		for i in range(num_chunks):
-			data_chunk = self.trX[(60000/num_chunks*i):(60000/num_chunks*(i+1))]
-			self.save_data("activations/e{0}-tr{1:02d}.txt".format(exclude, i), self.activate(data_chunk))
-		self.save_data("activations/e{0}-te.txt".format(exclude), self.activate(self.teX))
-		print(type(self.activate(self.teX)))
-		print("Saved penultimate activations to \"./activations/t*.txt\".")
+		trA = np.concatenate([cnn.activate(total_trX[(len(total_trX)/num_chunks*i):(len(total_trX)/num_chunks*(i+1))]) for i in range(num_chunks)])
+		teA = cnn.activate(total_teX)
+		trC = np.argmax(total_trY, axis = 1)
+		teC = np.argmax(total_teY, axis = 1)
+		lr = LogisticRegression()
+		lr.fit(trA, trC)
+
+		print("")
+		convnet_acc = accuracies["total"][-1]
+		print("[ConvNet]           Testing data accuracy (excluding task #{0}): {1:0.04f}".format(exclude, convnet_acc))
+		logreg_acc = np.mean(lr.predict(teA) == teC)
+		print("[ConvNet -> LogReg] Testing data accuracy (excluding task #{0}): {1:0.04f}".format(exclude, logreg_acc))
+		diff = logreg_acc - convnet_acc
+		print("[(CN -> LR) - CN]   Accuracy improvement: {0:0.04f}".format(diff))
 
 
 if __name__ == "__main__":
 	n_t = 10
 	for t in range(n_t):
-		generate_accuracy_graphs(num_tasks = n_t, exclude = t, save_figs = True, save_acts = True)
+		generate_accuracy_graphs(num_tasks = n_t, exclude = t, save_figs = True, do_logreg_comparison = True)
