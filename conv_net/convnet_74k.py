@@ -39,8 +39,8 @@ def create_examples(data, values, ptesting):
 
 def load_74k_data():
 	f = open("/home/scarter/Research/conv-net-ella/modern_net/Alphabet/Data/Char74k_HndImg.save",'rb')
-	trX = cPickle.load(f)[0:1000]
-	trY = reprocess(np.asarray(cPickle.load(f))[0:1000])
+	trX = cPickle.load(f)
+	trY = reprocess(np.asarray(cPickle.load(f)))
 	shuffle_in_unison(trX, trY)
 	f.close()
 	trX,trY,teX,teY = create_examples(trX,trY,.1)
@@ -177,17 +177,17 @@ class ConvolutionalNeuralNetwork(object):
 	def char74k_example(self, verbose = False, save = False):
 		print "Initializing the network."
 		trX, trY, teX, teY  = load_74k_data()
-		self.initialize_74k(trX[:1000], trY[:1000], teX, teY)
+		self.initialize_74k(trX[:128], trY[:128], teX, teY)
 		print "Creating model functions."
 		self.create_model_functions()
-		for i in xrange(len(trX)/1000 + 1):
+		for i in xrange(len(trX)/128 + 1):
 			print "Beginning part {0}".format(str(i))
 			print "Training on dataset."
 			self.train_data(verbose, epochs = 5)
-			print "Save weights."
-			self.save_all_weights()
-			self.trX = trX[1000*i:1000*(i+1)]
-			self.trY = trY[1000*i:1000*(i+1)]
+			self.trX = trX[128*i:128*(i+1)]
+			self.trY = trY[128*i:128*(i+1)]
+		print "Saving Weights."
+		self.save_all_weights()
 
 if __name__ == "__main__":
 	print "Creating conv-net"
