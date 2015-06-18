@@ -128,7 +128,7 @@ def generate_accuracy_graphs(num_tasks, exclude):
 	plt.ylabel("Accuracy")
 	plt.title("Model Accuracy (all tasks except {0}, then all tasks)".format(exclude))
 	plt.legend(["Task {0}".format(t) for t in range(num_tasks)]+["Total"], loc = "lower right")
-	plt.savefig("all but {0}, then all.png".format(exclude), bbox_inches = "tight")
+	plt.savefig("all but {0} then all.png".format(exclude), bbox_inches = "tight")
 	plt.close()
 
 
