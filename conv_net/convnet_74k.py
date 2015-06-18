@@ -105,8 +105,8 @@ class ConvolutionalNeuralNetwork(object):
 		pyx = self.softmax(T.dot(l4, wo))
 		return l1, l2, l3, l4, pyx
 
-	def initialize_74k(self, trX, trY, teX, teY):
-		self.trX, self.trY, self.teX, self.teY = trX, trY, teX, teY
+	def initialize_74k(self):
+		self.trX, self.trY, self.teX, self.teY = load_data()
 		self.trX = self.trX.reshape(-1, 1, 100, 100)
 		self.teX = self.teX.reshape(-1, 1, 100, 100)
 
@@ -129,10 +129,13 @@ class ConvolutionalNeuralNetwork(object):
 		self.predict = theano.function(inputs = [self.X], outputs = self.y_x, allow_input_downcast = True)
 		self.activate = theano.function(inputs = [self.X], outputs = self.l4, allow_input_downcast = True)
 
-	def train_data(self, verbose, epochs = 10):
+	def train_data(self, verbose, chunks = 1, epochs = 10):
 		for i in range(epochs):
 			print "Starting epoch: {0}".format(str(i))
 			for start, end in zip(range(0, len(self.trX), 128), range(128, len(self.trX), 128)):
+				chunks = 20
+				for i in range(chunks):
+						trX = self.trX()
 				self.cost = self.train(self.trX[start:end], self.trY[start:end])
 			if verbose:
 				print(np.mean(np.argmax(self.teY, axis = 1) == self.predict(self.teX)))
@@ -176,16 +179,10 @@ class ConvolutionalNeuralNetwork(object):
 
 	def char74k_example(self, verbose = False, save = False):
 		print "Initializing the network."
-		trX, trY, teX, teY  = load_74k_data()
-		self.initialize_74k(trX[:128], trY[:128], teX, teY)
+		self.initialize_74k()
 		print "Creating model functions."
 		self.create_model_functions()
-		for i in xrange(len(trX)/128 + 1):
-			print "Beginning part {0}".format(str(i))
-			print "Training on dataset."
-			self.train_data(verbose, epochs = 5)
-			self.trX = trX[128*i:128*(i+1)]
-			self.trY = trY[128*i:128*(i+1)]
+		self.train_data(verbose, epochs = 5)
 		print "Saving Weights."
 		self.save_all_weights()
 
