@@ -2,6 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import random
 import sys
+from sklearn.linear_model import LogisticRegression
 sys.path.append("..")
 from convnet import ConvolutionalNeuralNetwork
 
@@ -80,59 +81,81 @@ def train_new_task(cnn, trXT, trYT, teXT, teYT, num_tasks, verbose, epochs, batc
 	return accuracies
 
 
-def generate_accuracy_graphs(num_tasks, exclude):
+def generate_accuracy_graphs(num_tasks, exclude, save_figs, do_logreg_comparison):
 	task_nums = [i for i in range(num_tasks) if i != exclude]
 	cnn = ConvolutionalNeuralNetwork()
 	cnn.initialize_mnist()
 
-	cnn.trX = cnn.trX[:len(cnn.trX)*.1]
-	cnn.trY = cnn.trY[:len(cnn.trY)*.1]
-	cnn.teX = cnn.teX[:len(cnn.teX)*.1]
-	cnn.teY = cnn.teY[:len(cnn.teY)*.1]
+	cnn.trX = cnn.trX[:int(len(cnn.trX)*.1)]
+	cnn.trY = cnn.trY[:int(len(cnn.trY)*.1)]
+	cnn.teX = cnn.teX[:int(len(cnn.teX)*.1)]
+	cnn.teY = cnn.teY[:int(len(cnn.teY)*.1)]
 
 	cnn.trX, cnn.trY, trXE, trYE = separate_class_from_dataset(exclude, cnn.trX, cnn.trY)
 	cnn.teX, cnn.teY, teXE, teYE = separate_class_from_dataset(exclude, cnn.teX, cnn.teY)
 
 	cnn.create_model_functions()
 
-	v = True
+	v = False
 	e = 20
 	b = 100
 	colors = ["#00FF00", "#0000FF", "#00FFFF", "#FFFF00", "#FF00FF", "#000000", "#888888", "#FF8800", "#88FF00", "#FF0088"]
 
 	print("\nTraining on all tasks except #{0}:".format(exclude))
 	accuracies = train_per_task(cnn, num_tasks, v, e, b)
-	for t in task_nums:
-		plt.plot(np.arange(0, e), accuracies[t], color = colors[t])
-	plt.plot(np.arange(0, e), accuracies["total"], color = "#FF0000", marker = "o")
-	plt.axis([0, e-1, 0, 1])
-	plt.xlabel("Epoch")
-	plt.ylabel("Accuracy")
-	plt.title("Model Accuracy (all tasks except {0})".format(exclude))
-	plt.legend(["Task {0}".format(t) for t in task_nums]+["Total"], loc = "lower right")
-	plt.savefig("all but {0}.png".format(exclude), bbox_inches = "tight")
-	plt.close()
+
+	if save_figs:
+		for t in task_nums:
+			plt.plot(np.arange(0, e), accuracies[t], color = colors[t])
+		plt.plot(np.arange(0, e), accuracies["total"], color = "#FF0000", marker = "o")
+		plt.axis([0, e-1, 0, 1])
+		plt.xlabel("Epoch")
+		plt.ylabel("Accuracy")
+		plt.title("Model Accuracy (all tasks except {0})".format(exclude))
+		plt.legend(["Task {0}".format(t) for t in task_nums]+["Total"], loc = "lower right")
+		plt.savefig("figures/all but {0}.png".format(exclude), bbox_inches = "tight")
+		plt.close()
 
 	total_trX = np.concatenate((cnn.trX, trXE), axis = 0)
 	total_trY = np.concatenate((cnn.trY, trYE), axis = 0)
 	total_teX = np.concatenate((cnn.teX, teXE), axis = 0)
 	total_teY = np.concatenate((cnn.teY, teYE), axis = 0)
 
-	print("\nRetraining on all tasks after excluding #{0}:".format(exclude))
-	accuracies = train_new_task(cnn, total_trX, total_trY, total_teX, total_teY, num_tasks, v, e, b)
-	for t in range(num_tasks):
-		plt.plot(np.arange(0, e), accuracies[t], color = colors[t])
-	plt.plot(np.arange(0, e), accuracies["total"], color = "#FF0000", marker = "o")
-	plt.axis([0, e-1, 0, 1])
-	plt.xlabel("Epoch")
-	plt.ylabel("Accuracy")
-	plt.title("Model Accuracy (all tasks except {0}, then all tasks)".format(exclude))
-	plt.legend(["Task {0}".format(t) for t in range(num_tasks)]+["Total"], loc = "lower right")
-	plt.savefig("all but {0}, then all.png".format(exclude), bbox_inches = "tight")
-	plt.close()
+	if do_logreg_comparison:
+		num_chunks = 20
+		trA = np.concatenate([cnn.activate(total_trX[(len(total_trX)/num_chunks*i):(len(total_trX)/num_chunks*(i+1))]) for i in range(num_chunks)])
+		teA = cnn.activate(total_teX)
+		trC = np.argmax(total_trY, axis = 1)
+		teC = np.argmax(total_teY, axis = 1)
+		lr = LogisticRegression()
+		lr.fit(trA, trC)
+
+		print("")
+		convnet_acc = accuracies["total"][-1]
+		print("[ConvNet]           Testing data accuracy (excluding task #{0}): {1:0.04f}".format(exclude, convnet_acc))
+		logreg_acc = np.mean(lr.predict(teA) == teC)
+		print("[ConvNet -> LogReg] Testing data accuracy (excluding task #{0}): {1:0.04f}".format(exclude, logreg_acc))
+		diff = logreg_acc - convnet_acc
+		print("[(CN -> LR) - CN]   Accuracy improvement: {0:0.04f}".format(diff))
+
+	else:
+		print("\nRetraining on all tasks after excluding #{0}:".format(exclude))
+		accuracies = train_new_task(cnn, total_trX, total_trY, total_teX, total_teY, num_tasks, v, e, b)
+
+		if save_figs:
+			for t in range(num_tasks):
+				plt.plot(np.arange(0, e), accuracies[t], color = colors[t])
+			plt.plot(np.arange(0, e), accuracies["total"], color = "#FF0000", marker = "o")
+			plt.axis([0, e-1, 0, 1])
+			plt.xlabel("Epoch")
+			plt.ylabel("Accuracy")
+			plt.title("Model Accuracy (all tasks except {0}, then all tasks)".format(exclude))
+			plt.legend(["Task {0}".format(t) for t in range(num_tasks)]+["Total"], loc = "lower right")
+			plt.savefig("figures/all but {0} then all.png".format(exclude), bbox_inches = "tight")
+			plt.close()
 
 
 if __name__ == "__main__":
 	n_t = 10
 	for t in range(n_t):
-		generate_accuracy_graphs(num_tasks = n_t, exclude = t)
+		generate_accuracy_graphs(num_tasks = n_t, exclude = t, save_figs = True, do_logreg_comparison = True)
