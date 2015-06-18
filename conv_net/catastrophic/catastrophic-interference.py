@@ -96,7 +96,7 @@ def generate_accuracy_graphs(num_tasks, exclude, save_figs, do_logreg_comparison
 
 	cnn.create_model_functions()
 
-	v = True
+	v = False
 	e = 20
 	b = 100
 	colors = ["#00FF00", "#0000FF", "#00FFFF", "#FFFF00", "#FF00FF", "#000000", "#888888", "#FF8800", "#88FF00", "#FF0088"]
@@ -121,21 +121,6 @@ def generate_accuracy_graphs(num_tasks, exclude, save_figs, do_logreg_comparison
 	total_teX = np.concatenate((cnn.teX, teXE), axis = 0)
 	total_teY = np.concatenate((cnn.teY, teYE), axis = 0)
 
-	print("\nRetraining on all tasks after excluding #{0}:".format(exclude))
-	accuracies = train_new_task(cnn, total_trX, total_trY, total_teX, total_teY, num_tasks, v, e, b)
-
-	if save_figs:
-		for t in range(num_tasks):
-			plt.plot(np.arange(0, e), accuracies[t], color = colors[t])
-		plt.plot(np.arange(0, e), accuracies["total"], color = "#FF0000", marker = "o")
-		plt.axis([0, e-1, 0, 1])
-		plt.xlabel("Epoch")
-		plt.ylabel("Accuracy")
-		plt.title("Model Accuracy (all tasks except {0}, then all tasks)".format(exclude))
-		plt.legend(["Task {0}".format(t) for t in range(num_tasks)]+["Total"], loc = "lower right")
-		plt.savefig("figures/all but {0} then all.png".format(exclude), bbox_inches = "tight")
-		plt.close()
-
 	if do_logreg_comparison:
 		num_chunks = 20
 		trA = np.concatenate([cnn.activate(total_trX[(len(total_trX)/num_chunks*i):(len(total_trX)/num_chunks*(i+1))]) for i in range(num_chunks)])
@@ -152,6 +137,22 @@ def generate_accuracy_graphs(num_tasks, exclude, save_figs, do_logreg_comparison
 		print("[ConvNet -> LogReg] Testing data accuracy (excluding task #{0}): {1:0.04f}".format(exclude, logreg_acc))
 		diff = logreg_acc - convnet_acc
 		print("[(CN -> LR) - CN]   Accuracy improvement: {0:0.04f}".format(diff))
+
+	else:
+		print("\nRetraining on all tasks after excluding #{0}:".format(exclude))
+		accuracies = train_new_task(cnn, total_trX, total_trY, total_teX, total_teY, num_tasks, v, e, b)
+
+		if save_figs:
+			for t in range(num_tasks):
+				plt.plot(np.arange(0, e), accuracies[t], color = colors[t])
+			plt.plot(np.arange(0, e), accuracies["total"], color = "#FF0000", marker = "o")
+			plt.axis([0, e-1, 0, 1])
+			plt.xlabel("Epoch")
+			plt.ylabel("Accuracy")
+			plt.title("Model Accuracy (all tasks except {0}, then all tasks)".format(exclude))
+			plt.legend(["Task {0}".format(t) for t in range(num_tasks)]+["Total"], loc = "lower right")
+			plt.savefig("figures/all but {0} then all.png".format(exclude), bbox_inches = "tight")
+			plt.close()
 
 
 if __name__ == "__main__":
