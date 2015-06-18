@@ -31,16 +31,16 @@ def create_examples(data, values, ptesting):
 	shuffle_in_unison(data, values)
 	nexamples = data.shape[0]
 	testindex = int((1-ptesting)*nexamples)
-	trX = data[testindex:,:]
-	trY = values[testindex:,:]
-	teX = data[:testindex,:]
-	teY = values[:testindex,:]
+	trX = data[:testindex,:]
+	trY = values[:testindex,:]
+	teX = data[testindex:,:]
+	teY = values[testindex:,:]
 	return trX,trY,teX,teY
 
 def load_74k_data():
 	f = open("/home/scarter/Research/conv-net-ella/modern_net/Alphabet/Data/Char74k_HndImg.save",'rb')
-	trX = cPickle.load(f)
-	trY = reprocess(np.asarray(cPickle.load(f)))
+	trX = cPickle.load(f)[0:1000]
+	trY = reprocess(np.asarray(cPickle.load(f))[0:1000])
 	shuffle_in_unison(trX, trY)
 	f.close()
 	trX,trY,teX,teY = create_examples(trX,trY,.1)
@@ -105,17 +105,15 @@ class ConvolutionalNeuralNetwork(object):
 		pyx = self.softmax(T.dot(l4, wo))
 		return l1, l2, l3, l4, pyx
 
-	def initialize_74k(self):
-
-		self.trX, self.teX, self.trY, self.teY = load_74k_data()
-
+	def initialize_74k(self, trX, trY, teX, teY):
+		self.trX, self.trY, self.teX, self.teY = trX, trY, teX, teY
 		self.trX = self.trX.reshape(-1, 1, 100, 100)
 		self.teX = self.teX.reshape(-1, 1, 100, 100)
 
 		self.w1 = self.init_weights((32, 1, 3, 3))
 		self.w2 = self.init_weights((64, 32, 3, 3))
 		self.w3 = self.init_weights((128, 64, 3, 3))
-		self.w4 = self.init_weights((128 * 3 * 3, 9409))
+		self.w4 = self.init_weights((128 * 12 * 12, 9409))
 		self.wo = self.init_weights((9409, 62))
 
 	def create_model_functions(self):
@@ -178,13 +176,18 @@ class ConvolutionalNeuralNetwork(object):
 
 	def char74k_example(self, verbose = False, save = False):
 		print "Initializing the network."
-		self.initialize_74k()
-		print "Print Creating model functions."
+		trX, trY, teX, teY  = load_74k_data()
+		self.initialize_74k(trX[:1000], trY[:1000], teX, teY)
+		print "Creating model functions."
 		self.create_model_functions()
-		print "Training on dataset."
-		self.train_data(verbose, epochs = 20)
-		print "Save weights."
-		self.save_all_weights()
+		for i in xrange(len(trX)/1000 + 1):
+			print "Beginning part {0}".format(str(i))
+			print "Training on dataset."
+			self.train_data(verbose, epochs = 5)
+			print "Save weights."
+			self.save_all_weights()
+			self.trX = trX[1000*i:1000*(i+1)]
+			self.trY = trY[1000*i:1000*(i+1)]
 
 if __name__ == "__main__":
 	print "Creating conv-net"
