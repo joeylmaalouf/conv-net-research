@@ -100,7 +100,7 @@ def generate_accuracy_graphs(num_tasks, exclude):
 	b = 100
 	colors = ["#00FF00", "#0000FF", "#00FFFF", "#FFFF00", "#FF00FF", "#000000", "#888888", "#FF8800", "#88FF00", "#FF0088"]
 
-	print("Training on all tasks except {0}".format(exclude))
+	print("\nTraining on all tasks except #{0}:".format(exclude))
 	accuracies = train_per_task(cnn, num_tasks, v, e, b)
 	for t in task_nums:
 		plt.plot(np.arange(0, e), accuracies[t], color = colors[t])
@@ -111,24 +111,25 @@ def generate_accuracy_graphs(num_tasks, exclude):
 	plt.title("Model Accuracy (all tasks except {0})".format(exclude))
 	plt.legend(["Task {0}".format(t) for t in task_nums]+["Total"], loc = "lower right")
 	plt.savefig("all but {0}.png".format(exclude), bbox_inches = "tight")
-
+	plt.close()
 
 	total_trX = np.concatenate((cnn.trX, trXE), axis = 0)
 	total_trY = np.concatenate((cnn.trY, trYE), axis = 0)
 	total_teX = np.concatenate((cnn.teX, teXE), axis = 0)
 	total_teY = np.concatenate((cnn.teY, teYE), axis = 0)
 
-	print("Retraining on all tasks")
+	print("\nRetraining on all tasks after excluding #{0}:".format(exclude))
 	accuracies = train_new_task(cnn, total_trX, total_trY, total_teX, total_teY, num_tasks, v, e, b)
-	for t in task_nums:
+	for t in range(num_tasks):
 		plt.plot(np.arange(0, e), accuracies[t], color = colors[t])
 	plt.plot(np.arange(0, e), accuracies["total"], color = "#FF0000", marker = "o")
 	plt.axis([0, e-1, 0, 1])
 	plt.xlabel("Epoch")
 	plt.ylabel("Accuracy")
 	plt.title("Model Accuracy (all tasks except {0}, then all tasks)".format(exclude))
-	plt.legend(["Task {0}".format(t) for t in task_nums]+["Total"], loc = "lower right")
+	plt.legend(["Task {0}".format(t) for t in range(num_tasks)]+["Total"], loc = "lower right")
 	plt.savefig("all but {0}, then all.png".format(exclude), bbox_inches = "tight")
+	plt.close()
 
 
 if __name__ == "__main__":
