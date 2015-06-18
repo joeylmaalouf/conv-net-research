@@ -1,3 +1,5 @@
 build/
 devel/
+ros_workspace/src/video/data_set/
 *.pyc
+
