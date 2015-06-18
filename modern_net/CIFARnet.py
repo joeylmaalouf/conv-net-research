@@ -9,7 +9,7 @@ def unpickle(filename):
     fo.close()
     return dictionary
 
-def reprocess(values):
+def reprocess(data):
 	""" Turns the 'values' into something that looks like neural network output
 	"""
 	newdata = np.zeros((len(data), 10))
@@ -20,9 +20,9 @@ def reprocess(values):
 def load_data(filename):
 	""" Opens the data file, and processes the data for each object
 	"""
-	data = unpickle(filename)
-	X = data.keys()[0]
-	Y = data[X]
+	dictionary = unpickle(filename)
+	X = dictionary['data']
+	Y = dictionary['labels']
 	return X, Y
 
 if __name__ == '__main__':
@@ -32,7 +32,9 @@ if __name__ == '__main__':
 
 	print "Loading Data"
 	trX, trY = load_data("./CIFAR_Data/cifar-10-batches-py/data_batch_1")
+	trY = reprocess(trY)
 	teX, teY = load_data("./CIFAR_Data/cifar-10-batches-py/test_batch")
+	teY = reprocess(teY)
 
 	print "Training Net:"
 	for i in range(100):
