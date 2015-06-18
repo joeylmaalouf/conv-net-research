@@ -105,8 +105,8 @@ class ConvolutionalNeuralNetwork(object):
 		pyx = self.softmax(T.dot(l4, wo))
 		return l1, l2, l3, l4, pyx
 
-	def initialize_74k(self):
-		self.trX, self.trY, self.teX, self.teY = load_74k_data()
+	def initialize_74k(self, trX, trY, teX, teY):
+		self.trX, self.trY, self.teX, self.teY = trX, trY, teX, teY
 		self.trX = self.trX.reshape(-1, 1, 100, 100)
 		self.teX = self.teX.reshape(-1, 1, 100, 100)
 
@@ -176,13 +176,18 @@ class ConvolutionalNeuralNetwork(object):
 
 	def char74k_example(self, verbose = False, save = False):
 		print "Initializing the network."
-		self.initialize_74k()
+		trX, trY, teX, teY  = load_74k_data()
+		self.initialize_74k(trX[:1000], trY[:1000], teX, teY)
 		print "Creating model functions."
 		self.create_model_functions()
-		print "Training on dataset."
-		self.train_data(verbose, epochs = 20)
-		print "Save weights."
-		self.save_all_weights()
+		for i in xrange(len(trX)/1000 + 1):
+			print "Beginning part {0}".format(str(i))
+			print "Training on dataset."
+			self.train_data(verbose, epochs = 5)
+			print "Save weights."
+			self.save_all_weights()
+			self.trX = trX[1000*i:1000*(i+1)]
+			self.trY = trY[1000*i:1000*(i+1)]
 
 if __name__ == "__main__":
 	print "Creating conv-net"
