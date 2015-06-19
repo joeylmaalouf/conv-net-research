@@ -39,8 +39,8 @@ def create_examples(data, values, ptesting):
 
 def load_74k_data():
 	f = open("/home/scarter/Research/conv-net-ella/modern_net/Alphabet/Data/Char74k_HndImg.save",'rb')
-	trX = cPickle.load(f)
-	trY = reprocess(np.asarray(cPickle.load(f)))
+	trX = cPickle.load(f)[:1000]
+	trY = reprocess(np.asarray(cPickle.load(f))[:1000])
 	shuffle_in_unison(trX, trY)
 	f.close()
 	trX,trY,teX,teY = create_examples(trX,trY,.1)
@@ -106,7 +106,7 @@ class ConvolutionalNeuralNetwork(object):
 		return l1, l2, l3, l4, pyx
 
 	def initialize_74k(self):
-		self.trX, self.trY, self.teX, self.teY = load_data()
+		self.trX, self.trY, self.teX, self.teY = load_74k_data()
 		self.trX = self.trX.reshape(-1, 1, 100, 100)
 		self.teX = self.teX.reshape(-1, 1, 100, 100)
 
@@ -133,9 +133,6 @@ class ConvolutionalNeuralNetwork(object):
 		for i in range(epochs):
 			print "Starting epoch: {0}".format(str(i))
 			for start, end in zip(range(0, len(self.trX), 128), range(128, len(self.trX), 128)):
-				chunks = 20
-				for i in range(chunks):
-						trX = self.trX()
 				self.cost = self.train(self.trX[start:end], self.trY[start:end])
 			if verbose:
 				print(np.mean(np.argmax(self.teY, axis = 1) == self.predict(self.teX)))
@@ -182,7 +179,7 @@ class ConvolutionalNeuralNetwork(object):
 		self.initialize_74k()
 		print "Creating model functions."
 		self.create_model_functions()
-		self.train_data(verbose, epochs = 5)
+		self.train_data(verbose, epochs = 20)
 		print "Saving Weights."
 		self.save_all_weights()
 
