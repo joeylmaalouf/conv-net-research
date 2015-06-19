@@ -35,12 +35,12 @@ def create_examples(data, values, ptesting):
 	trY = values[:testindex,:]
 	teX = data[testindex:,:]
 	teY = values[testindex:,:]
-	return trX,trY,teX,teY
+	return [trX,trY,teX,teY]
 
 def load_74k_data():
 	f = open("/home/scarter/Research/conv-net-ella/modern_net/Alphabet/Data/Char74k_HndImg.save",'rb')
-	trX = cPickle.load(f)[:1000]
-	trY = reprocess(np.asarray(cPickle.load(f))[:1000])
+	trX = cPickle.load(f)
+	trY = reprocess(np.asarray(cPickle.load(f)))
 	shuffle_in_unison(trX, trY)
 	f.close()
 	trX,trY,teX,teY = create_examples(trX,trY,.1)
@@ -106,7 +106,6 @@ class ConvolutionalNeuralNetwork(object):
 		return l1, l2, l3, l4, pyx
 
 	def initialize_74k(self):
-		self.trX, self.trY, self.teX, self.teY = load_74k_data()
 		self.trX = self.trX.reshape(-1, 1, 100, 100)
 		self.teX = self.teX.reshape(-1, 1, 100, 100)
 
@@ -129,13 +128,17 @@ class ConvolutionalNeuralNetwork(object):
 		self.predict = theano.function(inputs = [self.X], outputs = self.y_x, allow_input_downcast = True)
 		self.activate = theano.function(inputs = [self.X], outputs = self.l4, allow_input_downcast = True)
 
-	def train_data(self, verbose, chunks = 1, epochs = 10):
+	def train_data(self, data, verbose, chunks = 1, epochs = 10):
+		trX = data[0]
+		trY = data[1]
+		teX = data[2]
+		teY = data[3]
 		for i in range(epochs):
 			print "Starting epoch: {0}".format(str(i))
-			for start, end in zip(range(0, len(self.trX), 128), range(128, len(self.trX), 128)):
-				self.cost = self.train(self.trX[start:end], self.trY[start:end])
+			for start, end in zip(range(0, len(trX), 128), range(128, len(trX), 128)):
+				self.cost = self.train(trX[start:end], trY[start:end])
 			if verbose:
-				print(np.mean(np.argmax(self.teY, axis = 1) == self.predict(self.teX)))
+				print(np.mean(np.argmax(teY, axis = 1) == self.predict(teX)))
 
 	def save_data(self, filename, data, gpu = False):
 		mult = lambda x, y: x * y
@@ -175,11 +178,16 @@ class ConvolutionalNeuralNetwork(object):
 		self.wo = self.load_data("74kweights/Wo.txt", (9409, 62), gpu = True)
 
 	def char74k_example(self, verbose = False, save = False):
+		print "Loading data"
+		trX, trY, teX, teY = load_74k_data()
 		print "Initializing the network."
 		self.initialize_74k()
 		print "Creating model functions."
 		self.create_model_functions()
-		self.train_data(verbose, epochs = 20)
+		for i in xrange(len(trX)/1000):
+			print "Beginning batch {0}".format(str(i))
+			data = [trX[1000*i:1000*(i+1)], trY[1000*i:1000*(i+1)], teX, teY]
+			self.train_data(data, verbose, epochs = 10)
 		print "Saving Weights."
 		self.save_all_weights()
 
