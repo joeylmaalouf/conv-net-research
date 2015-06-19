@@ -101,7 +101,7 @@ def generate_accuracy_graphs(num_tasks, exclude, save_figs, do_logreg_comparison
 	b = 100
 	colors = ["#00FF00", "#0000FF", "#00FFFF", "#FFFF00", "#FF00FF", "#000000", "#888888", "#FF8800", "#88FF00", "#FF0088"]
 
-	print("\nTraining on all tasks except #{0}:".format(exclude))
+	print("\nTraining on all tasks except #{0}".format(exclude))
 	accuracies = train_per_task(cnn, num_tasks, v, e, b)
 
 	if save_figs:
@@ -132,14 +132,14 @@ def generate_accuracy_graphs(num_tasks, exclude, save_figs, do_logreg_comparison
 
 		print("")
 		convnet_acc = accuracies["total"][-1]
-		print("[ConvNet]           Testing data accuracy (excluding task #{0}): {1:0.04f}".format(exclude, convnet_acc))
+		print("[ConvNet]        Testing data accuracy (excluding task #{0}): {1:0.04f}".format(exclude, convnet_acc))
 		logreg_acc = np.mean(lr.predict(teA) == teC)
-		print("[ConvNet -> LogReg] Testing data accuracy (excluding task #{0}): {1:0.04f}".format(exclude, logreg_acc))
+		print("[ConvNet+LogReg] Testing data accuracy (excluding task #{0}): {1:0.04f}".format(exclude, logreg_acc))
 		diff = logreg_acc - convnet_acc
-		print("[(CN -> LR) - CN]   Accuracy improvement: {0:0.04f}".format(diff))
+		print("[(CN+LR)-CN]     Accuracy improvement: {0:0.04f}".format(diff))
 
 	else:
-		print("\nRetraining on all tasks after excluding #{0}:".format(exclude))
+		print("\nRetraining on all tasks after excluding #{0}".format(exclude))
 		accuracies = train_new_task(cnn, total_trX, total_trY, total_teX, total_teY, num_tasks, v, e, b)
 
 		if save_figs:
