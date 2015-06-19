@@ -149,7 +149,7 @@ class ConvolutionalNeuralNetwork(object):
 			print("Saved weights to \"./saved/W*.txt\".")
 			num_chunks = 20
 			for i in range(num_chunks):
-				data_chunk = self.trX[(60000/num_chunks*i):(60000/num_chunks*(i+1))]
+				data_chunk = self.trX[(len(self.trX)/num_chunks*i):(len(self.trX)/num_chunks*(i+1))]
 				self.save_data("saved/trA{0:02d}.txt".format(i), self.activate(data_chunk))
 			self.save_data("saved/teA.txt", self.activate(self.teX))
 			print("Saved penultimate activations to \"./saved/*A*.txt\".")
