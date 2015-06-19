@@ -88,7 +88,7 @@ def find_lr_task_accuracies(lr, num_tasks, data, classes):
 		task_data = []
 		task_labels = []
 		for i in range(data):
-			if classes[i] = t:
+			if classes[i] == t:
 				task_data.append(data[i])
 				task_labels.append(classes[i])
 		acc[t] = np.mean(lr.predict(task_data) == task_labels)
@@ -110,7 +110,7 @@ def generate_accuracy_graphs(num_tasks, exclude, save_figs, do_logreg_comparison
 
 	cnn.create_model_functions()
 
-	v = True
+	v = False
 	e = 20
 	b = 100
 	colors = ["#00FF00", "#0000FF", "#00FFFF", "#FFFF00", "#FF00FF", "#000000", "#888888", "#FF8800", "#88FF00", "#FF0088"]
