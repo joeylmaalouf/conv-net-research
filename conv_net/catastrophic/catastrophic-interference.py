@@ -87,7 +87,7 @@ def find_lr_task_accuracies(lr, num_tasks, data, classes):
 	for t in range(num_tasks):
 		task_data = []
 		task_labels = []
-		for i in range(data):
+		for i in range(len(data)):
 			if classes[i] == t:
 				task_data.append(data[i])
 				task_labels.append(classes[i])
