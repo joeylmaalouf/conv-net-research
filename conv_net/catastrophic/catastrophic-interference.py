@@ -96,7 +96,7 @@ def generate_accuracy_graphs(num_tasks, exclude, save_figs, do_logreg_comparison
 
 	cnn.create_model_functions()
 
-	v = False
+	v = True
 	e = 20
 	b = 100
 	colors = ["#00FF00", "#0000FF", "#00FFFF", "#FFFF00", "#FF00FF", "#000000", "#888888", "#FF8800", "#88FF00", "#FF0088"]
@@ -158,4 +158,4 @@ def generate_accuracy_graphs(num_tasks, exclude, save_figs, do_logreg_comparison
 if __name__ == "__main__":
 	n_t = 10
 	for t in range(n_t):
-		generate_accuracy_graphs(num_tasks = n_t, exclude = t, save_figs = True, do_logreg_comparison = True)
+		generate_accuracy_graphs(num_tasks = n_t, exclude = t, save_figs = True, do_logreg_comparison = False)
