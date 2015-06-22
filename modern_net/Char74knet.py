@@ -57,7 +57,7 @@ if __name__ == '__main__':
 	mnet.create_model_functions()
 
 	print "Loading Data"
-	f = open("./Alphabet/Data/Char74k_HndImg.save",'rb')
+	f = open("./Alphabet/Data/Char74k_Fnt.save",'rb')
 	trX = cPickle.load(f)
 	trY = reprocess(np.asarray(cPickle.load(f)))
 	shuffle_in_unison(trX, trY)
@@ -70,7 +70,7 @@ if __name__ == '__main__':
 	print "Training Net:"
 	for i in range(100):
 		for start, end in zip(range(0, len(trX), 128), range(128, len(trX), 128)):
-			cost = mnet.train(trX[start:end], trY[start:end])
+			cost = mnet.train(trX[start:end], trY[start:end], batch)
 		print np.mean(np.argmax(teY, axis=1) == mnet.predict(teX))
 
 	print "Saving Data"

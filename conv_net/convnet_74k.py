@@ -31,10 +31,10 @@ def create_examples(data, values, ptesting):
 	shuffle_in_unison(data, values)
 	nexamples = data.shape[0]
 	testindex = int((1-ptesting)*nexamples)
-	trX = data[:testindex,:]
-	trY = values[:testindex,:]
-	teX = data[testindex:,:]
-	teY = values[testindex:,:]
+	trX = data[:testindex,:][:1500]
+	trY = values[:testindex,:][:1500]
+	teX = data[testindex:,:][:200]
+	teY = values[testindex:,:][:200]
 	return [trX,trY,teX,teY]
 
 def load_74k_data():
@@ -106,9 +106,6 @@ class ConvolutionalNeuralNetwork(object):
 		return l1, l2, l3, l4, pyx
 
 	def initialize_74k(self):
-		self.trX = self.trX.reshape(-1, 1, 100, 100)
-		self.teX = self.teX.reshape(-1, 1, 100, 100)
-
 		self.w1 = self.init_weights((32, 1, 3, 3))
 		self.w2 = self.init_weights((64, 32, 3, 3))
 		self.w3 = self.init_weights((128, 64, 3, 3))
@@ -129,9 +126,9 @@ class ConvolutionalNeuralNetwork(object):
 		self.activate = theano.function(inputs = [self.X], outputs = self.l4, allow_input_downcast = True)
 
 	def train_data(self, data, verbose, chunks = 1, epochs = 10):
-		trX = data[0]
+		trX = data[0].reshape((-1,1,100,100))
 		trY = data[1]
-		teX = data[2]
+		teX = data[2].reshape((-1,1,100,100))
 		teY = data[3]
 		for i in range(epochs):
 			print "Starting epoch: {0}".format(str(i))
@@ -180,14 +177,21 @@ class ConvolutionalNeuralNetwork(object):
 	def char74k_example(self, verbose = False, save = False):
 		print "Loading data"
 		trX, trY, teX, teY = load_74k_data()
+		#trX = trX[:1000]
+		#trY = trY[:1000]
+		#teX = teX[:500]
+		#teY = teY[:500]
 		print "Initializing the network."
 		self.initialize_74k()
 		print "Creating model functions."
 		self.create_model_functions()
-		for i in xrange(len(trX)/1000):
-			print "Beginning batch {0}".format(str(i))
-			data = [trX[1000*i:1000*(i+1)], trY[1000*i:1000*(i+1)], teX, teY]
-			self.train_data(data, verbose, epochs = 10)
+		i=0
+		#for i in xrange(len(trX)/1000):
+			#print "Beginning batch {0}".format(str(i))
+		#data = [trX[1000*i:1000*(i+1)], trY[1000*i:1000*(i+1)], teX, teY]
+		data = [trX, trY, teX, teY]
+		self.train_data(data, verbose, epochs = 10)
+		del data
 		print "Saving Weights."
 		self.save_all_weights()
 
