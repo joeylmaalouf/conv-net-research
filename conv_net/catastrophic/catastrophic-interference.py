@@ -1,8 +1,9 @@
 import matplotlib.pyplot as plt
 import numpy as np
+from pprint import pprint
 import random
-import sys
 from sklearn.linear_model import LogisticRegression
+import sys
 sys.path.append("..")
 from convnet import ConvolutionalNeuralNetwork
 
@@ -81,6 +82,19 @@ def train_new_task(cnn, trXT, trYT, teXT, teYT, num_tasks, verbose, epochs, batc
 	return accuracies
 
 
+def find_lr_task_accuracies(lr, num_tasks, data, classes):
+	acc = {"total": np.mean(lr.predict(data) == classes)}
+	for t in range(num_tasks):
+		task_data = []
+		task_labels = []
+		for i in range(len(data)):
+			if classes[i] == t:
+				task_data.append(data[i])
+				task_labels.append(classes[i])
+		acc[t] = np.mean(lr.predict(task_data) == task_labels)
+	return acc
+
+
 def generate_accuracy_graphs(num_tasks, exclude, save_figs, do_logreg_comparison):
 	task_nums = [i for i in range(num_tasks) if i != exclude]
 	cnn = ConvolutionalNeuralNetwork()
@@ -96,12 +110,12 @@ def generate_accuracy_graphs(num_tasks, exclude, save_figs, do_logreg_comparison
 
 	cnn.create_model_functions()
 
-	v = True
+	v = False
 	e = 20
 	b = 100
 	colors = ["#00FF00", "#0000FF", "#00FFFF", "#FFFF00", "#FF00FF", "#000000", "#888888", "#FF8800", "#88FF00", "#FF0088"]
 
-	print("\nTraining on all tasks except #{0}:".format(exclude))
+	print("\nTraining on all tasks except #{0}".format(exclude))
 	accuracies = train_per_task(cnn, num_tasks, v, e, b)
 
 	if save_figs:
@@ -132,14 +146,20 @@ def generate_accuracy_graphs(num_tasks, exclude, save_figs, do_logreg_comparison
 
 		print("")
 		convnet_acc = accuracies["total"][-1]
-		print("[ConvNet]           Testing data accuracy (excluding task #{0}): {1:0.04f}".format(exclude, convnet_acc))
-		logreg_acc = np.mean(lr.predict(teA) == teC)
-		print("[ConvNet -> LogReg] Testing data accuracy (excluding task #{0}): {1:0.04f}".format(exclude, logreg_acc))
-		diff = logreg_acc - convnet_acc
-		print("[(CN -> LR) - CN]   Accuracy improvement: {0:0.04f}".format(diff))
+		print("[ConvNet]        Testing data accuracy (excluding task #{0}): {1:0.04f}".format(exclude, convnet_acc))
+		logreg_accs = find_lr_task_accuracies(lr, num_tasks, teA, teC)
+		print("[ConvNet+LogReg] Testing data accuracy (excluding task #{0}): {1:0.04f}".format(exclude, logreg_accs["total"]))
+		diff = logreg_accs["total"] - convnet_acc
+		print("[(CN+LR)-CN]     Accuracy improvement: {0:0.04f}".format(diff))
+
+		print("\nLogistic regression model accuracies after excluding #{0}:".format(exclude))
+		pprint(logreg_accs)
+
+		# examine tradeoff of initializing convnet with fewer tasks and having logreg learn more
+		# make comparison chart for different models (convnet predictions, convnet representations into logreg/ella, etc.)
 
 	else:
-		print("\nRetraining on all tasks after excluding #{0}:".format(exclude))
+		print("\nRetraining on all tasks after excluding #{0}".format(exclude))
 		accuracies = train_new_task(cnn, total_trX, total_trY, total_teX, total_teY, num_tasks, v, e, b)
 
 		if save_figs:
@@ -158,4 +178,4 @@ def generate_accuracy_graphs(num_tasks, exclude, save_figs, do_logreg_comparison
 if __name__ == "__main__":
 	n_t = 10
 	for t in range(n_t):
-		generate_accuracy_graphs(num_tasks = n_t, exclude = t, save_figs = True, do_logreg_comparison = False)
+		generate_accuracy_graphs(num_tasks = n_t, exclude = t, save_figs = False, do_logreg_comparison = True)
