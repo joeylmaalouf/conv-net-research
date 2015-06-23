@@ -31,10 +31,10 @@ def create_examples(data, values, ptesting):
 	shuffle_in_unison(data, values)
 	nexamples = data.shape[0]
 	testindex = int((1-ptesting)*nexamples)
-	trX = data[:testindex,:][:1500]
-	trY = values[:testindex,:][:1500]
-	teX = data[testindex:,:][:200]
-	teY = values[testindex:,:][:200]
+	trX = data[:testindex,:]
+	trY = values[:testindex,:]
+	teX = data[testindex:,:]
+	teY = values[testindex:,:]
 	return [trX,trY,teX,teY]
 
 def load_74k_data():
@@ -125,17 +125,20 @@ class ConvolutionalNeuralNetwork(object):
 		self.predict = theano.function(inputs = [self.X], outputs = self.y_x, allow_input_downcast = True)
 		self.activate = theano.function(inputs = [self.X], outputs = self.l4, allow_input_downcast = True)
 
-	def train_data(self, data, verbose, chunks = 1, epochs = 10):
+	def train_data(self, data, verbose, chunks = 1, epochs = 10, batch = 50):
 		trX = data[0].reshape((-1,1,100,100))
 		trY = data[1]
 		teX = data[2].reshape((-1,1,100,100))
 		teY = data[3]
 		for i in range(epochs):
 			print "Starting epoch: {0}".format(str(i))
-			for start, end in zip(range(0, len(trX), 128), range(128, len(trX), 128)):
+			for start, end in zip(range(0, len(trX), batch), range(batch, len(trX), batch)):
 				self.cost = self.train(trX[start:end], trY[start:end])
 			if verbose:
-				print(np.mean(np.argmax(teY, axis = 1) == self.predict(teX)))
+				predictions = []
+				for start, end in zip(range(0, len(teX), batch), range(batch, len(teX), batch)):
+					predictions.append(np.mean(np.argmax(teY[start:end], axis = 1) == self.predict(teX[start:end])))
+				print sum(predictions)/float(len(predictions))
 
 	def save_data(self, filename, data, gpu = False):
 		mult = lambda x, y: x * y
@@ -185,12 +188,11 @@ class ConvolutionalNeuralNetwork(object):
 		self.initialize_74k()
 		print "Creating model functions."
 		self.create_model_functions()
-		i=0
 		#for i in xrange(len(trX)/1000):
 			#print "Beginning batch {0}".format(str(i))
 		#data = [trX[1000*i:1000*(i+1)], trY[1000*i:1000*(i+1)], teX, teY]
 		data = [trX, trY, teX, teY]
-		self.train_data(data, verbose, epochs = 10)
+		self.train_data(data, verbose, epochs = 40)
 		del data
 		print "Saving Weights."
 		self.save_all_weights()
