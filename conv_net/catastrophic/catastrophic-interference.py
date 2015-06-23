@@ -5,7 +5,6 @@
 
 import matplotlib.pyplot as plt
 import numpy as np
-from pprint import pprint
 import random
 from sklearn.linear_model import LogisticRegression
 import sys
@@ -100,7 +99,7 @@ def find_lr_task_accuracies(lr, num_tasks, data, classes):
 	return acc
 
 
-def generate_accuracy_graphs(num_tasks, exclude_start, exclude_end, save_figs, do_logreg_comparison):
+def generate_accuracy_graphs(num_tasks, exclude_start, exclude_end, save_figs, do_logreg_comparison, verbose = False, epochs = 20, batch_size = 100):
 	excluded = range(exclude_start, exclude_end)
 	task_nums = [i for i in range(num_tasks) if i not in excluded]
 	cnn = ConvolutionalNeuralNetwork()
@@ -116,19 +115,16 @@ def generate_accuracy_graphs(num_tasks, exclude_start, exclude_end, save_figs, d
 
 	cnn.create_model_functions()
 
-	v = False
-	e = 20
-	b = 100
 	colors = ["#00FF00", "#0000FF", "#00FFFF", "#FFFF00", "#FF00FF", "#000000", "#888888", "#FF8800", "#88FF00", "#FF0088"]
 
 	print("\nTraining on tasks {0}, excluding tasks {1}".format(task_nums, excluded))
-	accuracies = train_per_task(cnn, num_tasks, v, e, b)
+	accuracies = train_per_task(cnn, num_tasks, verbose, epochs, batch_size)
 
 	if save_figs:
 		for t in task_nums:
-			plt.plot(np.arange(0, e), accuracies[t], color = colors[t])
-		plt.plot(np.arange(0, e), accuracies["total"], color = "#FF0000", marker = "o")
-		plt.axis([0, e-1, 0, 1])
+			plt.plot(np.arange(0, epochs), accuracies[t], color = colors[t])
+		plt.plot(np.arange(0, epochs), accuracies["total"], color = "#FF0000", marker = "o")
+		plt.axis([0, epochs-1, 0, 1])
 		plt.xlabel("Epoch")
 		plt.ylabel("Accuracy")
 		plt.title("Model Accuracy")
@@ -143,14 +139,14 @@ def generate_accuracy_graphs(num_tasks, exclude_start, exclude_end, save_figs, d
 
 	if not do_logreg_comparison:
 		print("\nRetraining on all tasks after excluding {0}".format(excluded))
-		accuracies = train_new_task(cnn, total_trX, total_trY, total_teX, total_teY, num_tasks, v, e, b)
+		accuracies = train_new_task(cnn, total_trX, total_trY, total_teX, total_teY, num_tasks, verbose, epochs, batch_size)
 
 		if save_figs:
 			for t in range(num_tasks):
-				plt.plot(np.arange(0, e), accuracies[t], color = colors[t])
-			plt.plot(np.arange(0, e), accuracies["total"], color = "#FF0000", marker = "o")
+				plt.plot(np.arange(0, epochs), accuracies[t], color = colors[t])
+			plt.plot(np.arange(0, epochs), accuracies["total"], color = "#FF0000", marker = "o")
 			plt.legend(["Task {0}".format(t) for t in task_nums]+["Total"], loc = "lower right")
-			plt.axis([0, e-1, 0, 1])
+			plt.axis([0, epochs-1, 0, 1])
 			plt.xlabel("Epoch")
 			plt.ylabel("Accuracy")
 			plt.title("Model Accuracy")
@@ -168,19 +164,21 @@ def generate_accuracy_graphs(num_tasks, exclude_start, exclude_end, save_figs, d
 
 		print("")
 		convnet_acc = accuracies["total"][-1]
-		print("[ConvNet]        Testing data accuracy: {1:0.04f}".format(convnet_acc))
+		print("[ConvNet]        Testing data accuracy: {0:0.04f}".format(convnet_acc))
 		logreg_accs = find_lr_task_accuracies(lr, num_tasks, teA, teC)
-		print("[ConvNet+LogReg] Testing data accuracy: {1:0.04f}".format(logreg_accs["total"]))
+		print("[ConvNet+LogReg] Testing data accuracy: {0:0.04f}".format(logreg_accs["total"]))
 		diff = logreg_accs["total"] - convnet_acc
 		print("[(CN+LR)-CN]     Accuracy improvement:  {0:0.04f}".format(diff))
 
 		print("\nLogistic regression model accuracies after exclusion:")
-		pprint(logreg_accs)
+		for key in logreg_accs.keys():
+			print("Task: {0}, accuracy: {1:0.04f}".format(key, logreg_accs[key]))
+		print("")
 
 
 if __name__ == "__main__":
 	n_t = 10
 #	for t in range(n_t):
-#		generate_accuracy_graphs(num_tasks = n_t, exclude_start = t, exclude_end = t+1, save_figs = False, do_logreg_comparison = True)
+#		generate_accuracy_graphs(num_tasks = n_t, exclude_start = t, exclude_end = t+1, save_figs = True, do_logreg_comparison = False, verbose = True)
 	for i in range(1, n_t):
-		generate_accuracy_graphs(num_tasks = n_t, exclude_start = 0, exclude_end = i, save_figs = False, do_logreg_comparison = True)
+		generate_accuracy_graphs(num_tasks = n_t, exclude_start = 0, exclude_end = i, save_figs = True, do_logreg_comparison = True)
