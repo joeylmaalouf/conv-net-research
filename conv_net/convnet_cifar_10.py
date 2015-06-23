@@ -5,7 +5,7 @@ from theano.sandbox.cuda.basic_ops import host_from_gpu
 from theano.tensor.nnet.conv import conv2d
 from theano.tensor.signal.downsample import max_pool_2d
 import numpy as np
-from load import mnist
+import cPickle
 
 def reprocess(data):
 	""" Turns the 'values' into something that looks like neural network output
@@ -19,13 +19,13 @@ def load_cifar_data():
 	f = open("../modern_net/CIFAR_Data/cifar-10-batches-py/data_batch_1",'rb')
 	data = cPickle.load(f)
 	trX = data["data"]
-	trY = reprocess(data["lables"])
+	trY = reprocess(data["labels"])
 	f.close()
 
 	f = open("../modern_net/CIFAR_Data/cifar-10-batches-py/test_batch",'rb')
 	data = cPickle.load(f)
 	teX = data["data"]
-	teY = reprocess(data["lables"])
+	teY = reprocess(data["labels"])
 	f.close()
 	return trX, trY, teX, teY
 
@@ -90,14 +90,9 @@ class ConvolutionalNeuralNetwork(object):
 		return l1, l2, l3, l4, pyx
 
 	def initialize(self):
-		self.trX, self.teX, self.trY, self.teY = mnist(onehot = True)
-
-		self.trX = self.trX.reshape(-1, 1, 32, 32, 3)
-		self.teX = self.teX.reshape(-1, 1, 32, 32, 3)
-
-		self.w1 = self.init_weights((32, 1, 3, 3, 3))
-		self.w2 = self.init_weights((64, 32, 3, 3, 3))
-		self.w3 = self.init_weights((128, 64, 3, 3, 3))
+		self.w1 = self.init_weights((32, 1, 3, 3))
+		self.w2 = self.init_weights((64, 32, 3, 3))
+		self.w3 = self.init_weights((128, 64, 3, 3))
 		self.w4 = self.init_weights((128 * 3 * 3 * 3, 841*3))
 		self.wo = self.init_weights((841*3, 10))
 
@@ -152,5 +147,12 @@ class ConvolutionalNeuralNetwork(object):
 		self.create_model_functions()
 		data = [trX, trY, teX, teY]
 		self.train_data(data, verbose, epochs = 40)
-		print "Saving Weights."
-		self.save_all_weights()
+		#print "Saving Weights."
+		#self.save_all_weights()
+
+if __name__ == "__main__":
+	print "Creating conv-net"
+	cnn = ConvolutionalNeuralNetwork()
+	print "Conv-net created. Running network."
+	cnn.char74k_example(verbose = True)
+	print "Program Complete."
