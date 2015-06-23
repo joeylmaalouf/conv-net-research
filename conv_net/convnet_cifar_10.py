@@ -90,10 +90,10 @@ class ConvolutionalNeuralNetwork(object):
 		return l1, l2, l3, l4, pyx
 
 	def initialize(self):
-		self.w1 = self.init_weights((32, 1, 3, 3))
+		self.w1 = self.init_weights((32, 3, 3, 3))
 		self.w2 = self.init_weights((64, 32, 3, 3))
 		self.w3 = self.init_weights((128, 64, 3, 3))
-		self.w4 = self.init_weights((128 * 3 * 3 * 3, 841*3))
+		self.w4 = self.init_weights((128 * 3 * 3, 841*3))
 		self.wo = self.init_weights((841*3, 10))
 
 	def create_model_functions(self):
@@ -110,9 +110,9 @@ class ConvolutionalNeuralNetwork(object):
 		self.activate = theano.function(inputs = [self.X], outputs = self.l4, allow_input_downcast = True)
 
 	def train_data(self, data, verbose, chunks = 1, epochs = 10, batch = 50):
-		trX = data[0].reshape((-1,1,32,32,3))
+		trX = data[0].reshape((-1,3,32,32))
 		trY = data[1]
-		teX = data[2].reshape((-1,1,32,32,3))
+		teX = data[2].reshape((-1,3,32,32))
 		teY = data[3]
 		for i in range(epochs):
 			print "Starting epoch: {0}".format(str(i))
