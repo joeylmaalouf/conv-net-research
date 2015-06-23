@@ -1,7 +1,6 @@
 # examine tradeoff of initializing convnet with fewer tasks and having logreg learn more (vary number of excluded tasks)
 # make comparison chart for different models (convnet predictions, convnet representations into logreg/ella, etc.)
-# ^ done for cnn and cnn->lr, try with cnn->ella
-# try svm as replacement for lr/ella?
+# ^ done for cnn and cnn->lr, try with cnn->ella and cnn->svm
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -120,17 +119,17 @@ def generate_accuracy_graphs(num_tasks, exclude_start, exclude_end, save_figs, d
 	print("\nTraining on tasks {0}, excluding tasks {1}".format(task_nums, excluded))
 	accuracies = train_per_task(cnn, num_tasks, verbose, epochs, batch_size)
 
-	if save_figs:
-		for t in task_nums:
-			plt.plot(np.arange(0, epochs), accuracies[t], color = colors[t])
-		plt.plot(np.arange(0, epochs), accuracies["total"], color = "#FF0000", marker = "o")
-		plt.axis([0, epochs-1, 0, 1])
-		plt.xlabel("Epoch")
-		plt.ylabel("Accuracy")
-		plt.title("Model Accuracy")
-		plt.legend(["Task {0}".format(t) for t in task_nums]+["Total"], loc = "lower right")
-		plt.savefig("figures/trained on {0}, excluded {1}.png".format(task_nums, excluded), bbox_inches = "tight")
-		plt.close()
+#	if save_figs:
+#		for t in task_nums:
+#			plt.plot(np.arange(0, epochs), accuracies[t], color = colors[t])
+#		plt.plot(np.arange(0, epochs), accuracies["total"], color = "#FF0000", marker = "o")
+#		plt.axis([0, epochs-1, 0, 1])
+#		plt.xlabel("Epoch")
+#		plt.ylabel("Accuracy")
+#		plt.title("Model Accuracy")
+#		plt.legend(["Task {0}".format(t) for t in task_nums]+["Total"], loc = "lower right")
+#		plt.savefig("figures/trained on {0}, excluded {1}.png".format(task_nums, excluded), bbox_inches = "tight")
+#		plt.close()
 
 	total_trX = np.concatenate((cnn.trX, trXE), axis = 0)
 	total_trY = np.concatenate((cnn.trY, trYE), axis = 0)
@@ -170,10 +169,24 @@ def generate_accuracy_graphs(num_tasks, exclude_start, exclude_end, save_figs, d
 		diff = logreg_accs["total"] - convnet_acc
 		print("[(CN+LR)-CN]     Accuracy improvement:  {0:0.04f}".format(diff))
 
-		print("\nLogistic regression model accuracies after exclusion:")
-		for key in logreg_accs.keys():
-			print("Task: {0}, accuracy: {1:0.04f}".format(key, logreg_accs[key]))
+#		print("\nLogistic regression model accuracies after exclusion:")
+#		for key, value in logreg_accs.items():
+#			print("Task: {0}, accuracy: {1:0.04f}".format(key, value))
 		print("")
+
+		if save_figs:
+			for t in range(num_tasks):
+				plt.plot(np.arange(0, epochs), logreg_accs[t], color = colors[t])
+			plt.plot(np.arange(0, epochs), logreg_accs["total"], color = "#FF0000", marker = "o")
+			averaged = np.mean(logreg_accs.values(), axis = 0)
+			plt.plot(np.arange(0, epochs), averaged, color = "#000000", marker = "o")
+			plt.legend(["Task {0}".format(t) for t in task_nums]+["Total", "Average"], loc = "lower right")
+			plt.axis([0, epochs-1, 0, 1])
+			plt.xlabel("Epoch")
+			plt.ylabel("Accuracy")
+			plt.title("Model Accuracy")
+			plt.savefig("figures/trained on {0}, excluded {1}, then logreg.png".format(task_nums, excluded), bbox_inches = "tight")
+			plt.close()
 
 
 if __name__ == "__main__":
