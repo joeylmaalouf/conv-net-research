@@ -7,6 +7,28 @@ from theano.tensor.signal.downsample import max_pool_2d
 import numpy as np
 from load import mnist
 
+def reprocess(data):
+	""" Turns the 'values' into something that looks like neural network output
+	"""
+	newdata = np.zeros((len(data), 10))
+	for i in xrange(len(data)):
+		newdata[i,data[i]-1] = 1
+	return newdata
+
+def load_cifar_data():
+	f = open("../modern_net/CIFAR_Data/cifar-10-batches-py/data_batch_1",'rb')
+	data = cPickle.load(f)
+	trX = data["data"]
+	trY = reprocess(data["lables"])
+	f.close()
+
+	f = open("../modern_net/CIFAR_Data/cifar-10-batches-py/test_batch",'rb')
+	data = cPickle.load(f)
+	teX = data["data"]
+	teY = reprocess(data["lables"])
+	f.close()
+	return trX, trY, teX, teY
+
 
 class ConvolutionalNeuralNetwork(object):
 	def __init__(self):
@@ -120,3 +142,15 @@ class ConvolutionalNeuralNetwork(object):
 		f = open(filename, "w")
 		f.write(data)
 		f.close()
+
+	def char74k_example(self, verbose = False, save = False):
+		print "Loading data"
+		trX, trY, teX, teY = load_cifar_data()
+		print "Initializing the network."
+		self.initialize()
+		print "Creating model functions."
+		self.create_model_functions()
+		data = [trX, trY, teX, teY]
+		self.train_data(data, verbose, epochs = 40)
+		print "Saving Weights."
+		self.save_all_weights()
