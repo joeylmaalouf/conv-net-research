@@ -16,16 +16,16 @@ def reprocess(data):
 	return newdata
 
 def load_cifar_data():
-	f = open("../modern_net/CIFAR_Data/cifar-100-batches-py/train",'rb')
+	f = open("../modern_net/CIFAR_Data/cifar-100-python/train",'rb')
 	data = cPickle.load(f)
 	trX = data["data"]
-	trY = reprocess(data["labels"])
+	trY = reprocess(data["coarse_labels"])
 	f.close()
 
-	f = open("../modern_net/CIFAR_Data/cifar-100-batches-py/test",'rb')
+	f = open("../modern_net/CIFAR_Data/cifar-100-python/test",'rb')
 	data = cPickle.load(f)
 	teX = data["data"]
-	teY = reprocess(data["labels"])
+	teY = reprocess(data["coarse_labels"])
 	f.close()
 	return trX, trY, teX, teY
 
@@ -94,7 +94,7 @@ class ConvolutionalNeuralNetwork(object):
 		self.w2 = self.init_weights((64, 32, 3, 3))
 		self.w3 = self.init_weights((128, 64, 3, 3))
 		self.w4 = self.init_weights((128 * 3 * 3, 841*3))
-		self.wo = self.init_weights((841*3, 10))
+		self.wo = self.init_weights((841*3, 100))
 
 	def create_model_functions(self):
 		self.noise_l1, self.noise_l2, self.noise_l3, self.noise_l4, self.noise_py_x = self.model(self.X, self.w1, self.w2, self.w3, self.w4, self.wo, 0.2, 0.5)
