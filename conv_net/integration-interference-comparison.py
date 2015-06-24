@@ -4,6 +4,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 from sklearn.linear_model import LogisticRegression
+from sklearn.svm import LinearSVC
 import sys
 sys.path.append("..")
 from convnet import ConvolutionalNeuralNetwork
@@ -39,29 +40,7 @@ def get_task_accuracy(cnn, X, Y, task = None):
 			return 0.0
 
 
-def train_per_task(cnn, num_tasks, verbose, epochs, batch_size):
-	accuracies = {}
-	accuracies["total"] = []
-	for t in range(num_tasks):
-		accuracies[t] = []
-
-	for e in range(epochs):
-		for start, end in zip(range(0, len(cnn.trX), batch_size), range(batch_size, len(cnn.trX), batch_size)):
-			cnn.cost = cnn.train(cnn.trX[start:end], cnn.trY[start:end])
-		accuracy = get_task_accuracy(cnn, cnn.teX, cnn.teY)
-		accuracies["total"].append(accuracy)
-		if verbose:
-			print("Accuracy at epoch {0:02d}: {1:0.04f}".format(e, accuracy))
-		for t in range(num_tasks):
-			accuracies[t].append(get_task_accuracy(cnn, cnn.teX, cnn.teY, t))
-
-	accuracies["total"] = np.asarray(accuracies["total"])
-	for t in range(num_tasks):
-		accuracies[t] = np.asarray(accuracies[t])
-	return accuracies
-
-
-def train_new_task(cnn, trXT, trYT, teXT, teYT, num_tasks, verbose, epochs, batch_size):
+def train_cnn_for_accs(cnn, trXT, trYT, teXT, teYT, num_tasks, verbose, epochs, batch_size):
 	accuracies = {}
 	accuracies["total"] = []
 	for t in range(num_tasks):
@@ -77,9 +56,8 @@ def train_new_task(cnn, trXT, trYT, teXT, teYT, num_tasks, verbose, epochs, batc
 		for t in range(num_tasks):
 			accuracies[t].append(get_task_accuracy(cnn, teXT, teYT, t))
 
-	accuracies["total"] = np.asarray(accuracies["total"])
-	for t in range(num_tasks):
-		accuracies[t] = np.asarray(accuracies[t])
+	for task in accuracies:
+		accuracies[task] = np.asarray(accuracies[task])
 	return accuracies
 
 
@@ -96,7 +74,7 @@ def find_lr_task_accuracies(lr, num_tasks, data, classes):
 	return acc
 
 
-def generate_accuracy_graphs(num_tasks, exclude_start, exclude_end, save_figs, do_logreg_comparison, verbose = False, epochs = 20, batch_size = 100):
+def calculate_catastrophic_interference(num_tasks, exclude_start, exclude_end, top_layer = "cnn", save_figs = False, verbose = False, epochs = 20, batch_size = 100):
 	excluded = range(exclude_start, exclude_end)
 	task_nums = [i for i in range(num_tasks) if i not in excluded]
 	cnn = ConvolutionalNeuralNetwork()
@@ -115,8 +93,10 @@ def generate_accuracy_graphs(num_tasks, exclude_start, exclude_end, save_figs, d
 	colors = ["#00FF00", "#0000FF", "#00FFFF", "#FFFF00", "#FF00FF", "#000000", "#888888", "#FF8800", "#88FF00", "#FF0088"]
 
 	print("\nTraining on tasks {0}, excluding tasks {1}".format(task_nums, excluded))
-	accuracies = train_per_task(cnn, num_tasks, verbose, epochs, batch_size)
+	base_accuracies = train_cnn_for_accs(cnn, cnn.trX, cnn.trY, cnn.teX, cnn.teY, num_tasks, verbose, epochs, batch_size)
 
+#	base model, trained without excluded tasks
+#	(which are then added back in one of the three top-layer models)
 #	if save_figs:
 #		for t in task_nums:
 #			plt.plot(np.arange(0, epochs), accuracies[t], color = colors[t])
@@ -134,14 +114,24 @@ def generate_accuracy_graphs(num_tasks, exclude_start, exclude_end, save_figs, d
 	total_teX = np.concatenate((cnn.teX, teXE), axis = 0)
 	total_teY = np.concatenate((cnn.teY, teYE), axis = 0)
 
-	if not do_logreg_comparison:
-		print("\nRetraining on all tasks after excluding {0}".format(excluded))
-		accuracies = train_new_task(cnn, total_trX, total_trY, total_teX, total_teY, num_tasks, verbose, epochs, batch_size)
+	# == convolutional neural network ======================================== #
+	if top_layer == "cnn":
+		print("\nRetraining convolutional neural network on all tasks after excluding {0} from initial training".format(excluded))
 
+		# == fit model with data ============================================= #
+		cnn_accs = train_cnn_for_accs(cnn, total_trX, total_trY, total_teX, total_teY, num_tasks, verbose, epochs, batch_size)
+
+		# == show accuracy improvement from additional model layer =========== #
+		print("")
+		print("[ConvNet(exclusion)]              Testing data accuracy: {0:0.04f}".format(base_accuracies["total"][-1]))
+		print("[ConvNet(exclusion)+ConvNet(all)] Testing data accuracy: {0:0.04f}".format(cnn_accs["total"]))
+		print("[(CN(E)+CN(A))-CN(E)]             Accuracy improvement:  {0:0.04f}".format(cnn_accs["total"]-base_accuracies["total"][-1]))
+
+		# == generate and save accuracy figures ============================== #
 		if save_figs:
 			for t in range(num_tasks):
-				plt.plot(np.arange(0, epochs), accuracies[t], color = colors[t])
-			plt.plot(np.arange(0, epochs), accuracies["total"], color = "#FF0000", marker = "o")
+				plt.plot(np.arange(0, epochs), cnn_accs[t], color = colors[t])
+			plt.plot(np.arange(0, epochs), cnn_accs["total"], color = "#FF0000", marker = "o")
 			plt.legend(["Task {0}".format(t) for t in task_nums]+["Total"], loc = "lower right")
 			plt.axis([0, epochs-1, 0, 1])
 			plt.xlabel("Epoch")
@@ -150,7 +140,11 @@ def generate_accuracy_graphs(num_tasks, exclude_start, exclude_end, save_figs, d
 			plt.savefig("figures/trained on {0}, excluded {1}, then retrained on all.png".format(task_nums, excluded), bbox_inches = "tight")
 			plt.close()
 
-	else:
+	# == logistic regression model =========================================== #
+	elif top_layer == "lr":
+		print("\nTraining logistic regression model on all tasks after excluding {0} from convnet training".format(excluded))
+
+		# == fit model with data ============================================= #
 		num_chunks = 20
 		trA = np.concatenate([cnn.activate(total_trX[(len(total_trX)/num_chunks*i):(len(total_trX)/num_chunks*(i+1))]) for i in range(num_chunks)])
 		teA = cnn.activate(total_teX)
@@ -158,22 +152,21 @@ def generate_accuracy_graphs(num_tasks, exclude_start, exclude_end, save_figs, d
 		teC = np.argmax(total_teY, axis = 1)
 		lr = LogisticRegression()
 		lr.fit(trA, trC)
-
-		print("")
-		convnet_acc = accuracies["total"][-1]
-		print("[ConvNet]        Testing data accuracy: {0:0.04f}".format(convnet_acc))
 		logreg_accs = find_lr_task_accuracies(lr, num_tasks, teA, teC)
+
+		# == show accuracy improvement from additional model layer =========== #
+		print("")
+		print("[ConvNet]        Testing data accuracy: {0:0.04f}".format(base_accuracies["total"][-1]))
 		print("[ConvNet+LogReg] Testing data accuracy: {0:0.04f}".format(logreg_accs["total"]))
-		diff = logreg_accs["total"] - convnet_acc
-		print("[(CN+LR)-CN]     Accuracy improvement:  {0:0.04f}".format(diff))
+		print("[(CN+LR)-CN]     Accuracy improvement:  {0:0.04f}".format(logreg_accs["total"]-base_accuracies["total"][-1]))
 
 		if verbose:
 			print("\nLogistic regression model accuracies after exclusion:")
 			for key, value in logreg_accs.items():
 				print("Task: {0}, accuracy: {1:0.04f}".format(key, value))
-
 		print("")
 
+		# == generate and save accuracy figures ============================== #
 		if save_figs:
 			plotX = ["Task {0}".format(t) for t in range(num_tasks)]+["Total", "Average"]
 			plotY = [logreg_accs[t] for t in range(num_tasks)]+[logreg_accs["total"], np.mean(logreg_accs.values())]
@@ -183,8 +176,40 @@ def generate_accuracy_graphs(num_tasks, exclude_start, exclude_end, save_figs, d
 			plt.savefig("figures/trained on {0}, excluded {1}, then logreg.png".format(task_nums, excluded), bbox_inches = "tight")
 			plt.close()
 
+	# == efficient lifelong learning algorithm =============================== #
+	elif top_layer == "ella":
+		print("\nTraining efficient lifelong learning algorithm on all tasks after excluding {0} from convnet training".format(excluded))
+
+		# == fit model with data ============================================= #
+		pass
+
+		# == show accuracy improvement from additional model layer =========== #
+		pass
+
+		# == generate and save accuracy figures ============================== #
+		pass
+
+	# == support vector classifier =========================================== #
+	elif top_layer == "svc":
+		print("\nTraining linear support vector classifier on all tasks after excluding {0} from convnet training".format(excluded))
+
+		# == fit model with data ============================================= #
+		num_chunks = 20
+		trA = np.concatenate([cnn.activate(total_trX[(len(total_trX)/num_chunks*i):(len(total_trX)/num_chunks*(i+1))]) for i in range(num_chunks)])
+		teA = cnn.activate(total_teX)
+		trC = np.argmax(total_trY, axis = 1)
+		teC = np.argmax(total_teY, axis = 1)
+		svc = LinearSVC()
+		svc.fit(trA, trC)
+
+		# == show accuracy improvement from additional model layer =========== #
+		pass
+
+		# == generate and save accuracy figures ============================== #
+		pass
+
 
 if __name__ == "__main__":
 	n_t = 10
 	for i in range(1, n_t):
-		generate_accuracy_graphs(num_tasks = n_t, exclude_start = 0, exclude_end = i, save_figs = True, do_logreg_comparison = True, )
+		calculate_catastrophic_interference(num_tasks = n_t, exclude_start = 0, exclude_end = i, top_layer = "svc", epochs = 10)
