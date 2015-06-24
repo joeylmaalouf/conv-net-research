@@ -1,17 +1,15 @@
-# examine tradeoff of initializing convnet with fewer tasks and having logreg learn more (vary number of excluded tasks)
 # make comparison chart for different models (convnet predictions, convnet representations into logreg/ella, etc.)
 # ^ done for cnn and cnn->lr, try with cnn->ella and cnn->svm
 
 import matplotlib.pyplot as plt
 import numpy as np
-import random
 from sklearn.linear_model import LogisticRegression
 import sys
 sys.path.append("..")
 from convnet import ConvolutionalNeuralNetwork
 
 
-def segregate_dataset(excluded, data_set, data_labels):
+def split_dataset(excluded, data_set, data_labels):
 	matching_indices = []
 	nonmatching_indices = []
 	for i in range(len(data_set)):
@@ -109,8 +107,8 @@ def generate_accuracy_graphs(num_tasks, exclude_start, exclude_end, save_figs, d
 	cnn.teX = cnn.teX[:int(len(cnn.teX)*.1)]
 	cnn.teY = cnn.teY[:int(len(cnn.teY)*.1)]
 
-	cnn.trX, cnn.trY, trXE, trYE = segregate_dataset(excluded, cnn.trX, cnn.trY)
-	cnn.teX, cnn.teY, teXE, teYE = segregate_dataset(excluded, cnn.teX, cnn.teY)
+	cnn.trX, cnn.trY, trXE, trYE = split_dataset(excluded, cnn.trX, cnn.trY)
+	cnn.teX, cnn.teY, teXE, teYE = split_dataset(excluded, cnn.teX, cnn.teY)
 
 	cnn.create_model_functions()
 
@@ -169,9 +167,11 @@ def generate_accuracy_graphs(num_tasks, exclude_start, exclude_end, save_figs, d
 		diff = logreg_accs["total"] - convnet_acc
 		print("[(CN+LR)-CN]     Accuracy improvement:  {0:0.04f}".format(diff))
 
-#		print("\nLogistic regression model accuracies after exclusion:")
-#		for key, value in logreg_accs.items():
-#			print("Task: {0}, accuracy: {1:0.04f}".format(key, value))
+		if verbose:
+			print("\nLogistic regression model accuracies after exclusion:")
+			for key, value in logreg_accs.items():
+				print("Task: {0}, accuracy: {1:0.04f}".format(key, value))
+
 		print("")
 
 		if save_figs:
@@ -186,7 +186,5 @@ def generate_accuracy_graphs(num_tasks, exclude_start, exclude_end, save_figs, d
 
 if __name__ == "__main__":
 	n_t = 10
-#	for t in range(n_t):
-#		generate_accuracy_graphs(num_tasks = n_t, exclude_start = t, exclude_end = t+1, save_figs = True, do_logreg_comparison = False, verbose = True)
 	for i in range(1, n_t):
-		generate_accuracy_graphs(num_tasks = n_t, exclude_start = 0, exclude_end = i, save_figs = True, do_logreg_comparison = True)
+		generate_accuracy_graphs(num_tasks = n_t, exclude_start = 0, exclude_end = i, save_figs = True, do_logreg_comparison = True, )
