@@ -175,15 +175,10 @@ def generate_accuracy_graphs(num_tasks, exclude_start, exclude_end, save_figs, d
 		print("")
 
 		if save_figs:
-			for t in range(num_tasks):
-				plt.plot(np.arange(0, epochs), logreg_accs[t], color = colors[t])
-			plt.plot(np.arange(0, epochs), logreg_accs["total"], color = "#FF0000", marker = "o")
-			averaged = np.mean(logreg_accs.values(), axis = 0)
-			plt.plot(np.arange(0, epochs), averaged, color = "#000000", marker = "o")
-			plt.legend(["Task {0}".format(t) for t in task_nums]+["Total", "Average"], loc = "lower right")
-			plt.axis([0, epochs-1, 0, 1])
-			plt.xlabel("Epoch")
-			plt.ylabel("Accuracy")
+			plotX = ["Task {0}".format(t) for t in range(num_tasks)]+["Total", "Average"]
+			plotY = [logreg_accs[t] for t in range(num_tasks)]+[logreg_accs["total"], np.mean(logreg_accs.values())]
+			plt.bar(range(len(plotX)), plotY)
+			plt.xticks(range(len(plotX)), plotX)
 			plt.title("Model Accuracy")
 			plt.savefig("figures/trained on {0}, excluded {1}, then logreg.png".format(task_nums, excluded), bbox_inches = "tight")
 			plt.close()
