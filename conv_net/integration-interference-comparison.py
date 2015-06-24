@@ -37,7 +37,28 @@ def get_task_accuracy(cnn, X, Y, task = None):
 			return 0.0
 
 
-def train_cnn_for_accs(cnn, trXT, trYT, teXT, teYT, num_tasks, verbose, epochs, batch_size):
+def train_per_task(cnn, num_tasks, verbose, epochs, batch_size):
+	accuracies = {}
+	accuracies["total"] = []
+	for t in range(num_tasks):
+		accuracies[t] = []
+
+	for e in range(epochs):
+		for start, end in zip(range(0, len(cnn.trX), batch_size), range(batch_size, len(cnn.trX), batch_size)):
+			cnn.cost = cnn.train(cnn.trX[start:end], cnn.trY[start:end])
+		accuracy = get_task_accuracy(cnn, cnn.teX, cnn.teY)
+		accuracies["total"].append(accuracy)
+		if verbose:
+			print("Accuracy at epoch {0:02d}: {1:0.04f}".format(e, accuracy))
+		for t in range(num_tasks):
+			accuracies[t].append(get_task_accuracy(cnn, cnn.teX, cnn.teY, t))
+
+	for task in accuracies:
+		accuracies[task] = np.asarray(accuracies[task])
+	return accuracies
+
+
+def train_new_tasks(cnn, trXT, trYT, teXT, teYT, num_tasks, verbose, epochs, batch_size):
 	accuracies = {}
 	accuracies["total"] = []
 	for t in range(num_tasks):
@@ -90,7 +111,7 @@ def calculate_catastrophic_interference(num_tasks, exclude_start, exclude_end, t
 	colors = ["#00FF00", "#0000FF", "#00FFFF", "#FFFF00", "#FF00FF", "#000000", "#888888", "#FF8800", "#88FF00", "#FF0088"]
 
 	print("\nTraining on tasks {0}, excluding tasks {1}".format(task_nums, excluded))
-	base_accuracies = train_cnn_for_accs(cnn, cnn.trX, cnn.trY, cnn.teX, cnn.teY, num_tasks, verbose, epochs, batch_size)
+	base_accuracies = train_per_task(cnn, num_tasks, verbose, epochs, batch_size)
 
 #	base model, trained without excluded tasks
 #	(which are then added back in one of the three top-layer models)
@@ -118,20 +139,20 @@ def calculate_catastrophic_interference(num_tasks, exclude_start, exclude_end, t
 	teC = np.argmax(total_teY, axis = 1)
 
 
-	# == convolutional neural network ======================================== #
+	# convolutional neural network
 	if "cnn" in top_layer:
 		print("\nRetraining convolutional neural network on all tasks after excluding {0} from initial training".format(excluded))
 
-		# == fit model with data ============================================= #
-		cnn_accs = train_cnn_for_accs(cnn, total_trX, total_trY, total_teX, total_teY, num_tasks, verbose, epochs, batch_size)
+		# fit model with data
+		cnn_accs = train_new_tasks(cnn, total_trX, total_trY, total_teX, total_teY, num_tasks, verbose, epochs, batch_size)
 
-		# == show accuracy improvement from additional model layer =========== #
+		# show accuracy improvement from additional model layer
 		print("")
 		print("[ConvNet(exclusion)]              Testing data accuracy: {0:0.04f}".format(base_accuracies["total"][-1]))
 		print("[ConvNet(exclusion)+ConvNet(all)] Testing data accuracy: {0:0.04f}".format(cnn_accs["total"][-1]))
 		print("[(CN(E)+CN(A))-CN(E)]             Accuracy improvement:  {0:0.04f}".format(cnn_accs["total"][-1]-base_accuracies["total"][-1]))
 
-		# == generate and save accuracy figures ============================== #
+		# generate and save accuracy figures
 		if save_figs:
 			for t in range(num_tasks):
 				plt.plot(np.arange(0, epochs), cnn_accs[t], color = colors[t])
@@ -144,16 +165,16 @@ def calculate_catastrophic_interference(num_tasks, exclude_start, exclude_end, t
 			plt.savefig("figures/trained on {0}, excluded {1}, then retrained on all.png".format(task_nums, excluded), bbox_inches = "tight")
 			plt.close()
 
-	# == logistic regression model =========================================== #
+	# logistic regression model
 	if "lr" in top_layer:
 		print("\nTraining logistic regression model on all tasks after excluding {0} from convnet training".format(excluded))
 
-		# == fit model with data ============================================= #
+		# fit model with data
 		lr = LogisticRegression()
 		lr.fit(trA, trC)
 		logreg_accs = find_lr_task_accuracies(lr, num_tasks, teA, teC)
 
-		# == show accuracy improvement from additional model layer =========== #
+		# show accuracy improvement from additional model layer
 		print("")
 		print("[ConvNet]        Testing data accuracy: {0:0.04f}".format(base_accuracies["total"][-1]))
 		print("[ConvNet+LogReg] Testing data accuracy: {0:0.04f}".format(logreg_accs["total"]))
@@ -165,7 +186,7 @@ def calculate_catastrophic_interference(num_tasks, exclude_start, exclude_end, t
 				print("Task: {0}, accuracy: {1:0.04f}".format(key, value))
 		print("")
 
-		# == generate and save accuracy figures ============================== #
+		# generate and save accuracy figures
 		if save_figs:
 			plotX = ["Task {0}".format(t) for t in range(num_tasks)]+["Total", "Average"]
 			plotY = [logreg_accs[t] for t in range(num_tasks)]+[logreg_accs["total"], np.mean(logreg_accs.values())]
@@ -175,31 +196,31 @@ def calculate_catastrophic_interference(num_tasks, exclude_start, exclude_end, t
 			plt.savefig("figures/trained on {0}, excluded {1}, then logreg.png".format(task_nums, excluded), bbox_inches = "tight")
 			plt.close()
 
-	# == efficient lifelong learning algorithm =============================== #
+	# efficient lifelong learning algorithm
 	if "ella" in top_layer:
 		print("\nTraining efficient lifelong learning algorithm on all tasks after excluding {0} from convnet training".format(excluded))
 
-		# == fit model with data ============================================= #
+		# fit model with data
 		pass
 
-		# == show accuracy improvement from additional model layer =========== #
+		# show accuracy improvement from additional model layer
 		pass
 
-		# == generate and save accuracy figures ============================== #
+		# generate and save accuracy figures
 		pass
 
-	# == support vector classifier =========================================== #
+	# support vector classifier
 	if "svc" in top_layer:
 		print("\nTraining linear support vector classifier on all tasks after excluding {0} from convnet training".format(excluded))
 
-		# == fit model with data ============================================= #
+		# fit model with data
 		svc = LinearSVC()
 		svc.fit(trA, trC)
 
-		# == show accuracy improvement from additional model layer =========== #
+		# show accuracy improvement from additional model layer
 		pass
 
-		# == generate and save accuracy figures ============================== #
+		# generate and save accuracy figures
 		pass
 
 
