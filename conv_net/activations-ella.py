@@ -6,7 +6,7 @@ import ELLA
 
 
 def binarize(classifications, task_id):
-	return np.asarray([int(elem == task_id) for elem in classifications])
+	return np.asarray(np.asarray(classifications) == task_id, dtype = np.uint8)
 
 
 if __name__ == "__main__":
