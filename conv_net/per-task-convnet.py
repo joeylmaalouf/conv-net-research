@@ -35,6 +35,8 @@ later present random sampling from mnist that includes 0-9
 """
 
 import numpy as np
+import sys
+
 from convnet import ConvolutionalNeuralNetwork
 from load import mnist
 
@@ -42,11 +44,16 @@ from load import mnist
 class MultiNetModel(object):
 	def __init__(self):
 		super(MultiNetModel, self).__init__()
-		self.nets = []
+		self.nets = {}
+		self.tasks = np.asarray([])
+		self.newest = None
 
-	def new_net(self, previous = None, epochs = 10, ):
+	def binarize(self, classes, task_id):
+		return (np.asarray(classes) == task_id).astype(np.uint8)
+
+	def new_net(self, trX, trY, previous = None, epochs = 10, batch_size = 100):
 		cnn = ConvolutionalNeuralNetwork()
-		if weights == None:
+		if previous == None:
 			cnn.w1 = cnn.init_weights((32, 1, 3, 3))
 			cnn.w2 = cnn.init_weights((64, 32, 3, 3))
 			cnn.w3 = cnn.init_weights((128, 64, 3, 3))
@@ -55,13 +62,24 @@ class MultiNetModel(object):
 		else:
 			cnn.w1, cnn.w2, cnn.w3, cnn.w4, cnn.wo = previous.w1, previous.w2, previous.w3, previous.w4, previous.wo
 		cnn.create_model_functions()
-		# cnn.train stuff blah blah epochs blah batch training
-		# ...
+		for _ in range(epochs):
+			for start, end in zip(range(0, len(trX), batch_size), range(batch_size, len(trX), batch_size)):
+				cnn.cost = cnn.train(trX[start:end], trY[start:end])
 		return cnn
 
 	def train(self, trX, trY):
-		tasks = np.unique(trY)
-		# ...
+		new_tasks = np.setdiff1d(np.unique(trY), self.tasks)
+		for task in new_tasks:
+			print("Training new task {0}".format(task))
+			prev = None if len(self.nets) == 0 else self.nets[self.newest]
+			trB = self.binarize(trY, task)[:, np.newaxis]
+			trB = np.concatenate((np.logical_not(trB).astype(np.uint8), trB), axis = 1)
+			cnn = self.new_net(trX, trB, prev)
+			self.tasks = np.append(self.tasks, task)
+			self.newest = task
+			self.nets[self.newest] = cnn
+		print self.tasks
+		print self.nets
 		return self
 
 	def predict(self, teX):
@@ -70,9 +88,6 @@ class MultiNetModel(object):
 
 	def evaluate(self, teX, teY):
 		# ...
-		# TO JAMES: PLEASE MAKE THIS METHOD EVALUATE THE ACCURACY OF THE MODEL,
-		# ASSUMING THAT self.predict RETURNS SOMETHING OF THE SAME SHAPE AS teY
-		# HINT: np.mean
 		pass
 
 
@@ -96,7 +111,7 @@ if __name__ == "__main__":
 
 	# initialize, train, and evaluate multi-net model on classes 0-7
 	mnm = MultiNetModel().train(trX07, trY07)
-	print(mnm.evaluate(teX07, teY07))
+	#print(mnm.evaluate(teX07, teY07))
 	# train and evaluate model on classes 0-8
 	# mnm.train(trX08, trY08)				# get random sampling, not all training data 0-8?
 	# print(mnm.evaluate(teX08, teY08))		# get random sampling, not all testing  data 0-8?
