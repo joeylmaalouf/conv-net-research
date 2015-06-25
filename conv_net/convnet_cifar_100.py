@@ -90,10 +90,10 @@ class ConvolutionalNeuralNetwork(object):
 		return l1, l2, l3, l4, pyx
 
 	def initialize(self):
-		self.w1 = self.init_weights((32, 3, 3, 3))
-		self.w2 = self.init_weights((64, 32, 3, 3))
-		self.w3 = self.init_weights((128, 64, 3, 3))
-		self.w4 = self.init_weights((128 * 3 * 3, 841*3))
+		self.w1 = self.init_weights((320, 3, 3, 3))
+		self.w2 = self.init_weights((640, 320, 3, 3))
+		self.w3 = self.init_weights((1280, 640, 3, 3))
+		self.w4 = self.init_weights((1280 * 3 * 3, 841*3))
 		self.wo = self.init_weights((841*3, 100))
 
 	def create_model_functions(self):
