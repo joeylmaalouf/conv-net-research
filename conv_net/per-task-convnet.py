@@ -93,12 +93,12 @@ class MultiNetModel(object):
 			print p.shape
 			print p[:, 1].shape
 			probabilities.append(p[:, 1])
+		print np.asarray(probabilities)
 		print np.asarray(probabilities).shape
 		return np.asarray(classes)[np.argmax(np.asarray(probabilities), axis = 0)]
 
 	def evaluate(self, teX, teY):
-		# ...
-		pass
+		return np.mean(self.predict(teX) == teY)
 
 
 def remove_task(data_set, data_labels, task):
