@@ -5,6 +5,11 @@ from sklearn.svm import LinearSVC
 import sys
 sys.path.append("..")
 from convnet import ConvolutionalNeuralNetwork
+from ELLA import ELLA
+
+
+def binarize(classifications, task_id):
+	return np.asarray([int(elem == task_id) for elem in classifications])
 
 
 def split_dataset(excluded, data_set, data_labels):
@@ -98,10 +103,10 @@ def calculate_catastrophic_interference(num_tasks, exclude_start, exclude_end, t
 	cnn = ConvolutionalNeuralNetwork()
 	cnn.initialize_mnist()
 
-	cnn.trX = cnn.trX[:int(len(cnn.trX)*.1)]
-	cnn.trY = cnn.trY[:int(len(cnn.trY)*.1)]
-	cnn.teX = cnn.teX[:int(len(cnn.teX)*.1)]
-	cnn.teY = cnn.teY[:int(len(cnn.teY)*.1)]
+	cnn.trX = cnn.trX[:int(len(cnn.trX)*.2)]
+	cnn.trY = cnn.trY[:int(len(cnn.trY)*.2)]
+	cnn.teX = cnn.teX[:int(len(cnn.teX)*.2)]
+	cnn.teY = cnn.teY[:int(len(cnn.teY)*.2)]
 
 	cnn.trX, cnn.trY, trXE, trYE = split_dataset(excluded, cnn.trX, cnn.trY)
 	cnn.teX, cnn.teY, teXE, teYE = split_dataset(excluded, cnn.teX, cnn.teY)
@@ -201,10 +206,17 @@ def calculate_catastrophic_interference(num_tasks, exclude_start, exclude_end, t
 		print("\nTraining efficient lifelong learning algorithm on all tasks after excluding {0} from convnet training".format(excluded))
 
 		# fit model with data
-		pass
+		ella = ELLA(d = 625, k = 5, base_learner = LogisticRegression, base_learner_kwargs = {"tol": 10**-2}, mu = 10**-3)
+		for task in range(num_tasks):
+			ella.fit(trA, binarize(trC, task), task)
+		predictions = np.argmax(np.asarray([ella.predict_logprobs(teA, i) for i in range(ella.T)]), axis = 0)
+		ella_acc = np.mean(predictions == teC)
 
 		# show accuracy improvement from additional model layer
-		pass
+		print("")
+		print("[ConvNet]      Testing data accuracy: {0:0.04f}".format(base_accuracies["total"][-1]))
+		print("[ConvNet+ELLA] Testing data accuracy: {0:0.04f}".format(ella_acc))
+		print("[(CN+ELLA)-CN] Accuracy improvement:  {0:0.04f}".format(ella_acc-base_accuracies["total"][-1]))
 
 		# generate and save accuracy figures
 		pass
@@ -227,4 +239,4 @@ def calculate_catastrophic_interference(num_tasks, exclude_start, exclude_end, t
 if __name__ == "__main__":
 	n_t = 10
 	for i in range(1, n_t):
-		calculate_catastrophic_interference(num_tasks = n_t, exclude_start = 0, exclude_end = i, top_layer = "cnn, lr", epochs = 20)
+		calculate_catastrophic_interference(num_tasks = n_t, exclude_start = 0, exclude_end = i, top_layer = "cnn, lr, ella, svc", epochs = 15)
