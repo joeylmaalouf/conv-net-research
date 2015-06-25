@@ -84,8 +84,8 @@ def train_new_tasks(cnn, trXT, trYT, teXT, teYT, num_tasks, verbose, epochs, bat
 	return accuracies
 
 
-def find_lr_task_accuracies(lr, num_tasks, data, classes):
-	acc = {"total": np.mean(lr.predict(data) == classes)}
+def find_model_task_accuracies(model, num_tasks, data, classes):
+	acc = {"total": np.mean(model.predict(data) == classes)}
 	for t in range(num_tasks):
 		task_data = []
 		task_labels = []
@@ -93,7 +93,7 @@ def find_lr_task_accuracies(lr, num_tasks, data, classes):
 			if classes[i] == t:
 				task_data.append(data[i])
 				task_labels.append(classes[i])
-		acc[t] = np.mean(lr.predict(task_data) == task_labels)
+		acc[t] = np.mean(model.predict(task_data) == task_labels)
 	return acc
 
 
@@ -170,6 +170,27 @@ def calculate_catastrophic_interference(num_tasks, exclude_start, exclude_end, t
 			plt.savefig("figures/trained on {0}, excluded {1}, then retrained on all.png".format(task_nums, excluded), bbox_inches = "tight")
 			plt.close()
 
+	# efficient lifelong learning algorithm
+	if "ella" in top_layer:
+		print("\nTraining efficient lifelong learning algorithm on all tasks after excluding {0} from convnet training".format(excluded))
+
+		# fit model with data
+		ella = ELLA(d = 625, k = 5, base_learner = LogisticRegression, base_learner_kwargs = {"tol": 10**-2}, mu = 10**-3)
+		for task in range(num_tasks):
+			ella.fit(trA, binarize(trC, task), task)
+		predictions = np.argmax(np.asarray([ella.predict_logprobs(teA, i) for i in range(ella.T)]), axis = 0)
+		ella_acc = np.mean(predictions == teC)
+
+		# show accuracy improvement from additional model layer
+		print("")
+		print("[ConvNet]                         Testing data accuracy: {0:0.04f}".format(base_accuracies["total"][-1]))
+		print("[ConvNet+ELLA]                    Testing data accuracy: {0:0.04f}".format(ella_acc))
+		print("[(CN+ELLA)-CN]                    Accuracy improvement:  {0:0.04f}".format(ella_acc-base_accuracies["total"][-1]))
+
+		# generate and save accuracy figures
+		if save_figs:
+			pass # need to generate per-task or per-epoch accuracies to have a good visualization
+
 	# logistic regression model
 	if "lr" in top_layer:
 		print("\nTraining logistic regression model on all tasks after excluding {0} from convnet training".format(excluded))
@@ -177,16 +198,16 @@ def calculate_catastrophic_interference(num_tasks, exclude_start, exclude_end, t
 		# fit model with data
 		lr = LogisticRegression()
 		lr.fit(trA, trC)
-		logreg_accs = find_lr_task_accuracies(lr, num_tasks, teA, teC)
+		logreg_accs = find_model_task_accuracies(lr, num_tasks, teA, teC)
 
 		# show accuracy improvement from additional model layer
 		print("")
-		print("[ConvNet]        Testing data accuracy: {0:0.04f}".format(base_accuracies["total"][-1]))
-		print("[ConvNet+LogReg] Testing data accuracy: {0:0.04f}".format(logreg_accs["total"]))
-		print("[(CN+LR)-CN]     Accuracy improvement:  {0:0.04f}".format(logreg_accs["total"]-base_accuracies["total"][-1]))
+		print("[ConvNet]                         Testing data accuracy: {0:0.04f}".format(base_accuracies["total"][-1]))
+		print("[ConvNet+LogReg]                  Testing data accuracy: {0:0.04f}".format(logreg_accs["total"]))
+		print("[(CN+LR)-CN]                      Accuracy improvement:  {0:0.04f}".format(logreg_accs["total"]-base_accuracies["total"][-1]))
 
 		if verbose:
-			print("\nLogistic regression model accuracies after exclusion:")
+			print("\nLogistic regression model accuracies after exclusion training:")
 			for key, value in logreg_accs.items():
 				print("Task: {0}, accuracy: {1:0.04f}".format(key, value))
 		print("")
@@ -201,26 +222,6 @@ def calculate_catastrophic_interference(num_tasks, exclude_start, exclude_end, t
 			plt.savefig("figures/trained on {0}, excluded {1}, then logreg.png".format(task_nums, excluded), bbox_inches = "tight")
 			plt.close()
 
-	# efficient lifelong learning algorithm
-	if "ella" in top_layer:
-		print("\nTraining efficient lifelong learning algorithm on all tasks after excluding {0} from convnet training".format(excluded))
-
-		# fit model with data
-		ella = ELLA(d = 625, k = 5, base_learner = LogisticRegression, base_learner_kwargs = {"tol": 10**-2}, mu = 10**-3)
-		for task in range(num_tasks):
-			ella.fit(trA, binarize(trC, task), task)
-		predictions = np.argmax(np.asarray([ella.predict_logprobs(teA, i) for i in range(ella.T)]), axis = 0)
-		ella_acc = np.mean(predictions == teC)
-
-		# show accuracy improvement from additional model layer
-		print("")
-		print("[ConvNet]      Testing data accuracy: {0:0.04f}".format(base_accuracies["total"][-1]))
-		print("[ConvNet+ELLA] Testing data accuracy: {0:0.04f}".format(ella_acc))
-		print("[(CN+ELLA)-CN] Accuracy improvement:  {0:0.04f}".format(ella_acc-base_accuracies["total"][-1]))
-
-		# generate and save accuracy figures
-		pass
-
 	# support vector classifier
 	if "svc" in top_layer:
 		print("\nTraining linear support vector classifier on all tasks after excluding {0} from convnet training".format(excluded))
@@ -228,15 +229,32 @@ def calculate_catastrophic_interference(num_tasks, exclude_start, exclude_end, t
 		# fit model with data
 		svc = LinearSVC()
 		svc.fit(trA, trC)
+		svc_accs = find_model_task_accuracies(svc, num_tasks, teA, teC)
 
 		# show accuracy improvement from additional model layer
-		pass
+		print("")
+		print("[ConvNet]                         Testing data accuracy: {0:0.04f}".format(base_accuracies["total"][-1]))
+		print("[ConvNet+SVC]                     Testing data accuracy: {0:0.04f}".format(svc_accs["total"]))
+		print("[(CN+SVC)-CN]                     Accuracy improvement:  {0:0.04f}".format(svc_accs["total"]-base_accuracies["total"][-1]))
+
+		if verbose:
+			print("\nSupport vector classifier accuracies after exclusion training:")
+			for key, value in svc_accs.items():
+				print("Task: {0}, accuracy: {1:0.04f}".format(key, value))
+		print("")
 
 		# generate and save accuracy figures
-		pass
+		if save_figs:
+			plotX = ["Task {0}".format(t) for t in range(num_tasks)]+["Total", "Average"]
+			plotY = [svc_accs[t] for t in range(num_tasks)]+[svc_accs["total"], np.mean(svc_accs.values())]
+			plt.bar(range(len(plotX)), plotY)
+			plt.xticks(range(len(plotX)), plotX)
+			plt.title("Model Accuracy")
+			plt.savefig("figures/trained on {0}, excluded {1}, then svc.png".format(task_nums, excluded), bbox_inches = "tight")
+			plt.close()
 
 
 if __name__ == "__main__":
 	n_t = 10
 	for i in range(1, n_t):
-		calculate_catastrophic_interference(num_tasks = n_t, exclude_start = 0, exclude_end = i, top_layer = "cnn, lr, ella, svc", epochs = 15)
+		calculate_catastrophic_interference(num_tasks = n_t, exclude_start = 0, exclude_end = i, top_layer = "cnn, ella, lr, svc", epochs = 15)
