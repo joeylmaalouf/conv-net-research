@@ -31,3 +31,23 @@ train on mnist tasks 0-7 (remove all 8s and 9s)
 later present random sampling from mnist that includes 0-8
 later present random sampling from mnist that includes 0-9
 """
+
+import numpy as np
+from convnet import ConvolutionalNeuralNetwork
+from load import mnist
+
+
+class MultiNetModel(object):
+	def __init__(self):
+		super(MultiNetModel, self).__init__()
+
+	def train(self, trX, trY):
+		tasks = np.unique(trY)
+		return self
+
+
+if __name__ == "__main__":
+	trX, teX, trY, teY = mnist(onehot = False)
+	trX = trX.reshape(-1, 1, 28, 28)
+	teX = teX.reshape(-1, 1, 28, 28)
+	mnm = MultiNetModel().train(trX, trY)

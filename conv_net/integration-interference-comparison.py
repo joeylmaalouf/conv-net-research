@@ -206,7 +206,6 @@ def calculate_catastrophic_interference(num_tasks, exclude_start, exclude_end, t
 			print("\nLogistic regression model accuracies after exclusion training:")
 			for key, value in logreg_accs.items():
 				print("Task: {0}, accuracy: {1:0.04f}".format(key, value))
-		print("")
 
 		# generate and save accuracy figures
 		if save_figs:
@@ -236,7 +235,6 @@ def calculate_catastrophic_interference(num_tasks, exclude_start, exclude_end, t
 			print("\nSupport vector classifier accuracies after exclusion training:")
 			for key, value in svc_accs.items():
 				print("Task: {0}, accuracy: {1:0.04f}".format(key, value))
-		print("")
 
 		# generate and save accuracy figures
 		if save_figs:

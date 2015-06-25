@@ -69,10 +69,11 @@ class ConvolutionalNeuralNetwork(object):
 
 	def initialize_mnist(self):
 		self.trX, self.teX, self.trY, self.teY = mnist(onehot = True)
-
 		self.trX = self.trX.reshape(-1, 1, 28, 28)
 		self.teX = self.teX.reshape(-1, 1, 28, 28)
+		self.set_mnist_weights()
 
+	def set_mnist_weights(self):
 		self.w1 = self.init_weights((32, 1, 3, 3))
 		self.w2 = self.init_weights((64, 32, 3, 3))
 		self.w3 = self.init_weights((128, 64, 3, 3))
