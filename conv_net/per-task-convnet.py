@@ -70,7 +70,7 @@ class MultiNetModel(object):
 	def train(self, trX, trY):
 		new_tasks = np.setdiff1d(np.unique(trY), self.tasks)
 		for task in new_tasks:
-			print("Training new task {0}".format(task))
+			# print("Training new task {0}".format(task))
 			prev = None if len(self.nets) == 0 else self.nets[self.newest]
 			trB = self.binarize(trY, task)[:, np.newaxis]
 			trB = np.concatenate((np.logical_not(trB).astype(np.uint8), trB), axis = 1)
@@ -81,8 +81,20 @@ class MultiNetModel(object):
 		return self
 
 	def predict(self, teX):
-		# ...
-		pass
+		if len(self.nets) == 0:
+			return -1
+		classes = []
+		probabilities = []
+		for task, net in self.nets.items():
+			classes.append(task)
+			p = net.predict(teX)
+			print p
+			print p[:, 1]
+			print p.shape
+			print p[:, 1].shape
+			probabilities.append(p[:, 1])
+		print np.asarray(probabilities).shape
+		return np.asarray(classes)[np.argmax(np.asarray(probabilities), axis = 0)]
 
 	def evaluate(self, teX, teY):
 		# ...
@@ -109,7 +121,7 @@ if __name__ == "__main__":
 
 	# initialize, train, and evaluate multi-net model on classes 0-7
 	mnm = MultiNetModel().train(trX07, trY07)
-	#print(mnm.evaluate(teX07, teY07))
+	# print(mnm.evaluate(teX07, teY07))
 	# train and evaluate model on classes 0-8
 	# mnm.train(trX08, trY08)				# get random sampling, not all training data 0-8?
 	# print(mnm.evaluate(teX08, teY08))		# get random sampling, not all testing  data 0-8?
