@@ -45,7 +45,7 @@ class MultiNetModel(object):
 	def __init__(self):
 		super(MultiNetModel, self).__init__()
 		self.nets = {}
-		self.tasks = np.asarray([])
+		self.tasks = np.asarray([], dtype = np.unit8)
 		self.newest = None
 
 	def binarize(self, classes, task_id):
@@ -78,8 +78,6 @@ class MultiNetModel(object):
 			self.tasks = np.append(self.tasks, task)
 			self.newest = task
 			self.nets[self.newest] = cnn
-		print self.tasks
-		print self.nets
 		return self
 
 	def predict(self, teX):
