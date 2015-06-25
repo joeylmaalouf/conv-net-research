@@ -143,7 +143,6 @@ def calculate_catastrophic_interference(num_tasks, exclude_start, exclude_end, t
 	trC = np.argmax(total_trY, axis = 1)
 	teC = np.argmax(total_teY, axis = 1)
 
-
 	# convolutional neural network
 	if "cnn" in top_layer:
 		print("\nRetraining convolutional neural network on all tasks after excluding {0} from initial training".format(excluded))
@@ -152,7 +151,6 @@ def calculate_catastrophic_interference(num_tasks, exclude_start, exclude_end, t
 		cnn_accs = train_new_tasks(cnn, total_trX, total_trY, total_teX, total_teY, num_tasks, verbose, epochs, batch_size)
 
 		# show accuracy improvement from additional model layer
-		print("")
 		print("[ConvNet(exclusion)]              Testing data accuracy: {0:0.04f}".format(base_accuracies["total"][-1]))
 		print("[ConvNet(exclusion)+ConvNet(all)] Testing data accuracy: {0:0.04f}".format(cnn_accs["total"][-1]))
 		print("[(CN(E)+CN(A))-CN(E)]             Accuracy improvement:  {0:0.04f}".format(cnn_accs["total"][-1]-base_accuracies["total"][-1]))
@@ -182,7 +180,6 @@ def calculate_catastrophic_interference(num_tasks, exclude_start, exclude_end, t
 		ella_acc = np.mean(predictions == teC)
 
 		# show accuracy improvement from additional model layer
-		print("")
 		print("[ConvNet]                         Testing data accuracy: {0:0.04f}".format(base_accuracies["total"][-1]))
 		print("[ConvNet+ELLA]                    Testing data accuracy: {0:0.04f}".format(ella_acc))
 		print("[(CN+ELLA)-CN]                    Accuracy improvement:  {0:0.04f}".format(ella_acc-base_accuracies["total"][-1]))
@@ -201,7 +198,6 @@ def calculate_catastrophic_interference(num_tasks, exclude_start, exclude_end, t
 		logreg_accs = find_model_task_accuracies(lr, num_tasks, teA, teC)
 
 		# show accuracy improvement from additional model layer
-		print("")
 		print("[ConvNet]                         Testing data accuracy: {0:0.04f}".format(base_accuracies["total"][-1]))
 		print("[ConvNet+LogReg]                  Testing data accuracy: {0:0.04f}".format(logreg_accs["total"]))
 		print("[(CN+LR)-CN]                      Accuracy improvement:  {0:0.04f}".format(logreg_accs["total"]-base_accuracies["total"][-1]))
@@ -232,7 +228,6 @@ def calculate_catastrophic_interference(num_tasks, exclude_start, exclude_end, t
 		svc_accs = find_model_task_accuracies(svc, num_tasks, teA, teC)
 
 		# show accuracy improvement from additional model layer
-		print("")
 		print("[ConvNet]                         Testing data accuracy: {0:0.04f}".format(base_accuracies["total"][-1]))
 		print("[ConvNet+SVC]                     Testing data accuracy: {0:0.04f}".format(svc_accs["total"]))
 		print("[(CN+SVC)-CN]                     Accuracy improvement:  {0:0.04f}".format(svc_accs["total"]-base_accuracies["total"][-1]))
@@ -252,6 +247,8 @@ def calculate_catastrophic_interference(num_tasks, exclude_start, exclude_end, t
 			plt.title("Model Accuracy")
 			plt.savefig("figures/trained on {0}, excluded {1}, then svc.png".format(task_nums, excluded), bbox_inches = "tight")
 			plt.close()
+
+	print("")
 
 
 if __name__ == "__main__":
