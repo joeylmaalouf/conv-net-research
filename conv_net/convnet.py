@@ -71,14 +71,15 @@ class ConvolutionalNeuralNetwork(object):
 		self.trX, self.teX, self.trY, self.teY = mnist(onehot = True)
 		self.trX = self.trX.reshape(-1, 1, 28, 28)
 		self.teX = self.teX.reshape(-1, 1, 28, 28)
-		self.set_mnist_weights()
+		self.set_weights("mnist")
 
-	def set_mnist_weights(self):
-		self.w1 = self.init_weights((32, 1, 3, 3))
-		self.w2 = self.init_weights((64, 32, 3, 3))
-		self.w3 = self.init_weights((128, 64, 3, 3))
-		self.w4 = self.init_weights((128 * 3 * 3, 625))
-		self.wo = self.init_weights((625, 10))
+	def set_weights(self, dataset = "mnist"):
+		if dataset.lower() == "mnist":
+			self.w1 = self.init_weights((32, 1, 3, 3))
+			self.w2 = self.init_weights((64, 32, 3, 3))
+			self.w3 = self.init_weights((128, 64, 3, 3))
+			self.w4 = self.init_weights((128 * 3 * 3, 625))
+			self.wo = self.init_weights((625, 10))
 
 	def create_model_functions(self):
 		self.noise_l1, self.noise_l2, self.noise_l3, self.noise_l4, self.noise_py_x = self.model(self.X, self.w1, self.w2, self.w3, self.w4, self.wo, 0.2, 0.5)
