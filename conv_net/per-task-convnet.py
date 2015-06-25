@@ -44,19 +44,39 @@ class MultiNetModel(object):
 		super(MultiNetModel, self).__init__()
 		self.nets = []
 
+	def new_net(self, previous = None, epochs = 10, ):
+		cnn = ConvolutionalNeuralNetwork()
+		if weights == None:
+			cnn.w1 = cnn.init_weights((32, 1, 3, 3))
+			cnn.w2 = cnn.init_weights((64, 32, 3, 3))
+			cnn.w3 = cnn.init_weights((128, 64, 3, 3))
+			cnn.w4 = cnn.init_weights((128*3*3, 625))
+			cnn.wo = cnn.init_weights((625, 2))
+		else:
+			cnn.w1, cnn.w2, cnn.w3, cnn.w4, cnn.wo = previous.w1, previous.w2, previous.w3, previous.w4, previous.wo
+		cnn.create_model_functions()
+		# cnn.train stuff blah blah epochs blah batch training
+		# ...
+		return cnn
+
 	def train(self, trX, trY):
 		tasks = np.unique(trY)
 		# ...
 		return self
 
-	def new_net(self):
-		cnn = ConvolutionalNeuralNetwork()
-		cnn.set_weights("mnist")
+	def predict(self, teX):
 		# ...
-		return cnn
+		pass
+
+	def evaluate(self, teX, teY):
+		# ...
+		# TO JAMES: PLEASE MAKE THIS METHOD EVALUATE THE ACCURACY OF THE MODEL,
+		# ASSUMING THAT self.predict RETURNS SOMETHING OF THE SAME SHAPE AS teY
+		# HINT: np.mean
+		pass
 
 
-def remove_task(task, data_set, data_labels):
+def remove_task(data_set, data_labels, task):
 	nonmatching = np.nonzero(data_labels != task)
 	matching = np.nonzero(data_labels == task)
 	return data_set[nonmatching], data_labels[nonmatching], data_set[matching], data_labels[matching]
@@ -64,16 +84,22 @@ def remove_task(task, data_set, data_labels):
 
 if __name__ == "__main__":
 	# load data
-	trX, teX, trY, teY = mnist(onehot = False)
+	trX09, teX09, trY09, teY09 = mnist(onehot = False)
 	# prep training data
-	trX = trX.reshape(-1, 1, 28, 28)
-	trX, trY, trX8, trY8 = remove_task(8, trX, trY)
-	trX, trY, trX9, trY9 = remove_task(9, trX, trY)
+	trX09 = trX09.reshape(-1, 1, 28, 28)
+	trX08, trY08, trX_9, trY_9 = remove_task(trX09, trY09, 9)
+	trX07, trY07, trX_8, trY_8 = remove_task(trX08, trY08, 8)
 	# prep testing data
-	teX = teX.reshape(-1, 1, 28, 28)
-	teX, teY, teX8, teY8 = remove_task(8, teX, teY)
-	teX, teY, teX9, teY9 = remove_task(9, teX, teY)
-	# initialize and train multi-net model
-	mnm = MultiNetModel().train(trX, trY)
-	# mnm.train(trX8, trY8)
-	# mnm.train(trX9, trY9)
+	teX09 = teX09.reshape(-1, 1, 28, 28)
+	teX08, teY08, teX_9, teY_9 = remove_task(teX09, teY09, 9)
+	teX07, teY07, teX_8, teY_8 = remove_task(teX08, teY08, 8)
+
+	# initialize, train, and evaluate multi-net model on classes 0-7
+	mnm = MultiNetModel().train(trX07, trY07)
+	print(mnm.evaluate(teX07, teY07))
+	# train and evaluate model on classes 0-8
+	# mnm.train(trX08, trY08)				# get random sampling, not all training data 0-8?
+	# print(mnm.evaluate(teX08, teY08))		# get random sampling, not all testing  data 0-8?
+	# train and evaluate model on classes 0-9
+	# mnm.train(trX09, trY09)				# get random sampling, not all training data 0-9?
+	# print(mnm.evaluate(teX09, teY09))		# get random sampling, not all testing  data 0-9?
