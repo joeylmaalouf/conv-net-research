@@ -92,6 +92,7 @@ class ConvolutionalNeuralNetwork(object):
 
 		self.train = theano.function(inputs = [self.X, self.Y], outputs = self.cost, updates = self.updates, allow_input_downcast = True)
 		self.predict = theano.function(inputs = [self.X], outputs = self.y_x, allow_input_downcast = True)
+		self.predict_probs = theano.function(inputs = [self.X], outputs = self.py_x, allow_input_downcast = True)
 		self.activate = theano.function(inputs = [self.X], outputs = self.l4, allow_input_downcast = True)
 
 	def train_mnist(self, verbose, epochs = 10, batch_size = 128):

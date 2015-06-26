@@ -63,7 +63,7 @@ class MultiNetModel(object):
 			cnn.w1, cnn.w2, cnn.w3, cnn.w4, cnn.wo = previous.w1, previous.w2, previous.w3, previous.w4, previous.wo
 		cnn.create_model_functions()
 		for _ in range(epochs):
-			for start, end in zip(range(0, len(trX), batch_size), range(batch_size, len(trX), batch_size)):
+			for start, end in zip(range(0, len(trX), batch_size), range(batch_size, len(trX)+batch_size, batch_size)):
 				cnn.cost = cnn.train(trX[start:end], trY[start:end])
 		return cnn
 
@@ -87,18 +87,14 @@ class MultiNetModel(object):
 		probabilities = []
 		for task, net in self.nets.items():
 			classes.append(task)
-			p = net.predict(teX)
-			print p
-			print p[:, 1]
-			print p.shape
-			print p[:, 1].shape
-			probabilities.append(p[:, 1])
-		print np.asarray(probabilities)
-		print np.asarray(probabilities).shape
-		return np.asarray(classes)[np.argmax(np.asarray(probabilities), axis = 0)]
+			probabilities.append(net.predict_probs(teX)[:, 0]) # TODO: figure out why these probabilities are the same for different nets. this seems to be the only bug left. maybe the new nets aren't updating the weights from the old?
+		return np.asarray(classes[::-1])[np.argmax(np.asarray(probabilities), axis = 0)]
 
-	def evaluate(self, teX, teY):
-		return np.mean(self.predict(teX) == teY)
+	def evaluate(self, teX, teY, batch_size = 100):
+		predictions = np.asarray([], dtype = np.uint8)
+		for start, end in zip(range(0, len(teX), batch_size), range(batch_size, len(teX)+batch_size, batch_size)):
+			predictions = np.append(predictions, self.predict(teX[start:end]))
+		return np.mean(predictions == teY)
 
 
 def remove_task(data_set, data_labels, task):
