@@ -61,6 +61,7 @@ class MultiNetModel(object):
 			cnn.wo = cnn.init_weights((625, 2))
 		else:
 			cnn.w1, cnn.w2, cnn.w3, cnn.w4, cnn.wo = previous.w1, previous.w2, previous.w3, previous.w4, previous.wo
+			print previous.w1 # remove
 		cnn.create_model_functions()
 		for _ in range(epochs):
 			for start, end in zip(range(0, len(trX), batch_size), range(batch_size, len(trX)+batch_size, batch_size)):
@@ -70,7 +71,7 @@ class MultiNetModel(object):
 	def train(self, trX, trY):
 		new_tasks = np.setdiff1d(np.unique(trY), np.asarray(self.tasks))
 		for task in new_tasks:
-			print("Training new task: {0}".format(task))
+			print("Training new net for task {0}".format(task))
 			prev = None if len(self.nets) == 0 else self.nets[self.newest]
 			trB = self.binarize(trY, task)[:, np.newaxis]
 			trB = np.concatenate((np.logical_not(trB).astype(np.uint8), trB), axis = 1)
@@ -87,7 +88,7 @@ class MultiNetModel(object):
 		probabilities = []
 		for task, net in self.nets.items():
 			classes.append(task)
-			probabilities.append(net.predict_probs(teX)[:, 0]) # TODO: figure out why these probabilities are the same for different nets. this seems to be the only bug left. maybe the new nets aren't updating the weights from the old?
+			probabilities.append(net.predict_probs(teX)[:, 0]) # TODO: figure out why these probabilities are the same for different nets. this seems to be the only bug left. maybe the new nets aren't updating the weights from the old? how can I visualize the weights?
 		return np.asarray(classes[::-1])[np.argmax(np.asarray(probabilities), axis = 0)]
 
 	def evaluate(self, teX, teY, batch_size = 100):
