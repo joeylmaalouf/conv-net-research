@@ -45,13 +45,13 @@ class MultiNetModel(object):
 	def __init__(self):
 		super(MultiNetModel, self).__init__()
 		self.nets = {}
-		self.tasks = np.asarray([], dtype = np.unit8)
+		self.tasks = []
 		self.newest = None
 
 	def binarize(self, classes, task_id):
 		return (np.asarray(classes) == task_id).astype(np.uint8)
 
-	def new_net(self, trX, trY, previous = None, epochs = 10, batch_size = 100):
+	def nnet(self, trX, trY, previous = None, epochs = 10, batch_size = 100):
 		cnn = ConvolutionalNeuralNetwork()
 		if previous == None:
 			cnn.w1 = cnn.init_weights((32, 1, 3, 3))
@@ -68,14 +68,14 @@ class MultiNetModel(object):
 		return cnn
 
 	def train(self, trX, trY):
-		new_tasks = np.setdiff1d(np.unique(trY), self.tasks)
+		new_tasks = np.setdiff1d(np.unique(trY), np.asarray(self.tasks))
 		for task in new_tasks:
-			# print("Training new task {0}".format(task))
+			print("Training new task: {0}".format(task))
 			prev = None if len(self.nets) == 0 else self.nets[self.newest]
 			trB = self.binarize(trY, task)[:, np.newaxis]
 			trB = np.concatenate((np.logical_not(trB).astype(np.uint8), trB), axis = 1)
-			cnn = self.new_net(trX, trB, prev)
-			self.tasks = np.append(self.tasks, task)
+			cnn = self.nnet(trX, trB, prev)
+			self.tasks.append(task)
 			self.newest = task
 			self.nets[self.newest] = cnn
 		return self
@@ -121,7 +121,7 @@ if __name__ == "__main__":
 
 	# initialize, train, and evaluate multi-net model on classes 0-7
 	mnm = MultiNetModel().train(trX07, trY07)
-	# print(mnm.evaluate(teX07, teY07))
+	print(mnm.evaluate(teX07, teY07))
 	# train and evaluate model on classes 0-8
 	# mnm.train(trX08, trY08)				# get random sampling, not all training data 0-8?
 	# print(mnm.evaluate(teX08, teY08))		# get random sampling, not all testing  data 0-8?
