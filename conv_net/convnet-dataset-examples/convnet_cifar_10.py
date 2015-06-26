@@ -6,6 +6,7 @@ from theano.tensor.nnet.conv import conv2d
 from theano.tensor.signal.downsample import max_pool_2d
 import numpy as np
 import cPickle
+from sklearn.linear_model import LogisticRegression
 
 def reprocess(data):
 	""" Turns the 'values' into something that looks like neural network output
@@ -16,13 +17,13 @@ def reprocess(data):
 	return newdata
 
 def load_cifar_data():
-	f = open("../modern_net/CIFAR_Data/cifar-10-batches-py/data_batch_1",'rb')
+	f = open("../../modern_net/CIFAR_Data/cifar-10-batches-py/data_batch_1",'rb')
 	data = cPickle.load(f)
 	trX = data["data"]
 	trY = reprocess(data["labels"])
 	f.close()
 
-	f = open("../modern_net/CIFAR_Data/cifar-10-batches-py/test_batch",'rb')
+	f = open("../../modern_net/CIFAR_Data/cifar-10-batches-py/test_batch",'rb')
 	data = cPickle.load(f)
 	teX = data["data"]
 	teY = reprocess(data["labels"])
@@ -138,7 +139,14 @@ class ConvolutionalNeuralNetwork(object):
 		f.write(data)
 		f.close()
 
-	def char74k_example(self, verbose = False, save = False):
+	def save_all_weights(self, filename):
+		self.save_data("CIFAR10kweights/W1.txt", self.w1, gpu = True)
+		self.save_data("CIFAR10kweights/W2.txt", self.w2, gpu = True)
+		self.save_data("CIFAR10kweights/W3.txt", self.w3, gpu = True)
+		self.save_data("CIFAR10kweights/W4.txt", self.w4, gpu = True)
+		self.save_data("CIFAR10kweights/Wo.txt", self.wo, gpu = True)
+
+	def cifar_example(self, verbose = False, save = False):
 		print "Loading data"
 		trX, trY, teX, teY = load_cifar_data()
 		print "Initializing the network."
@@ -147,12 +155,62 @@ class ConvolutionalNeuralNetwork(object):
 		self.create_model_functions()
 		data = [trX, trY, teX, teY]
 		self.train_data(data, verbose, epochs = 40)
-		#print "Saving Weights."
-		#self.save_all_weights()
+		if save:
+			print "Saving Weights."
+			self.save_all_weights()
+
+	def cifar_logreg_example(self, verbose = False, save = False):
+		###########################################
+		print "Starting neural network training."
+		print "Loading data"
+		trX, trY, teX, teY = load_cifar_data()
+		print "Initializing the network."
+		self.initialize()
+		print "Creating model functions."
+		self.create_model_functions()
+		data = [trX, trY, teX, teY]
+		self.train_data(data, verbose, epochs = 20)
+		print "Finished training Neural Network."
+		if save:
+			print "Saving Weights."
+			self.save_all_weights()
+		###########################################
+
+		###########################################
+		print("\nLoading Data...")
+		trA = self.activate(trX)
+		print("trA.shape: {0}".format(trA.shape))
+		teA = self.activate(data_chunk)
+		print("teA.shape: {0}".format(teA.shape))
+		trC = np.argmax(trY, axis = 1)
+		print("trC.shape: {0}".format(trC.shape))
+		teC = np.argmax(teY, axis = 1)
+		print("teC.shape: {0}".format(teC.shape))
+		print("Done.")
+
+		print("\nCreating Regression Model...")
+		lr = LogisticRegression()
+		lr.fit(trA, trC)
+		print("Done.")
+
+		print("\nAnalyzing Training Data...")
+		predictions = lr.predict(trA)
+		print("predictions.shape: {0}".format(predictions.shape))
+		accuracy = np.mean(predictions == trC)
+		print("accuracy: {0:0.04f}".format(accuracy))
+		print("Done.")
+
+		print("\nAnalyzing Testing Data...")
+		predictions = lr.predict(teA)
+		print("predictions.shape: {0}".format(predictions.shape))
+		accuracy = np.mean(predictions == teC)
+		print("accuracy: {0:0.04f}".format(accuracy))
+		print("Done.")
+		########################################
 
 if __name__ == "__main__":
 	print "Creating conv-net"
 	cnn = ConvolutionalNeuralNetwork()
 	print "Conv-net created. Running network."
-	cnn.char74k_example(verbose = True)
+	cnn.cifar_example(verbose = True)
 	print "Program Complete."
