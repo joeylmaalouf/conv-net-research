@@ -140,11 +140,11 @@ class ConvolutionalNeuralNetwork(object):
 		f.close()
 
 	def save_all_weights(self, filename):
-		self.save_data("CIFAR10kweights/W1.txt", self.w1, gpu = True)
-		self.save_data("CIFAR10kweights/W2.txt", self.w2, gpu = True)
-		self.save_data("CIFAR10kweights/W3.txt", self.w3, gpu = True)
-		self.save_data("CIFAR10kweights/W4.txt", self.w4, gpu = True)
-		self.save_data("CIFAR10kweights/Wo.txt", self.wo, gpu = True)
+		self.save_data("Weights/CIFAR10kW1.txt", self.w1, gpu = True)
+		self.save_data("Weights/CIFAR10kW2.txt", self.w2, gpu = True)
+		self.save_data("Weights/CIFAR10kW3.txt", self.w3, gpu = True)
+		self.save_data("Weights/CIFAR10kW4.txt", self.w4, gpu = True)
+		self.save_data("Weights/CIFAR10kWo.txt", self.wo, gpu = True)
 
 	def cifar_example(self, verbose = False, save = False):
 		print "Loading data"
@@ -212,5 +212,5 @@ if __name__ == "__main__":
 	print "Creating conv-net"
 	cnn = ConvolutionalNeuralNetwork()
 	print "Conv-net created. Running network."
-	cnn.cifar_example(verbose = True)
+	cnn.cifar_logreg_example(verbose = True, save = True)
 	print "Program Complete."
