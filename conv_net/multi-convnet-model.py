@@ -87,17 +87,13 @@ class MultiNetModel(object):
 		probabilities = []
 		for task, net in self.nets.items():
 			classes.append(task)
-			p = net.predict(teX) # all zeroes and ones, not ranging... why?
-			probabilities.append(p)
-		return np.asarray(classes)[np.argmax(np.asarray(probabilities), axis = 0)]
+			probabilities.append(net.predict_probs(teX)[:, 0]) # TODO: figure out why these probabilities are the same for different nets. this seems to be the only bug left. maybe the new nets aren't updating the weights from the old?
+		return np.asarray(classes[::-1])[np.argmax(np.asarray(probabilities), axis = 0)]
 
 	def evaluate(self, teX, teY, batch_size = 100):
-		predictions = np.asarray([])
+		predictions = np.asarray([], dtype = np.uint8)
 		for start, end in zip(range(0, len(teX), batch_size), range(batch_size, len(teX)+batch_size, batch_size)):
 			predictions = np.append(predictions, self.predict(teX[start:end]))
-#		print predictions.tolist()
-#		print teY.tolist()
-#		print predicctions == teY
 		return np.mean(predictions == teY)
 
 
