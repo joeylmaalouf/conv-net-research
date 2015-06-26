@@ -139,7 +139,7 @@ class ConvolutionalNeuralNetwork(object):
 		f.write(data)
 		f.close()
 
-	def save_all_weights(self, filename):
+	def save_all_weights(self):
 		self.save_data("Weights/CIFAR10kW1.txt", self.w1, gpu = True)
 		self.save_data("Weights/CIFAR10kW2.txt", self.w2, gpu = True)
 		self.save_data("Weights/CIFAR10kW3.txt", self.w3, gpu = True)
@@ -169,7 +169,7 @@ class ConvolutionalNeuralNetwork(object):
 		print "Creating model functions."
 		self.create_model_functions()
 		data = [trX, trY, teX, teY]
-		self.train_data(data, verbose, epochs = 20)
+		self.train_data(data, verbose, epochs = 35)
 		print "Finished training Neural Network."
 		if save:
 			print "Saving Weights."
@@ -177,10 +177,12 @@ class ConvolutionalNeuralNetwork(object):
 		###########################################
 
 		###########################################
+		trX = trX.reshape(-1,3,32,32)
+		teX = teX.reshape(-1,3,32,32)
 		print("\nLoading Data...")
 		trA = self.activate(trX)
 		print("trA.shape: {0}".format(trA.shape))
-		teA = self.activate(data_chunk)
+		teA = self.activate(teX)
 		print("teA.shape: {0}".format(teA.shape))
 		trC = np.argmax(trY, axis = 1)
 		print("trC.shape: {0}".format(trC.shape))
