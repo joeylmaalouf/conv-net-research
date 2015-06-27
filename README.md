@@ -7,7 +7,7 @@ The team:
   * Convolutional Neural Network Configuration
   * Catastrophic Interference Demonstration
   * Top-Layer Model Integration/Comparison (ELLA, SVC, etc.)
-  * Multi-Net-Model
+  * Multi-Net-Model Design/Creation
 * [Sean Carter](https://github.com/seanccarter)
   * Modern Neural Network Configuration
   * Neural Network Generalization/Experimentation
