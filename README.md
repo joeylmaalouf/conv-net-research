@@ -16,4 +16,3 @@ The team:
   * ROS Integration
   * Real-World Dataset Gathering/Testing
   * Neural Network Experimentation
-  * Multi-Net-Model Design/Creation
