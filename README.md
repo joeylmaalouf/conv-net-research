@@ -5,14 +5,16 @@ Our goal is to combine a convolutional neural network with an efficient lifelong
 The team:
 * [Joey Maalouf](https://github.com/joeylmaalouf)
   * Convolutional Neural Network Configuration
+  * ROS Video Integration
   * Catastrophic Interference Demonstration
-  * Top-Layer Model Integration/Comparison (ELLA, SVC, etc.)
-  * Multi-Net-Model Design/Creation
+  * Top-Layer Model Integration/Comparison (ELLA/SVC/etc.)
+  * Multi-Net-Model Design/Creation/Experimentation
 * [Sean Carter](https://github.com/seanccarter)
   * Modern Neural Network Configuration
   * Neural Network Generalization/Experimentation
   * Multiple Dataset Analysis
 * [Zhecan Wang](https://github.com/zhecanjameswang)
-  * ROS Integration
+  * ROS Video Integration
   * Real-World Dataset Gathering/Testing
   * Neural Network Experimentation
+  * Multi-Net-Model Experimentation

@@ -1,39 +1,3 @@
-"""
-pseudocode outline:
-given initial batch of data trX and trY,
-for each class/task in trY:
-	make a copy of trY and binarize the class values (5, 8, 3, etc.) to 1 or 0 (whether or not the class matches the current task)
-	train convnet on trX and the binarized trY
-		if len(net_list) == 0: initialize randomly
-		else: initialize convnet weights from net_list[-1].weights
-	net_list.append(convnet)
-	continue looping until we have a net trained for each task in trY
-
-whenever new data (trX1, trY1) is presented for training:
-if set(trY1) != set(trY):
-	there is a new task to be learned; repeat the process above ^ for the new task,
-	with any provided data thatisn't part of the new class being the negative examples
-else:
-	no new tasks to learn
-either way:
-	for any new data that doesn't belong to the new class, how can we train the frozen nets that correspond to those classes? should we not?
-	maybe make new nets for old digits as well? list of lists of nets, average probabilities from nets of the same task and argmax those totals
-
-whenever the model needs to predict on testing data teX:
-predictions = np.argmax(np.asarray([net.predict(teX)[:, 1] for net in net_list]), axis = 0)
-explanation:
-net.predict will return output of shape (teX.shape[0], 2) where the 2 are the
-probabilities of teX being not that class (index 0) or being that class (index 1)
-since we want to compare those probabilities of teX being each class, we just get net.predict(teX)[:, 1]
-now we have num_tasks lists of teX.shape[0] probabilities, with a numpy array shape of (num_tasks, teX.shape[0])
-and we can just argmax along axis 0
-
-demonstration:
-train on mnist tasks 0-7 (remove all 8s and 9s)
-later present random sampling from mnist that includes 0-8
-later present random sampling from mnist that includes 0-9
-"""
-
 import numpy as np
 import sys
 
@@ -57,11 +21,10 @@ class MultiNetModel(object):
 			cnn.w1 = cnn.init_weights((32, 1, 3, 3))
 			cnn.w2 = cnn.init_weights((64, 32, 3, 3))
 			cnn.w3 = cnn.init_weights((128, 64, 3, 3))
-			cnn.w4 = cnn.init_weights((128*3*3, 625))
+			cnn.w4 = cnn.init_weights((128 * 3 * 3, 625))
 			cnn.wo = cnn.init_weights((625, 2))
 		else:
 			cnn.w1, cnn.w2, cnn.w3, cnn.w4, cnn.wo = previous.w1, previous.w2, previous.w3, previous.w4, previous.wo
-			print previous.w1 # remove
 		cnn.create_model_functions()
 		for _ in range(epochs):
 			for start, end in zip(range(0, len(trX), batch_size), range(batch_size, len(trX)+batch_size, batch_size)):
@@ -75,11 +38,19 @@ class MultiNetModel(object):
 			prev = None if len(self.nets) == 0 else self.nets[self.newest]
 			trB = self.binarize(trY, task)[:, np.newaxis]
 			trB = np.concatenate((np.logical_not(trB).astype(np.uint8), trB), axis = 1)
-			cnn = self.nnet(trX, trB, prev)
+#			cnn = self.nnet(trX, trB, prev)
+			cnn = self.nnet(trX, trB, epochs = 4) # remove
 			self.tasks.append(task)
 			self.newest = task
-			self.nets[self.newest] = cnn
+			self.nets[task] = cnn
 		return self
+
+	def test(self, teX, teY, task, batch_size = 100):
+		cnn = self.nets[task]
+		predictions = np.asarray([])
+		for start, end in zip(range(0, len(teX), batch_size), range(batch_size, len(teX)+batch_size, batch_size)):
+			predictions = np.append(predictions, cnn.predict(teX[start:end]))
+		return np.mean(self.binarize(teY, task)[:, np.newaxis] == predictions)
 
 	def predict(self, teX):
 		if len(self.nets) == 0:
@@ -89,18 +60,22 @@ class MultiNetModel(object):
 		for task, net in self.nets.items():
 			classes.append(task)
 			probabilities.append(net.predict_probs(teX)[:, 0]) # TODO: figure out why these probabilities are the same for different nets. this seems to be the only bug left. maybe the new nets aren't updating the weights from the old? how can I visualize the weights?
+		print probabilities
 		return np.asarray(classes[::-1])[np.argmax(np.asarray(probabilities), axis = 0)]
 
 	def evaluate(self, teX, teY, batch_size = 100):
 		predictions = np.asarray([], dtype = np.uint8)
 		for start, end in zip(range(0, len(teX), batch_size), range(batch_size, len(teX)+batch_size, batch_size)):
 			predictions = np.append(predictions, self.predict(teX[start:end]))
+		print predictions.tolist()
+		print teY.tolist()
 		return np.mean(predictions == teY)
 
 
-def remove_task(data_set, data_labels, task):
-	nonmatching = np.nonzero(data_labels != task)
-	matching = np.nonzero(data_labels == task)
+def remove_task(data_set, data_labels, task, condense = False):
+	classes = np.argmax(data_labels, axis = 1) if condense else data_labels
+	nonmatching = np.nonzero(classes != task)[0]
+	matching = np.nonzero(classes == task)[0]
 	return data_set[nonmatching], data_labels[nonmatching], data_set[matching], data_labels[matching]
 
 
@@ -118,7 +93,9 @@ if __name__ == "__main__":
 
 	# initialize, train, and evaluate multi-net model on classes 0-7
 	mnm = MultiNetModel().train(trX07, trY07)
-	print(mnm.evaluate(teX07, teY07))
+#	print(mnm.evaluate(teX07, teY07))
+	for t in range(8):
+		print(mnm.test(teX07, teY07, t))
 	# train and evaluate model on classes 0-8
 	# mnm.train(trX08, trY08)				# get random sampling, not all training data 0-8?
 	# print(mnm.evaluate(teX08, teY08))		# get random sampling, not all testing  data 0-8?
