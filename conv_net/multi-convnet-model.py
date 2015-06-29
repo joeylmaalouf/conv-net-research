@@ -1,6 +1,5 @@
 import numpy as np
 import sys
-
 from convnet import ConvolutionalNeuralNetwork
 from load import mnist
 
@@ -39,7 +38,7 @@ class MultiNetModel(object):
 			trB = self.binarize(trY, task)[:, np.newaxis]
 			trB = np.concatenate((np.logical_not(trB).astype(np.uint8), trB), axis = 1)
 #			cnn = self.nnet(trX, trB, prev)
-			cnn = self.nnet(trX, trB, epochs = 4) # remove
+			cnn = self.nnet(trX, trB, epochs = 1) # remove
 			self.tasks.append(task)
 			self.newest = task
 			self.nets[task] = cnn
@@ -60,15 +59,15 @@ class MultiNetModel(object):
 		for task, net in self.nets.items():
 			classes.append(task)
 			probabilities.append(net.predict_probs(teX)[:, 0]) # TODO: figure out why these probabilities are the same for different nets. this seems to be the only bug left. maybe the new nets aren't updating the weights from the old? how can I visualize the weights?
-		print probabilities
+#		print probabilities # remove
 		return np.asarray(classes[::-1])[np.argmax(np.asarray(probabilities), axis = 0)]
 
 	def evaluate(self, teX, teY, batch_size = 100):
 		predictions = np.asarray([], dtype = np.uint8)
 		for start, end in zip(range(0, len(teX), batch_size), range(batch_size, len(teX)+batch_size, batch_size)):
 			predictions = np.append(predictions, self.predict(teX[start:end]))
-		print predictions.tolist()
-		print teY.tolist()
+#		print predictions.tolist() # remove
+#		print teY.tolist() # remove
 		return np.mean(predictions == teY)
 
 
@@ -93,12 +92,12 @@ if __name__ == "__main__":
 
 	# initialize, train, and evaluate multi-net model on classes 0-7
 	mnm = MultiNetModel().train(trX07, trY07)
-#	print(mnm.evaluate(teX07, teY07))
 	for t in range(8):
-		print(mnm.test(teX07, teY07, t))
+		print("Accuracy on task {0}: {1:0.04f}".format(t, mnm.test(teX07, teY07, t)))
+#	print(mnm.evaluate(teX07, teY07))
 	# train and evaluate model on classes 0-8
-	# mnm.train(trX08, trY08)				# get random sampling, not all training data 0-8?
-	# print(mnm.evaluate(teX08, teY08))		# get random sampling, not all testing  data 0-8?
+#	mnm.train(trX08, trY08)				# get random sampling, not all training data 0-8?
+#	print(mnm.evaluate(teX08, teY08))		# get random sampling, not all testing  data 0-8?
 	# train and evaluate model on classes 0-9
-	# mnm.train(trX09, trY09)				# get random sampling, not all training data 0-9?
-	# print(mnm.evaluate(teX09, teY09))		# get random sampling, not all testing  data 0-9?
+#	mnm.train(trX09, trY09)				# get random sampling, not all training data 0-9?
+#	print(mnm.evaluate(teX09, teY09))		# get random sampling, not all testing  data 0-9?
