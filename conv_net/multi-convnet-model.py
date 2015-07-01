@@ -1,5 +1,6 @@
-import numpy as np
+\import numpy as np
 import sys
+from theano.tensor import copy
 from convnet import ConvolutionalNeuralNetwork
 from load import mnist
 
@@ -23,8 +24,11 @@ class MultiNetModel(object):
 			cnn.w4 = cnn.init_weights((128 * 3 * 3, 625))
 			cnn.wo = cnn.init_weights((625, 2))
 		else:
-			# try deep copy here instead of basic assignment
-			cnn.w1, cnn.w2, cnn.w3, cnn.w4, cnn.wo = previous.w1, previous.w2, previous.w3, previous.w4, previous.wo
+			cnn.w1 = copy(previous.w1)
+			cnn.w2 = copy(previous.w2)
+			cnn.w3 = copy(previous.w3)
+			cnn.w4 = copy(previous.w4)
+			cnn.wo = copy(previous.wo)
 		cnn.create_model_functions()
 		for _ in range(epochs):
 			for start, end in zip(range(0, len(trX), batch_size), range(batch_size, len(trX)+batch_size, batch_size)):
@@ -38,7 +42,6 @@ class MultiNetModel(object):
 			prev = None if len(self.nets) == 0 else self.nets[self.newest]
 			trB = self.binarize(trY, task)[:, np.newaxis]
 			trB = np.concatenate((np.logical_not(trB).astype(np.uint8), trB), axis = 1)
-			prev = None # remove
 			cnn = self.nnet(trX, trB, prev, epochs)
 			self.tasks.append(task)
 			self.newest = task
@@ -59,8 +62,9 @@ class MultiNetModel(object):
 		probabilities = []
 		for task, net in self.nets.items():
 			classes.append(task)
-			probabilities.append(net.predict_probs(teX)[:, 0]) # TODO: figure out why these probabilities are the same for different nets. this seems to be the only bug left. maybe the new nets aren't updating the weights from the old? how can I visualize the weights?
-		return np.asarray(classes[::-1])[np.argmax(np.asarray(probabilities), axis = 0)] # why did I reverse the classes array?? it gets 0% accuracy when not reversed...
+			probabilities.append(net.predict_probs(teX)[:, 0])
+#		return np.asarray(classes[::-1])[np.argmax(np.asarray(probabilities), axis = 0)] # why did I reverse the classes array?? it gets 0% accuracy when not reversed...
+		return np.asarray(classes)[np.argmax(np.asarray(probabilities), axis = 0)]
 
 	def evaluate(self, teX, teY, batch_size = 100):
 		predictions = np.asarray([], dtype = np.uint8)
@@ -105,12 +109,14 @@ if __name__ == "__main__":
 
 
 	# testing
-	print("\n")
-	M = MultiNetModel()
+	""" 
+	print("~~~~")
+	binarize = MultiNetModel().binarize
+	epochs, batch_size = 2, 100
 	for task in range(8):
-		trB07 = M.binarize(trY07, task)[:, np.newaxis]
+		trB07 = binarize(trY07, task)[:, np.newaxis]
 		trB07 = np.concatenate((np.logical_not(trB07).astype(np.uint8), trB07), axis = 1)
-		teB07 = M.binarize(teY07, task)[:, np.newaxis]
+		teB07 = binarize(teY07, task)[:, np.newaxis]
 		cnn = ConvolutionalNeuralNetwork()
 		cnn.w1 = cnn.init_weights((32, 1, 3, 3))
 		cnn.w2 = cnn.init_weights((64, 32, 3, 3))
@@ -118,7 +124,6 @@ if __name__ == "__main__":
 		cnn.w4 = cnn.init_weights((128 * 3 * 3, 625))
 		cnn.wo = cnn.init_weights((625, 2))
 		cnn.create_model_functions()
-		epochs, batch_size = 2, 100
 		for _ in range(epochs):
 			for start, end in zip(range(0, len(trX07), batch_size), range(batch_size, len(trX07)+batch_size, batch_size)):
 				cnn.cost = cnn.train(trX07[start:end], trB07[start:end])
@@ -126,3 +131,21 @@ if __name__ == "__main__":
 		for start, end in zip(range(0, len(teX07), batch_size), range(batch_size, len(teX07)+batch_size, batch_size)):
 			predictions = np.append(predictions, cnn.predict(teX07[start:end]))
 		print("Accuracy on task {0}: {1:0.04f}".format(task, np.mean(teB07 == predictions)))
+	cnn = ConvolutionalNeuralNetwork()
+	cnn.initialize_mnist()
+	cnn.trX, cnn.trY, _, _ = remove_task(cnn.trX, cnn.trY, 9)
+	cnn.trX, cnn.trY, _, _ = remove_task(cnn.trX, cnn.trY, 8)
+	cnn.teX, cnn.teY, _, _ = remove_task(cnn.teX, cnn.teY, 9)
+	cnn.teX, cnn.teY, _, _ = remove_task(cnn.teX, cnn.teY, 8)
+	cnn.create_model_functions()
+	for _ in range(epochs):
+		for start, end in zip(range(0, len(cnn.trX), batch_size), range(batch_size, len(cnn.trX)+batch_size, batch_size)):
+			cnn.cost = cnn.train(cnn.trX[start:end], cnn.trY[start:end])
+	predictions = np.asarray([])
+	for start, end in zip(range(0, len(cnn.teX), batch_size), range(batch_size, len(cnn.teX)+batch_size, batch_size)):
+		predictions = np.append(predictions, cnn.predict(cnn.teX[start:end]))
+	print("Accuracy on tasks 0-7: {0:0.04f}".format(np.mean(cnn.teY == predictions)))
+	"""
+# try numbers right before softmax
+# try training binary cnns on all positive examples and random sampling of negative examples, instead of all
+# do more benchmarking on multicore cpu vs gpu
