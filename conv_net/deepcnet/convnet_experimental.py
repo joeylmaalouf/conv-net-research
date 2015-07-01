@@ -4,7 +4,9 @@ from theano.sandbox.rng_mrg import MRG_RandomStreams as RandomStreams
 from theano.sandbox.cuda.basic_ops import host_from_gpu
 from theano.tensor.nnet.conv import conv2d
 from theano.tensor.signal.downsample import max_pool_2d
-import image_tranformation
+import image_transformation
+import cPickle
+import numpy as np
 
 def reprocess(data, nfeatures):
 	""" Turns the 'values' into something that looks like neural network output
@@ -15,13 +17,13 @@ def reprocess(data, nfeatures):
 	return newdata
 
 def load_cifar_data():
-	f = open("../modern_net/CIFAR_Data/cifar-10-batches-py/data_batch_1",'rb')
+	f = open("../../modern_net/CIFAR_Data/cifar-10-batches-py/data_batch_1",'rb')
 	data = cPickle.load(f)
 	trX = data["data"]
 	trY = reprocess(data["labels"], 10)
 	f.close()
 
-	f = open("../modern_net/CIFAR_Data/cifar-10-batches-py/test_batch",'rb')
+	f = open("../../modern_net/CIFAR_Data/cifar-10-batches-py/test_batch",'rb')
 	data = cPickle.load(f)
 	teX = data["data"]
 	teY = reprocess(data["labels"], 10)
@@ -55,7 +57,7 @@ class ConvolutionalNeuralNetwork(object):
 			X /= retain_prob
 		return X
 
-	def RMSprop(self, cost, params, lr = 0.001, rho = 0.9, epsilon = 1e-6):
+	def RMSprop(self, cost, params, lr = 0.001, rho = 0.9, epsilon = 1e-4):
 		grads = T.grad(cost = cost, wrt = params)
 		updates = []
 		for p, g in zip(params, grads):
@@ -91,8 +93,8 @@ class ConvolutionalNeuralNetwork(object):
 		self.w1 = self.init_weights((32, 3, 3, 3))
 		self.w2 = self.init_weights((64, 32, 3, 3))
 		self.w3 = self.init_weights((128, 64, 3, 3))
-		self.w4 = self.init_weights((128 * 13 * 13, 15129*3))
-		self.wo = self.init_weights((15129*3, 10))
+		self.w4 = self.init_weights((128 * 3 * 3,  841*3))
+		self.wo = self.init_weights((841*3, 10))
 
 	def train_data(self, data, shape, verbose, chunks = 1, epochs = 10, batch = 50):
 		trX = data[0].reshape(shape)
@@ -104,14 +106,14 @@ class ConvolutionalNeuralNetwork(object):
 			for start, end in zip(range(0, len(trX), batch), range(batch, len(trX), batch)):
 				self.cost = self.train(trX[start:end], trY[start:end])
 			if verbose:
-				predictions = []LasagneLLasagneasagne
+				predictions = []
 				for start, end in zip(range(0, len(teX), batch), range(batch, len(teX), batch)):
 					predictions.append(np.mean(np.argmax(teY[start:end], axis = 1) == self.predict(teX[start:end])))
 				print sum(predictions)/float(len(predictions))
 
 	def create_model_functions(self):
-		self.noise_py_x = self.model(self.X, self.weights, 0.2, 0.5)
-		self.py_x = self.model(self.X, self.weights, 0., 0.)
+		self.noise_l1, self.noise_l2, self.noise_l3, self.noise_l4, self.noise_py_x = self.model(self.X, self.w1, self.w2, self.w3, self.w4, self.wo, 0.2, 0.5)
+		self.l1, self.l2, self.l3, self.l4, self.py_x = self.model(self.X, self.w1, self.w2, self.w3, self.w4, self.wo, 0., 0.)		
 		self.y_x = T.argmax(self.py_x, axis = 1)
 
 		self.cost = T.mean(T.nnet.categorical_crossentropy(self.noise_py_x, self.Y))
@@ -136,7 +138,7 @@ class ConvolutionalNeuralNetwork(object):
 		f.write(data)
 		f.close()
 
-	def save_all_weights(self, filename):
+	def save_all_weights(self):
 		self.save_data("Weights/CIFAR10kW1.txt", self.w1, gpu = True)
 		self.save_data("Weights/CIFAR10kW2.txt", self.w2, gpu = True)
 		self.save_data("Weights/CIFAR10kW3.txt", self.w3, gpu = True)
@@ -150,13 +152,21 @@ class ConvolutionalNeuralNetwork(object):
 		self.initialize()
 		print "Creating model functions."
 		self.create_model_functions()
-		trX = trX.reshape(-1,3,32,32)
-		trX = image_transformation.pad_images(trX, (126, 126))
-		trX = image_transformation.random_affine_transformations(trX)
-		teX = teX.reshape(-1,3,32,32)
-		teX = image_transformation.pad_images(teX, (126, 126))
+		#trX = trX.reshape(-1,3,32,32)
+		#trX = image_transformation.pad_images(trX, (50, 50))
+		#print trX.shape
+		#trX = np.append(trX, image_transformation.random_affine_transformations(trX), axis = 0)
+		#trY = np.append(trY, trY, axis = 0)
+		#print trX.shape
+		#trX = np.append(trX, image_transformation.random_affine_transformations(trX), axis = 0)
+		#trY = np.append(trY, trY, axis = 0)
+		#print trX.shape
+		#teX = teX.reshape(-1,3,32,32)
+		#teX = image_transformation.pad_images(teX, (50, 50))
+		#teX = np.append(teX, teX, axis = 0)
+		#print teX.shape
 		data = [trX, trY, teX, teY]
-		self.train_data(data, (-1,3,32,32), verbose, epochs = 40)
+		self.train_data(data, (-1,3,32,32), verbose, epochs = 25, batch = 50)
 		if save:
 			print "Saving Weights."
 			self.save_all_weights()
