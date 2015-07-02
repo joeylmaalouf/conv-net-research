@@ -1,5 +1,7 @@
-\import numpy as np
+from collections import Counter
+import numpy as np
 import sys
+# from sklearn.svm import LinearSVC
 from theano.tensor import copy
 from convnet import ConvolutionalNeuralNetwork
 from load import mnist
@@ -39,9 +41,10 @@ class MultiNetModel(object):
 		new_tasks = np.setdiff1d(np.unique(trY), np.asarray(self.tasks))
 		for task in new_tasks:
 			print("Training new net for task {0}".format(task))
-			prev = None if len(self.nets) == 0 else self.nets[self.newest]
+#			trXr, trYr = random_sampling(data_set = trX, data_labels = trY, p_kept = 0.2, to_keep = task)
 			trB = self.binarize(trY, task)[:, np.newaxis]
 			trB = np.concatenate((np.logical_not(trB).astype(np.uint8), trB), axis = 1)
+			prev = None if len(self.nets) == 0 else self.nets[self.newest]
 			cnn = self.nnet(trX, trB, prev, epochs)
 			self.tasks.append(task)
 			self.newest = task
@@ -50,9 +53,12 @@ class MultiNetModel(object):
 
 	def test(self, teX, teY, task, batch_size = 100):
 		cnn = self.nets[task]
-		predictions = np.asarray([])
+		probabilities = np.asarray([])
 		for start, end in zip(range(0, len(teX), batch_size), range(batch_size, len(teX)+batch_size, batch_size)):
-			predictions = np.append(predictions, cnn.predict(teX[start:end]))
+			probabilities = np.append(probabilities, cnn.predict_probs(teX[start:end])[:, 1])
+		vround = np.vectorize(lambda x: int(round(x)))
+		predictions = vround(probabilities)
+		print "task "+str(task)+" predictions:", Counter(predictions) # HOW ARE WE BACK TO THE PROBLEM OF ALL NETS PREDICTING THE SAME VALUES?
 		return np.mean(self.binarize(teY, task)[:, np.newaxis] == predictions)
 
 	def predict(self, teX):
@@ -62,18 +68,30 @@ class MultiNetModel(object):
 		probabilities = []
 		for task, net in self.nets.items():
 			classes.append(task)
-			probabilities.append(net.predict_probs(teX)[:, 0])
-#		return np.asarray(classes[::-1])[np.argmax(np.asarray(probabilities), axis = 0)] # why did I reverse the classes array?? it gets 0% accuracy when not reversed...
-		return np.asarray(classes)[np.argmax(np.asarray(probabilities), axis = 0)]
+			probabilities.append(net.predict_probs(teX)[:, 1])
+		probabilities = np.asarray(probabilities)
+		return np.asarray(classes)[np.argmax(probabilities, axis = 0)]
 
 	def evaluate(self, teX, teY, batch_size = 100):
 		predictions = np.asarray([], dtype = np.uint8)
 		for start, end in zip(range(0, len(teX), batch_size), range(batch_size, len(teX)+batch_size, batch_size)):
 			predictions = np.append(predictions, self.predict(teX[start:end]))
-#		print predictions[:30] # remove
-#		print teY[:30] # remove
-#		print(np.nonzero(predictions[:30] == teY[:30])) # remove
+		print "predictions:   ", Counter(predictions.tolist())
+		print "actual values: ", Counter(teY.tolist())
 		return np.mean(predictions == teY)
+
+
+def random_sampling(data_set, data_labels, p_kept = 0.5, to_keep = None):
+	if to_keep != None:
+		data_set, data_labels, kept_set, kept_labels = remove_task(data_set, data_labels, to_keep)
+	length = len(data_set)
+	limit = int(p_kept*length)
+	indices = np.random.permutation(range(length))[:limit]
+	data_set, data_labels = data_set[indices], data_labels[indices]
+	if to_keep != None:
+		data_set = np.concatenate((data_set, kept_set), 0)
+		data_labels = np.concatenate((data_labels, kept_labels), 0)
+	return data_set, data_labels
 
 
 def remove_task(data_set, data_labels, task, condense = False):
@@ -107,6 +125,7 @@ if __name__ == "__main__":
 #	mnm.train(trX09, trY09)				# get random sampling, not all training data 0-9?
 #	print(mnm.evaluate(teX09, teY09))		# get random sampling, not all testing  data 0-9?
 
+#	sys.exit()
 
 	# testing
 	""" 
@@ -145,7 +164,18 @@ if __name__ == "__main__":
 	for start, end in zip(range(0, len(cnn.teX), batch_size), range(batch_size, len(cnn.teX)+batch_size, batch_size)):
 		predictions = np.append(predictions, cnn.predict(cnn.teX[start:end]))
 	print("Accuracy on tasks 0-7: {0:0.04f}".format(np.mean(cnn.teY == predictions)))
+
+	binarize = MultiNetModel().binarize
+	epochs, batch_size = 2, 100
+	for task in range(8):
+		trB07 = binarize(trY07, task)
+		teB07 = binarize(teY07, task)
+		trX07 = trX07.reshape(-1, 28*28)
+		teX07 = teX07.reshape(-1, 28*28)
+		svc = LinearSVC()
+		svc.fit(trX07, trB07)
+		print task, "svc accuracy", np.mean(svc.predict(teX07) == teB07)
 	"""
 # try numbers right before softmax
-# try training binary cnns on all positive examples and random sampling of negative examples, instead of all
+# try training binary cnns on all positive examples and random sampling of negative examples, instead of all -> this resulted in worse performance :(
 # do more benchmarking on multicore cpu vs gpu
