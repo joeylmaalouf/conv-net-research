@@ -70,16 +70,23 @@ class ConvolutionalNeuralNetwork(object):
 		return updates
 
 	def model(self, X, w1, w2, w3, w4, wo, p_drop_conv, p_drop_hidden):
+		nin1 = self.init_weights((32, 3, 1, 1))
+		nin2 = self.init_weights((64, 3, 1, 1))
+		nin3 = self.init_weights((128, 3, 1, 1))
+
 		l1a = self.rectify(conv2d(X, w1, border_mode = "full"))
 		l1 = max_pool_2d(l1a, (2, 2))
+		l1 = conv2d(l1, nin1)
 		l1 = self.dropout(l1, p_drop_conv)
 
 		l2a = self.rectify(conv2d(l1, w2))
 		l2 = max_pool_2d(l2a, (2, 2))
+		l2 = conv2d(l2, nin2)
 		l2 = self.dropout(l2, p_drop_conv)
 
 		l3a = self.rectify(conv2d(l2, w3))
 		l3b = max_pool_2d(l3a, (2, 2))
+		l3b = conv2d(l3b, nin3)
 		l3 = T.flatten(l3b, outdim = 2)
 		l3 = self.dropout(l3, p_drop_conv)
 
@@ -145,6 +152,22 @@ class ConvolutionalNeuralNetwork(object):
 		self.save_data("Weights/CIFAR10kW4.txt", self.w4, gpu = True)
 		self.save_data("Weights/CIFAR10kWo.txt", self.wo, gpu = True)
 
+	def affine_data(trX, trY, teX, teY):
+		trX = trX.reshape(-1,3,32,32)
+		trX = image_transformation.pad_images(trX, (50, 50))
+		print trX.shape
+		trX = np.append(trX, image_transformation.random_affine_transformations(trX), axis = 0)
+		trY = np.append(trY, trY, axis = 0)
+		print trX.shape
+		trX = np.append(trX, image_transformation.random_affine_transformations(trX), axis = 0)
+		trY = np.append(trY, trY, axis = 0)
+		print trX.shape
+		teX = teX.reshape(-1,3,32,32)
+		teX = image_transformation.pad_images(teX, (50, 50))
+		teX = np.append(teX, teX, axis = 0)
+		print teX.shape
+		return [trX, trY, teX, teY]
+
 	def cifar_example(self, verbose = False, save = False):
 		print "Loading data"
 		trX, trY, teX, teY = load_cifar_data()
@@ -152,19 +175,6 @@ class ConvolutionalNeuralNetwork(object):
 		self.initialize()
 		print "Creating model functions."
 		self.create_model_functions()
-		#trX = trX.reshape(-1,3,32,32)
-		#trX = image_transformation.pad_images(trX, (50, 50))
-		#print trX.shape
-		#trX = np.append(trX, image_transformation.random_affine_transformations(trX), axis = 0)
-		#trY = np.append(trY, trY, axis = 0)
-		#print trX.shape
-		#trX = np.append(trX, image_transformation.random_affine_transformations(trX), axis = 0)
-		#trY = np.append(trY, trY, axis = 0)
-		#print trX.shape
-		#teX = teX.reshape(-1,3,32,32)
-		#teX = image_transformation.pad_images(teX, (50, 50))
-		#teX = np.append(teX, teX, axis = 0)
-		#print teX.shape
 		data = [trX, trY, teX, teY]
 		self.train_data(data, (-1,3,32,32), verbose, epochs = 25, batch = 50)
 		if save:
