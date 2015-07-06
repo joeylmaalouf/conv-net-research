@@ -1,3 +1,4 @@
+from collections import Counter
 import numpy as np
 import os
 import sys
@@ -45,7 +46,7 @@ class MultiNetModel(object):
 				cnn.cost = cnn.train(trX[start:end], trY[start:end])
 		return cnn
 
-	def train(self, trX, trY, epochs = 10, verbose = False):
+	def train(self, trX, trY, epochs = 20, verbose = False):
 		# find any new tasks that we don't have a net for
 		new_tasks = np.setdiff1d(np.unique(trY), np.asarray(self.tasks))
 		# for each one, train it on a binarized random sampling, keeping all positive examples of
@@ -92,7 +93,15 @@ class MultiNetModel(object):
 		predictions = np.asarray([], dtype = np.uint8)
 		for start, end in zip(range(0, len(teX), batch_size), range(batch_size, len(teX)+batch_size, batch_size)):
 			predictions = np.append(predictions, self.predict(teX[start:end]))
+		diff(teY, predictions)
 		return np.mean(predictions == teY)
+
+
+def diff(actual, predictions):
+	for task in np.unique(actual):
+		indices = np.nonzero(actual == task)[0]
+		data = predictions[indices]
+		print("For data of task {0}, model predicted {1}".format(task, dict(Counter(data))))
 
 
 def random_sampling(data_set, data_labels, p_kept = 0.5, to_keep = None):
@@ -139,14 +148,20 @@ if __name__ == "__main__":
 	# initialize, train, and evaluate multi-net model on classes 0-7
 	print("Batch training model on starting tasks 0-7...")
 	mnm = MultiNetModel().train(trX07, trY07, verbose = True)
+#	for t in range(8):
+#		print("Accuracy on task {0}: {1:0.04f}".format(t, mnm.test(teX07, teY07, t)))
 	print("Accuracy on tasks 0-7: {0:0.04f}".format(mnm.evaluate(teX07, teY07)))
 	# train and evaluate model on classes 0-8
 	print("Incrementally training model on new task 8...")
 	mnm.train(trX08, trY08, verbose = True)
+#	for t in range(9):
+#		print("Accuracy on task {0}: {1:0.04f}".format(t, mnm.test(teX08, teY08, t)))
 	print("Accuracy on tasks 0-8: {0:0.04f}".format(mnm.evaluate(teX08, teY08)))
 	# train and evaluate model on classes 0-9
 	print("Incrementally training model on new task 9...")
 	mnm.train(trX09, trY09, verbose = True)
+#	for t in range(10):
+#		print("Accuracy on task {0}: {1:0.04f}".format(t, mnm.test(teX09, teY09, t)))
 	print("Accuracy on tasks 0-9: {0:0.04f}".format(mnm.evaluate(teX09, teY09)))
 
 	# TODO:
@@ -154,3 +169,4 @@ if __name__ == "__main__":
 	# when we get new data, we already add a new net for each new task among the data; maybe add new nets for old tasks, too?
 	# this relies on the fact that the negative examples that come with a new task also double as positive examples for different tasks...
 	# that idea might not translate well to a robot that gives data labeled "chair" or "not chair", as opposed to "chair" or "desk"
+	# maybe attempt some sort of gradient descent to shift the weights of the new net based on its incorrent predictions?
