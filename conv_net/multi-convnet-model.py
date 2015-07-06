@@ -26,7 +26,7 @@ class MultiNetModel(object):
 			cnn.w4 = cnn.init_weights((128 * 3 * 3, 625))
 			cnn.wo = cnn.init_weights((625, 2))
 		else:
-			# np.copy and theano.tensor.copy don't create a fully disconnected deep copy, so we cry a little inside and use a temporary file
+			# np.copy and theano.tensor.copy don't create a fully disconnected deep copy, so we cry a little inside and use a temporary file :'(
 			filename = "tmp.txt"
 			previous.save_data(filename, previous.w1, gpu = True)
 			cnn.w1 = cnn.load_data(filename, (32, 1, 3, 3), gpu = True)
@@ -45,13 +45,15 @@ class MultiNetModel(object):
 				cnn.cost = cnn.train(trX[start:end], trY[start:end])
 		return cnn
 
-	def train(self, trX, trY, epochs = 10):
+	def train(self, trX, trY, epochs = 10, verbose = False):
 		# find any new tasks that we don't have a net for
 		new_tasks = np.setdiff1d(np.unique(trY), np.asarray(self.tasks))
 		# for each one, train it on a binarized random sampling, keeping all positive examples of
-		# the current task and using a percentage of all other tasks as the negative examples
+		# the current task and using a percentage of all other tasks as the negative examples,
+		# since we need both positive and negative examples to properly train a neural network
 		for task in new_tasks:
-			print("Training new net for task {0}".format(task))
+			if verbose:
+				print("Training new net for task {0}".format(task))
 			trXr, trYr = random_sampling(data_set = trX, data_labels = trY, p_kept = 0.2, to_keep = task)
 			trB = self.binarize(trYr, task)[:, np.newaxis]
 			trB = np.concatenate((np.logical_not(trB).astype(np.uint8), trB), axis = 1)
@@ -135,18 +137,18 @@ if __name__ == "__main__":
 	teX07, teY07, teX_8, teY_8 = remove_task(teX08, teY08, 8)
 
 	# initialize, train, and evaluate multi-net model on classes 0-7
-	mnm = MultiNetModel().train(trX07, trY07, epochs = 2)
-	for t in range(8):
-		print("Accuracy on task {0}: {1:0.04f}".format(t, mnm.test(teX07, teY07, t)))
+	print("Batch training model on starting tasks 0-7...")
+	mnm = MultiNetModel().train(trX07, trY07, verbose = True)
 	print("Accuracy on tasks 0-7: {0:0.04f}".format(mnm.evaluate(teX07, teY07)))
 	# train and evaluate model on classes 0-8
-#	mnm.train(trX08, trY08)				# get random sampling, not all training data 0-8?
-#	print(mnm.evaluate(teX08, teY08))		# get random sampling, not all testing  data 0-8?
+	print("Incrementally training model on new task 8...")
+	mnm.train(trX08, trY08, verbose = True)
+	print("Accuracy on tasks 0-8: {0:0.04f}".format(mnm.evaluate(teX08, teY08)))
 	# train and evaluate model on classes 0-9
-#	mnm.train(trX09, trY09)				# get random sampling, not all training data 0-9?
-#	print(mnm.evaluate(teX09, teY09))		# get random sampling, not all testing  data 0-9?
+	print("Incrementally training model on new task 9...")
+	mnm.train(trX09, trY09, verbose = True)
+	print("Accuracy on tasks 0-9: {0:0.04f}".format(mnm.evaluate(teX09, teY09)))
 
 # TODO:
-# test lines commented above
 # do more benchmarking on multicore cpu vs gpu
 # when we get new data, we already add a new net for each new task among the data; maybe add new nets for old tasks, too?
