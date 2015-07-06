@@ -149,6 +149,8 @@ if __name__ == "__main__":
 	mnm.train(trX09, trY09, verbose = True)
 	print("Accuracy on tasks 0-9: {0:0.04f}".format(mnm.evaluate(teX09, teY09)))
 
-# TODO:
-# do more benchmarking on multicore cpu vs gpu
-# when we get new data, we already add a new net for each new task among the data; maybe add new nets for old tasks, too?
+	# TODO:
+	# do more benchmarking on multicore cpu vs gpu
+	# when we get new data, we already add a new net for each new task among the data; maybe add new nets for old tasks, too?
+	# this relies on the fact that the negative examples that come with a new task also double as positive examples for different tasks...
+	# that idea might not translate well to a robot that gives data labeled "chair" or "not chair", as opposed to "chair" or "desk"
