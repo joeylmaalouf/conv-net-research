@@ -8,13 +8,14 @@ The team:
   * ROS Video Integration
   * Catastrophic Interference Demonstration
   * Top-Layer Model Integration/Comparison (ELLA/SVC/etc.)
-  * Multi-Net-Model Design/Creation/Experimentation
+  * Multi-Net Model Design/Creation/Experimentation
 * [Sean Carter](https://github.com/seanccarter)
   * Modern Neural Network Configuration
   * Neural Network Generalization/Experimentation
   * Multiple Dataset Analysis
+  * Caffe Experimentation
 * [Zhecan Wang](https://github.com/zhecanjameswang)
   * ROS Video Integration
   * Real-World Dataset Gathering/Testing
   * Neural Network Experimentation
-  * Multi-Net-Model Experimentation
+  * Collective-Net Model Creation/Experimentation
