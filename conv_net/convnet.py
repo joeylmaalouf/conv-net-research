@@ -146,7 +146,7 @@ class ConvolutionalNeuralNetwork(object):
 	def mnist_example(self, verbose = False, save = False):
 		self.initialize_mnist()
 		self.create_model_functions()
-		self.train_mnist(verbose, epochs = 20)
+		self.train_mnist(verbose, epochs = 5)
 		if save:
 			self.save_all_weights()
 			print("Saved weights to \"./saved/W*.txt\".")
@@ -160,5 +160,5 @@ class ConvolutionalNeuralNetwork(object):
 
 if __name__ == "__main__":
 	cnn = ConvolutionalNeuralNetwork()
-	cnn.mnist_example(verbose = True, save = True)
+	cnn.mnist_example(verbose = True, save = False)
 	print("Program complete.")

@@ -138,9 +138,9 @@ def remove_task(data_set, data_labels, task, condense = False):
 if __name__ == "__main__":
 	# set up command-line flags
 	parser = OptionParser()
-	parser.add_option("-v", "--verbose", action = "store_true", dest = "verbose",              default = False, help = "print non-essential output to stdout (defaults to %default)")
-	parser.add_option("-t", "--test",    action = "store_true", dest = "test",                 default = False, help = "also run per-task accuracy tests     (defaults to %default)")
-	parser.add_option("-e", "--epochs",  action = "store",      dest = "epochs", type = "int", default = 10,    help = "number of epochs for net training    (defaults to %default)")
+	parser.add_option("-v", "--verbose", action = "store_true", dest = "verbose",              default = False, help = "print non-essential output to stdout")
+	parser.add_option("-t", "--test",    action = "store_true", dest = "test",                 default = False, help = "run additional per-task accuracy tests")
+	parser.add_option("-e", "--epochs",  action = "store",      dest = "epochs", type = "int", default = 10,    help = "number of epochs for net training")
 	(options, args) = parser.parse_args()
 
 	# load data
