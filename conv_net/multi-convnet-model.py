@@ -1,5 +1,6 @@
 from collections import Counter
 import numpy as np
+from optparse import OptionParser
 import os
 import sys
 from convnet import ConvolutionalNeuralNetwork
@@ -46,7 +47,7 @@ class MultiNetModel(object):
 				cnn.cost = cnn.train(trX[start:end], trY[start:end])
 		return cnn
 
-	def train(self, trX, trY, epochs = 20, verbose = False):
+	def train(self, trX, trY, epochs = 10, verbose = False):
 		# find any new tasks that we don't have a net for
 		new_tasks = np.setdiff1d(np.unique(trY), np.asarray(self.tasks))
 		# for each one, train it on a binarized random sampling, keeping all positive examples of
@@ -88,12 +89,13 @@ class MultiNetModel(object):
 		# argmax the probabilities to find the one that is most likely and use that index to return the corresponding class
 		return np.asarray(classes)[np.argmax(probabilities, axis = 0)]
 
-	def evaluate(self, teX, teY, batch_size = 100):
+	def evaluate(self, teX, teY, batch_size = 100, verbose = False):
 		# compare the model's predictions to the actual values
 		predictions = np.asarray([], dtype = np.uint8)
 		for start, end in zip(range(0, len(teX), batch_size), range(batch_size, len(teX)+batch_size, batch_size)):
 			predictions = np.append(predictions, self.predict(teX[start:end]))
-		diff(teY, predictions)
+		if verbose:
+			diff(teY, predictions)
 		return np.mean(predictions == teY)
 
 
@@ -134,12 +136,21 @@ def remove_task(data_set, data_labels, task, condense = False):
 
 
 if __name__ == "__main__":
+	# set up command-line flags
+	parser = OptionParser()
+	parser.add_option("-v", "--verbose", action = "store_true", dest = "verbose",              default = False, help = "print output to stdout           (defaults to %default)")
+	parser.add_option("-t", "--test",    action = "store_true", dest = "test",                 default = False, help = "also run per-task accuracy tests (defaults to %default)")
+	parser.add_option("-e", "--epochs",  action = "store",      dest = "epochs", type = "int", default = 10,    help = "number of epochs to train        (defaults to %default)")
+	(options, args) = parser.parse_args()
+
 	# load data
 	trX09, teX09, trY09, teY09 = mnist(onehot = False)
+
 	# prep training data
 	trX09 = trX09.reshape(-1, 1, 28, 28)
 	trX08, trY08, trX_9, trY_9 = remove_task(trX09, trY09, 9)
 	trX07, trY07, trX_8, trY_8 = remove_task(trX08, trY08, 8)
+
 	# prep testing data
 	teX09 = teX09.reshape(-1, 1, 28, 28)
 	teX08, teY08, teX_9, teY_9 = remove_task(teX09, teY09, 9)
@@ -147,22 +158,27 @@ if __name__ == "__main__":
 
 	# initialize, train, and evaluate multi-net model on classes 0-7
 	print("Batch training model on starting tasks 0-7...")
-	mnm = MultiNetModel().train(trX07, trY07, verbose = True)
-#	for t in range(8):
-#		print("Accuracy on task {0}: {1:0.04f}".format(t, mnm.test(teX07, teY07, t)))
-	print("Accuracy on tasks 0-7: {0:0.04f}".format(mnm.evaluate(teX07, teY07)))
+	mnm = MultiNetModel().train(trX07, trY07, epochs = options.epochs, verbose = options.verbose)
+	if options.test:
+		for t in range(8):
+			print("Accuracy on task {0}: {1:0.04f}".format(t, mnm.test(teX07, teY07, t)))
+	print("Accuracy on tasks 0-7: {0:0.04f}".format(mnm.evaluate(teX07, teY07, verbose = options.verbose)))
+
 	# train and evaluate model on classes 0-8
 	print("Incrementally training model on new task 8...")
-	mnm.train(trX08, trY08, verbose = True)
-#	for t in range(9):
-#		print("Accuracy on task {0}: {1:0.04f}".format(t, mnm.test(teX08, teY08, t)))
-	print("Accuracy on tasks 0-8: {0:0.04f}".format(mnm.evaluate(teX08, teY08)))
+	mnm.train(trX08, trY08, epochs = options.epochs, verbose = options.verbose)
+	if options.test:
+		for t in range(9):
+			print("Accuracy on task {0}: {1:0.04f}".format(t, mnm.test(teX08, teY08, t)))
+	print("Accuracy on tasks 0-8: {0:0.04f}".format(mnm.evaluate(teX08, teY08, verbose = options.verbose)))
+
 	# train and evaluate model on classes 0-9
 	print("Incrementally training model on new task 9...")
-	mnm.train(trX09, trY09, verbose = True)
-#	for t in range(10):
-#		print("Accuracy on task {0}: {1:0.04f}".format(t, mnm.test(teX09, teY09, t)))
-	print("Accuracy on tasks 0-9: {0:0.04f}".format(mnm.evaluate(teX09, teY09)))
+	mnm.train(trX09, trY09, epochs = options.epochs, verbose = options.verbose)
+	if options.test:
+		for t in range(10):
+			print("Accuracy on task {0}: {1:0.04f}".format(t, mnm.test(teX09, teY09, t)))
+	print("Accuracy on tasks 0-9: {0:0.04f}".format(mnm.evaluate(teX09, teY09, verbose = options.verbose)))
 
 	# TODO:
 	# do more benchmarking on multicore cpu vs gpu
