@@ -31,16 +31,16 @@ class MultiNetModel(object):
 		else:
 			# np.copy and theano.tensor.copy don't create a fully disconnected deep copy, so we cry a little inside and use a temporary file :'(
 			filename = "tmp.txt"
-			previous.save_data(filename, previous.w1, gpu = True)
-			cnn.w1 = cnn.load_data(filename, (32, 1, 3, 3), gpu = True)
-			previous.save_data(filename, previous.w2, gpu = True)
-			cnn.w2 = cnn.load_data(filename, (64, 32, 3, 3), gpu = True)
-			previous.save_data(filename, previous.w3, gpu = True)
-			cnn.w3 = cnn.load_data(filename, (128, 64, 3, 3), gpu = True)
-			previous.save_data(filename, previous.w4, gpu = True)
-			cnn.w4 = cnn.load_data(filename, (128 * 3 * 3, 625), gpu = True)
-			previous.save_data(filename, previous.wo, gpu = True)
-			cnn.wo = cnn.load_data(filename, (625, 2), gpu = True)
+			previous.save_data(filename, previous.w1)
+			cnn.w1 = cnn.load_data(filename, (32, 1, 3, 3))
+			previous.save_data(filename, previous.w2)
+			cnn.w2 = cnn.load_data(filename, (64, 32, 3, 3))
+			previous.save_data(filename, previous.w3)
+			cnn.w3 = cnn.load_data(filename, (128, 64, 3, 3))
+			previous.save_data(filename, previous.w4)
+			cnn.w4 = cnn.load_data(filename, (128 * 3 * 3, 625))
+			previous.save_data(filename, previous.wo)
+			cnn.wo = cnn.load_data(filename, (625, 2))
 			os.remove(filename)
 		cnn.create_model_functions()
 		for _ in range(epochs):
