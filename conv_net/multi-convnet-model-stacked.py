@@ -144,7 +144,7 @@ if __name__ == "__main__":
 	# set up command-line flags
 	parser = OptionParser()
 	parser.add_option("-v", "--verbose", action = "store_true", dest = "verbose",              default = False, help = "print more detailed information to stdout")
-	parser.add_option("-c", "--clock",   action = "store_true", dest = "clock",                default = False, help = "print how long the program took to run (load, train on, and test the data)")
+	parser.add_option("-c", "--clock",   action = "store_true", dest = "clock",                default = False, help = "print how long the program took to run")
 	parser.add_option("-t", "--test",    action = "store_true", dest = "test",                 default = False, help = "run additional per-task accuracy tests")
 	parser.add_option("-e", "--epochs",  action = "store",      dest = "epochs", type = "int", default = 10,    help = "number of epochs for net training")
 	(options, args) = parser.parse_args()
@@ -189,4 +189,4 @@ if __name__ == "__main__":
 	print("Accuracy on tasks 0-9: {0:0.04f}".format(mnm.evaluate(teX09, teY09, verbose = options.verbose)))
 
 	end = time.time()
-	print("Time to run program: {0}".format(end-start))
+	print("Time to run program: {0} seconds.".format(end-start))
