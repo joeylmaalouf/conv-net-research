@@ -48,33 +48,37 @@ class MultiNetModel(object):
 		return cnn
 
 	def train(self, trX, trY, epochs = 10, verbose = False):
-		# find any new tasks that we don't have a net for
-		new_tasks = np.setdiff1d(np.unique(trY), np.asarray(self.tasks))
+		tasks = np.unique(trY)
 		# for each one, train it on a binarized random sampling, keeping all positive examples of
 		# the current task and using a percentage of all other tasks as the negative examples,
 		# since we need both positive and negative examples to properly train a neural network
-		for task in new_tasks:
+		for task in tasks:
 			if verbose:
 				print("Training new net for task {0}".format(task))
 			trXr, trYr = random_sampling(data_set = trX, data_labels = trY, p_kept = 0.2, to_keep = task)
 			trB = self.binarize(trYr, task)[:, np.newaxis]
 			trB = np.concatenate((np.logical_not(trB).astype(np.uint8), trB), axis = 1)
-			prev = None if len(self.nets) == 0 else self.nets[self.newest]
+			prev = None if len(self.nets) == 0 else self.nets[self.newest][-1]
 			cnn = self.nnet(trXr, trB, prev, epochs)
 			self.tasks.append(task)
 			self.newest = task
-			self.nets[task] = cnn
+			if task not in self.nets:
+				self.nets[task] = []
+			self.nets[task].append(cnn)
 		return self
 
 	def test(self, teX, teY, task, batch_size = 100):
-		cnn = self.nets[task]
-		probabilities = np.asarray([])
-		for start, end in zip(range(0, len(teX), batch_size), range(batch_size, len(teX)+batch_size, batch_size)):
-			probabilities = np.append(probabilities, cnn.predict_probs(teX[start:end])[:, 1])
+		predictions = []
+		for cnn in self.nets[task]:
+			probabilities = np.asarray([])
+			for start, end in zip(range(0, len(teX), batch_size), range(batch_size, len(teX)+batch_size, batch_size)):
+				probabilities = np.append(probabilities, cnn.predict_probs(teX[start:end])[:, 1])
+			predictions.append(probabilities)
+		# combine predictions from each of the task's nets
+		predictions = np.mean(predictions, axis = 0)
 		# turn our probabilities into binary 0s and 1s, instead of decimals in that range
 		vround = np.vectorize(lambda x: int(round(x)))
-		predictions = vround(probabilities)
-		return np.mean(self.binarize(teY, task)[:, np.newaxis] == predictions)
+		return np.mean(self.binarize(teY, task)[:, np.newaxis] == vround(predictions))
 
 	def predict(self, teX):
 		if len(self.nets) == 0:
@@ -82,9 +86,9 @@ class MultiNetModel(object):
 		# create the class array and predict the corresponding probabilities from each net
 		classes = []
 		probabilities = []
-		for task, net in self.nets.items():
+		for task, netlist in self.nets.items():
 			classes.append(task)
-			probabilities.append(net.predict_probs(teX)[:, 1])
+			probabilities.append(np.mean([net.predict_probs(teX)[:, 1] for net in netlist], axis = 0))
 		probabilities = np.asarray(probabilities)
 		# argmax the probabilities to find the one that is most likely and use that index to return the corresponding class
 		return np.asarray(classes)[np.argmax(probabilities, axis = 0)]
