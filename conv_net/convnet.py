@@ -106,11 +106,12 @@ class ConvolutionalNeuralNetwork(object):
 				print(accuracy)
 		return np.asarray(accuracies)
 
-	def save_data(self, filename, data, gpu = False):
+	def save_data(self, filename, data):
+		gpu = theano.config.device.startswith('gpu')
 		mult = lambda x, y: x * y
 		if gpu:
-			data = host_from_gpu(data).eval()
-		data = np.asarray(data)
+			data = host_from_gpu(data)
+		data = np.asarray(data.eval())
 		length = reduce(mult, data.shape)
 		data = data.reshape(length)
 		data = "\n".join([str(i) for i in data])
@@ -118,45 +119,46 @@ class ConvolutionalNeuralNetwork(object):
 		f.write(data)
 		f.close()
 
-	def load_data(self, filename, shape, gpu = False):
+	def load_data(self, filename, shape):
 		f = open(filename, "r")
 		data = [float(i) for i in f.read().split("\n")]
 		f.close()
-		data = self.floatX(data).reshape(shape)
-		if gpu:
-			data = theano.shared(data)
+		data = theano.shared(self.floatX(data).reshape(shape))
 		return data
 
-	def save_all_weights(self):
-		self.save_data("saved/W1.txt", self.w1, gpu = True)
-		self.save_data("saved/W2.txt", self.w2, gpu = True)
-		self.save_data("saved/W3.txt", self.w3, gpu = True)
-		self.save_data("saved/W4.txt", self.w4, gpu = True)
-		self.save_data("saved/Wo.txt", self.wo, gpu = True)
+	def save_all_weights(self, gpu = False):
+		self.save_data("saved/W1.txt", self.w1, gpu)
+		self.save_data("saved/W2.txt", self.w2, gpu)
+		self.save_data("saved/W3.txt", self.w3, gpu)
+		self.save_data("saved/W4.txt", self.w4, gpu)
+		self.save_data("saved/Wo.txt", self.wo, gpu)
 
 	def load_all_weights(self):
-		self.w1 = self.load_data("saved/W1.txt", (32, 1, 3, 3), gpu = True)
-		self.w2 = self.load_data("saved/W2.txt", (64, 32, 3, 3), gpu = True)
-		self.w3 = self.load_data("saved/W3.txt", (128, 64, 3, 3), gpu = True)
-		self.w4 = self.load_data("saved/W4.txt", (128 * 3 * 3, 625), gpu = True)
-		self.wo = self.load_data("saved/Wo.txt", (625, 10), gpu = True)
+		self.w1 = self.load_data("saved/W1.txt", (32, 1, 3, 3))
+		self.w2 = self.load_data("saved/W2.txt", (64, 32, 3, 3))
+		self.w3 = self.load_data("saved/W3.txt", (128, 64, 3, 3))
+		self.w4 = self.load_data("saved/W4.txt", (128 * 3 * 3, 625))
+		self.wo = self.load_data("saved/Wo.txt", (625, 10))
 
 	def mnist_example(self, verbose = False, save = False):
 		self.initialize_mnist()
 		self.create_model_functions()
 		self.train_mnist(verbose, epochs = 5)
 		if save:
-			self.save_all_weights()
+			self.save_all_weights(gpu = True)
 			print("Saved weights to \"./saved/W*.txt\".")
 			num_chunks = 20
 			for i in range(num_chunks):
 				data_chunk = self.trX[(len(self.trX)/num_chunks*i):(len(self.trX)/num_chunks*(i+1))]
 				self.save_data("saved/trA{0:02d}.txt".format(i), self.activate(data_chunk))
-			self.save_data("saved/teA.txt", self.activate(self.teX))
+			num_chunks = 20
+			for i in range(num_chunks):
+				data_chunk = self.teX[(len(self.teX)/num_chunks*i):(len(self.teX)/num_chunks*(i+1))]
+				self.save_data("saved/teA{0:02d}.txt".format(i), self.activate(data_chunk))
 			print("Saved penultimate activations to \"./saved/*A*.txt\".")
 
 
 if __name__ == "__main__":
 	cnn = ConvolutionalNeuralNetwork()
-	cnn.mnist_example(verbose = True, save = False)
+	cnn.mnist_example(verbose = True, save = True)
 	print("Program complete.")
