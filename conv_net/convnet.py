@@ -107,10 +107,9 @@ class ConvolutionalNeuralNetwork(object):
 		return np.asarray(accuracies)
 
 	def save_data(self, filename, data):
-		gpu = theano.config.device.startswith('gpu')
-		mult = lambda x, y: x * y
-		if gpu:
+		if theano.config.device.startswith("gpu"):
 			data = host_from_gpu(data)
+		mult = lambda x, y: x * y
 		data = np.asarray(data.eval())
 		length = reduce(mult, data.shape)
 		data = data.reshape(length)
@@ -126,12 +125,12 @@ class ConvolutionalNeuralNetwork(object):
 		data = theano.shared(self.floatX(data).reshape(shape))
 		return data
 
-	def save_all_weights(self, gpu = False):
-		self.save_data("saved/W1.txt", self.w1, gpu)
-		self.save_data("saved/W2.txt", self.w2, gpu)
-		self.save_data("saved/W3.txt", self.w3, gpu)
-		self.save_data("saved/W4.txt", self.w4, gpu)
-		self.save_data("saved/Wo.txt", self.wo, gpu)
+	def save_all_weights(self):
+		self.save_data("saved/W1.txt", self.w1)
+		self.save_data("saved/W2.txt", self.w2)
+		self.save_data("saved/W3.txt", self.w3)
+		self.save_data("saved/W4.txt", self.w4)
+		self.save_data("saved/Wo.txt", self.wo)
 
 	def load_all_weights(self):
 		self.w1 = self.load_data("saved/W1.txt", (32, 1, 3, 3))
@@ -145,7 +144,7 @@ class ConvolutionalNeuralNetwork(object):
 		self.create_model_functions()
 		self.train_mnist(verbose, epochs = 5)
 		if save:
-			self.save_all_weights(gpu = True)
+			self.save_all_weights()
 			print("Saved weights to \"./saved/W*.txt\".")
 			num_chunks = 20
 			for i in range(num_chunks):
