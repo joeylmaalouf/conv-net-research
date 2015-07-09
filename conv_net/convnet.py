@@ -127,36 +127,39 @@ class ConvolutionalNeuralNetwork(object):
 			data = theano.shared(data)
 		return data
 
-	def save_all_weights(self):
-		self.save_data("saved/W1.txt", self.w1, gpu = True)
-		self.save_data("saved/W2.txt", self.w2, gpu = True)
-		self.save_data("saved/W3.txt", self.w3, gpu = True)
-		self.save_data("saved/W4.txt", self.w4, gpu = True)
-		self.save_data("saved/Wo.txt", self.wo, gpu = True)
+	def save_all_weights(self, gpu = False):
+		self.save_data("saved/W1.txt", self.w1, gpu)
+		self.save_data("saved/W2.txt", self.w2, gpu)
+		self.save_data("saved/W3.txt", self.w3, gpu)
+		self.save_data("saved/W4.txt", self.w4, gpu)
+		self.save_data("saved/Wo.txt", self.wo, gpu)
 
-	def load_all_weights(self):
-		self.w1 = self.load_data("saved/W1.txt", (32, 1, 3, 3), gpu = True)
-		self.w2 = self.load_data("saved/W2.txt", (64, 32, 3, 3), gpu = True)
-		self.w3 = self.load_data("saved/W3.txt", (128, 64, 3, 3), gpu = True)
-		self.w4 = self.load_data("saved/W4.txt", (128 * 3 * 3, 625), gpu = True)
-		self.wo = self.load_data("saved/Wo.txt", (625, 10), gpu = True)
+	def load_all_weights(self, gpu = False):
+		self.w1 = self.load_data("saved/W1.txt", (32, 1, 3, 3), gpu)
+		self.w2 = self.load_data("saved/W2.txt", (64, 32, 3, 3), gpu)
+		self.w3 = self.load_data("saved/W3.txt", (128, 64, 3, 3), gpu)
+		self.w4 = self.load_data("saved/W4.txt", (128 * 3 * 3, 625), gpu)
+		self.wo = self.load_data("saved/Wo.txt", (625, 10), gpu)
 
 	def mnist_example(self, verbose = False, save = False):
 		self.initialize_mnist()
 		self.create_model_functions()
 		self.train_mnist(verbose, epochs = 5)
 		if save:
-			self.save_all_weights()
+			self.save_all_weights(gpu = True)
 			print("Saved weights to \"./saved/W*.txt\".")
 			num_chunks = 20
 			for i in range(num_chunks):
 				data_chunk = self.trX[(len(self.trX)/num_chunks*i):(len(self.trX)/num_chunks*(i+1))]
 				self.save_data("saved/trA{0:02d}.txt".format(i), self.activate(data_chunk))
-			self.save_data("saved/teA.txt", self.activate(self.teX))
+			num_chunks = 20
+			for i in range(num_chunks):
+				data_chunk = self.teX[(len(self.teX)/num_chunks*i):(len(self.teX)/num_chunks*(i+1))]
+				self.save_data("saved/teA{0:02d}.txt".format(i), self.activate(data_chunk))
 			print("Saved penultimate activations to \"./saved/*A*.txt\".")
 
 
 if __name__ == "__main__":
 	cnn = ConvolutionalNeuralNetwork()
-	cnn.mnist_example(verbose = True, save = False)
+	cnn.mnist_example(verbose = True, save = True)
 	print("Program complete.")
