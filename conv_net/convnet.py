@@ -109,11 +109,9 @@ class ConvolutionalNeuralNetwork(object):
 	def save_data(self, filename, data, gpu = False):
 		mult = lambda x, y: x * y
 		if gpu:
-			length = reduce(mult, data.shape.eval())
 			data = host_from_gpu(data).eval()
-			data = np.asarray(data)
-		else:
-			length = reduce(mult, data.shape)
+		data = np.asarray(data)
+		length = reduce(mult, data.shape)
 		data = data.reshape(length)
 		data = "\n".join([str(i) for i in data])
 		f = open(filename, "w")
