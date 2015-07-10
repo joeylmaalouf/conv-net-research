@@ -16,9 +16,6 @@ class MultiNetModel(object):
 		self.tasks = []
 		self.newest = None
 
-	def binarize(self, classes, task_id):
-		# take a set of data labels and binarize them to 1s and 0s depending on whether or not they match the current task
-		return (np.asarray(classes) == task_id).astype(np.uint8)
 
 	def nnet(self, trX, trY, previous = None, epochs = 10, batch_size = 100):
 		# create a new convnet, basing the weights on those of the previous net if possible
@@ -49,34 +46,64 @@ class MultiNetModel(object):
 				cnn.cost = cnn.train(trX[start:end], trY[start:end])
 		return cnn
 
+
 	def train(self, trX, trY, epochs = 10, verbose = False):
-		# find any new tasks that we don't have a net for
-		new_tasks = np.setdiff1d(np.unique(trY), np.asarray(self.tasks))
+		if self.mode == "frozen":
+			# find any new tasks that we don't have a net for
+			tasks = np.setdiff1d(np.unique(trY), np.asarray(self.tasks))
+		elif self.mode == "stacked":
+			tasks = np.unique(trY)
 		# for each one, train it on a binarized random sampling, keeping all positive examples of
 		# the current task and using a percentage of all other tasks as the negative examples,
 		# since we need both positive and negative examples to properly train a neural network
-		for task in new_tasks:
+		for task in tasks:
 			if verbose:
 				print("Training new net for task {0}".format(task))
+
 			trXr, trYr = random_sampling(data_set = trX, data_labels = trY, p_kept = 0.2, to_keep = task)
-			trB = self.binarize(trYr, task)[:, np.newaxis]
+			trB = binarize(trYr, task)[:, np.newaxis]
 			trB = np.concatenate((np.logical_not(trB).astype(np.uint8), trB), axis = 1)
-			prev = None if len(self.nets) == 0 else self.nets[self.newest]
+
+			if self.mode == "frozen":
+				prev = None if len(self.nets) == 0 else self.nets[self.newest]
+			elif self.mode == "stacked":
+				prev = None if len(self.nets) == 0 else self.nets[self.newest][-1]
+
 			cnn = self.nnet(trXr, trB, prev, epochs)
 			self.tasks.append(task)
 			self.newest = task
-			self.nets[task] = cnn
+			if self.mode == "frozen":
+				self.nets[task] = cnn
+			elif self.mode == "stacked":
+				if task not in self.nets:
+					self.nets[task] = []
+				self.nets[task].append(cnn)
+
 		return self
 
+
 	def test(self, teX, teY, task, batch_size = 100):
-		cnn = self.nets[task]
-		probabilities = np.asarray([])
-		for start, end in zip(range(0, len(teX), batch_size), range(batch_size, len(teX)+batch_size, batch_size)):
-			probabilities = np.append(probabilities, cnn.predict_probs(teX[start:end])[:, 1])
-		# turn our probabilities into binary 0s and 1s, instead of decimals in that range
-		vround = np.vectorize(lambda x: int(round(x)))
-		predictions = vround(probabilities)
-		return np.mean(self.binarize(teY, task)[:, np.newaxis] == predictions)
+		vround = np.vectorize(lambda x: int(round(x))) # vround turns outputs from probabilities to binary 0/1
+
+		if self.mode == "frozen":
+			cnn = self.nets[task]
+			probabilities = np.asarray([])
+			for start, end in zip(range(0, len(teX), batch_size), range(batch_size, len(teX)+batch_size, batch_size)):
+				probabilities = np.append(probabilities, cnn.predict_probs(teX[start:end])[:, 1])
+			predictions = vround(probabilities)
+
+		elif self.mode == "stacked":
+			predictions = []
+			for cnn in self.nets[task]:
+				probabilities = np.asarray([])
+				for start, end in zip(range(0, len(teX), batch_size), range(batch_size, len(teX)+batch_size, batch_size)):
+					probabilities = np.append(probabilities, cnn.predict_probs(teX[start:end])[:, 1])
+				predictions.append(probabilities)
+			# combine predictions from each of the task's nets
+			predictions = vround(np.mean(predictions, axis = 0))
+
+		return np.mean(binarize(teY, task)[:, np.newaxis] == predictions)
+
 
 	def predict(self, teX):
 		if len(self.nets) == 0:
@@ -84,28 +111,46 @@ class MultiNetModel(object):
 		# create the class array and predict the corresponding probabilities from each net
 		classes = []
 		probabilities = []
-		for task, net in self.nets.items():
-			classes.append(task)
-			probabilities.append(net.predict_probs(teX)[:, 1])
-		probabilities = np.asarray(probabilities)
+
+		if self.mode == "frozen":
+			for task, net in self.nets.items():
+				classes.append(task)
+				probabilities.append(net.predict_probs(teX)[:, 1])
+
+		elif self.mode == "stacked":
+			for task, netlist in self.nets.items():
+				classes.append(task)
+				probabilities.append(np.mean([net.predict_probs(teX)[:, 1] for net in netlist], axis = 0))
+
 		# argmax the probabilities to find the one that is most likely and use that index to return the corresponding class
-		return np.asarray(classes)[np.argmax(probabilities, axis = 0)]
+		return np.asarray(classes)[np.argmax(np.asarray(probabilities), axis = 0)]
+
 
 	def evaluate(self, teX, teY, batch_size = 100, verbose = False):
 		# compare the model's predictions to the actual values
 		predictions = np.asarray([], dtype = np.uint8)
 		for start, end in zip(range(0, len(teX), batch_size), range(batch_size, len(teX)+batch_size, batch_size)):
 			predictions = np.append(predictions, self.predict(teX[start:end]))
+
 		if verbose:
-			diff(teY, predictions)
+			print(diff(teY, predictions))
+
 		return np.mean(predictions == teY)
 
 
+def binarize(classes, task_id):
+	# take a set of data labels and binarize them to 1s and 0s depending on whether or not they match the current task
+	return (np.asarray(classes) == task_id).astype(np.uint8)
+
+
 def diff(actual, predictions):
+	# output the difference in actual vs predicted class labels
+	lines = []
 	for task in np.unique(actual):
 		indices = np.nonzero(actual == task)[0]
 		data = predictions[indices]
-		print("For data of task {0}, model predicted {1}".format(task, dict(Counter(data))))
+		lines.append("For data of task {0}, model predicted {1}".format(task, dict(Counter(data))))
+	return "\n".join(lines)
 
 
 def random_sampling(data_set, data_labels, p_kept = 0.5, to_keep = None):
@@ -140,12 +185,12 @@ def remove_task(data_set, data_labels, task, condense = False):
 if __name__ == "__main__":
 	# set up command-line flags
 	parser = OptionParser(add_help_option = False, description = "A machine learning model using multiple convolutional neural networks.")
-	parser.add_option("-h", "--help",    action = "store_true", dest = "help",                    default = False,    help = "show this help message and exit the program")
-	parser.add_option("-v", "--verbose", action = "store_true", dest = "verbose",                 default = False,    help = "print more detailed information to stdout")
-	parser.add_option("-c", "--clock",   action = "store_true", dest = "clock",                   default = False,    help = "print how long the program took to run")
-	parser.add_option("-t", "--test",    action = "store_true", dest = "test",                    default = False,    help = "run additional per-task accuracy tests")
-	parser.add_option("-e", "--epochs",  action = "store",      dest = "epochs", type = "int",    default = 10,       help = "number of epochs for net training")
-	parser.add_option("-m", "--mode",    action = "store",      dest = "mode",   type = "string", default = "frozen", help = "training mode (frozen, unfrozen, stacked)")
+	parser.add_option("-h", "--help", action = "store_true", dest = "help", default = False, help = "show this help message and exit the program")
+	parser.add_option("-v", "--verbose", action = "store_true", dest = "verbose", default = False, help = "print more detailed information to stdout")
+	parser.add_option("-c", "--clock", action = "store_true", dest = "clock", default = False, help = "print how long the program took to run")
+	parser.add_option("-t", "--test", action = "store_true", dest = "test", default = False, help = "run additional per-task accuracy tests")
+	parser.add_option("-e", "--epochs", action = "store", dest = "epochs", type = "int", default = 10, help = "number of epochs for net training")
+	parser.add_option("-m", "--mode", action = "store", dest = "mode", type = "choice", choices = ["frozen", "unfrozen", "stacked"], default = "frozen", help = "training mode (frozen, unfrozen, stacked)")
 	(options, args) = parser.parse_args()
 
 	# custom help message
