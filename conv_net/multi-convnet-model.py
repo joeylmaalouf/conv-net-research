@@ -9,8 +9,9 @@ from load import mnist
 
 
 class MultiNetModel(object):
-	def __init__(self):
+	def __init__(self, mode):
 		super(MultiNetModel, self).__init__()
+		self.mode = mode
 		self.nets = {}
 		self.tasks = []
 		self.newest = None
@@ -138,14 +139,27 @@ def remove_task(data_set, data_labels, task, condense = False):
 
 if __name__ == "__main__":
 	# set up command-line flags
-	parser = OptionParser()
-	parser.add_option("-v", "--verbose", action = "store_true", dest = "verbose",              default = False, help = "print more detailed information to stdout")
-	parser.add_option("-c", "--clock",   action = "store_true", dest = "clock",                default = False, help = "print how long the program took to run")
-	parser.add_option("-t", "--test",    action = "store_true", dest = "test",                 default = False, help = "run additional per-task accuracy tests")
-	parser.add_option("-e", "--epochs",  action = "store",      dest = "epochs", type = "int", default = 10,    help = "number of epochs for net training")
+	parser = OptionParser(add_help_option = False, description = "A machine learning model using multiple convolutional neural networks.")
+	parser.add_option("-h", "--help",    action = "store_true", dest = "help",                    default = False,    help = "show this help message and exit the program")
+	parser.add_option("-v", "--verbose", action = "store_true", dest = "verbose",                 default = False,    help = "print more detailed information to stdout")
+	parser.add_option("-c", "--clock",   action = "store_true", dest = "clock",                   default = False,    help = "print how long the program took to run")
+	parser.add_option("-t", "--test",    action = "store_true", dest = "test",                    default = False,    help = "run additional per-task accuracy tests")
+	parser.add_option("-e", "--epochs",  action = "store",      dest = "epochs", type = "int",    default = 10,       help = "number of epochs for net training")
+	parser.add_option("-m", "--mode",    action = "store",      dest = "mode",   type = "string", default = "frozen", help = "training mode (frozen, unfrozen, stacked)")
 	(options, args) = parser.parse_args()
 
-	start = time.time()
+	# custom help message
+	if options.help:
+		length_dest = max([len(o.dest) for o in parser.option_list])
+		length_help = max([len(o.help) for o in parser.option_list])
+		print("\n"+parser.description+"\n")
+		for option in parser.option_list:
+			print("    {0: <{1}}: {2: <{3}} (default: {4})".format(option.dest, length_dest, option.help, length_help, option.default))
+		print("")
+		sys.exit()
+
+	if options.clock:
+		start = time.time()
 
 	# load data
 	trX09, teX09, trY09, teY09 = mnist(onehot = False)
@@ -162,7 +176,7 @@ if __name__ == "__main__":
 
 	# initialize, train, and evaluate multi-net model on classes 0-7
 	print("Batch training model on starting tasks 0-7...")
-	mnm = MultiNetModel().train(trX07, trY07, epochs = options.epochs, verbose = options.verbose)
+	mnm = MultiNetModel(options.mode).train(trX07, trY07, epochs = options.epochs, verbose = options.verbose)
 	if options.test:
 		for t in range(8):
 			print("Accuracy on task {0}: {1:0.04f}".format(t, mnm.test(teX07, teY07, t)))
@@ -184,5 +198,6 @@ if __name__ == "__main__":
 			print("Accuracy on task {0}: {1:0.04f}".format(t, mnm.test(teX09, teY09, t)))
 	print("Accuracy on tasks 0-9: {0:0.04f}".format(mnm.evaluate(teX09, teY09, verbose = options.verbose)))
 
-	end = time.time()
-	print("Time to run program: {0} seconds.".format(end-start))
+	if options.clock:
+		end = time.time()
+		print("Time to run program: {0} seconds.".format(end-start))
