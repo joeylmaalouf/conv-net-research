@@ -1,3 +1,8 @@
+nano .bashrc file
+#Go to bottom
+export ROS_MASTER_URI=http://[Robot ip adress]:11311
+export ROS_HOSTNAME=[Your ip adress]
+
 # function: boots turtlebot
 # run on robot
 roslaunch turtlebot_bringup minimal.launch
