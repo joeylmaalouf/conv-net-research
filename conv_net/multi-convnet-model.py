@@ -195,11 +195,11 @@ if __name__ == "__main__":
 
 	# custom help message
 	if options.help:
-		length_dest = max([len(o.dest) for o in parser.option_list])
+		length_name = max([len(", ".join(o._short_opts + o._long_opts)) for o in parser.option_list])
 		length_help = max([len(o.help) for o in parser.option_list])
-		print("\n"+parser.description+"\n")
+		print("\n" + parser.description + "\n")
 		for option in parser.option_list:
-			print("    {0: <{1}}: {2: <{3}} (default: {4})".format(option.dest, length_dest, option.help, length_help, option.default))
+			print("  {0: <{1}}   {2: <{3}}   (default: {4})".format(", ".join(option._short_opts + option._long_opts), length_name, option.help, length_help, option.default))
 		print("")
 		sys.exit()
 
