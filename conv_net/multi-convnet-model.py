@@ -42,7 +42,7 @@ class MultiNetModel(object):
 			os.remove(filename)
 		cnn.create_model_functions()
 		for _ in range(epochs):
-			for start, end in zip(range(0, len(trX), batch_size), range(batch_size, len(trX)+batch_size, batch_size)):
+			for start, end in zip(range(0, trX.shape[0], batch_size), range(batch_size, trX.shape[0]+batch_size, batch_size)):
 				cnn.cost = cnn.train(trX[start:end], trY[start:end])
 		return cnn
 
@@ -73,7 +73,7 @@ class MultiNetModel(object):
 			if self.mode == "unfrozen" and task in np.asarray(self.tasks):
 				cnn = self.nets[task]
 				for _ in range(epochs):
-					for start, end in zip(range(0, len(trX), batch_size), range(batch_size, len(trX)+batch_size, batch_size)):
+					for start, end in zip(range(0, trXr.shape[0], batch_size), range(batch_size, trXr.shape[0]+batch_size, batch_size)):
 						cnn.cost = cnn.train(trXr[start:end], trB[start:end])
 			else:
 				cnn = self.nnet(trXr, trB, prev, epochs)
@@ -96,7 +96,7 @@ class MultiNetModel(object):
 		if self.mode == "frozen" or self.mode == "unfrozen":
 			cnn = self.nets[task]
 			probabilities = np.asarray([])
-			for start, end in zip(range(0, len(teX), batch_size), range(batch_size, len(teX)+batch_size, batch_size)):
+			for start, end in zip(range(0, teX.shape[0], batch_size), range(batch_size, teX.shape[0]+batch_size, batch_size)):
 				probabilities = np.append(probabilities, cnn.predict_probs(teX[start:end])[:, 1])
 			predictions = vround(probabilities)
 
@@ -104,7 +104,7 @@ class MultiNetModel(object):
 			predictions = []
 			for cnn in self.nets[task]:
 				probabilities = np.asarray([])
-				for start, end in zip(range(0, len(teX), batch_size), range(batch_size, len(teX)+batch_size, batch_size)):
+				for start, end in zip(range(0, teX.shape[0], batch_size), range(batch_size, teX.shape[0]+batch_size, batch_size)):
 					probabilities = np.append(probabilities, cnn.predict_probs(teX[start:end])[:, 1])
 				predictions.append(probabilities)
 			# combine predictions from each of the task's nets
@@ -137,7 +137,7 @@ class MultiNetModel(object):
 	def evaluate(self, teX, teY, batch_size = 100, verbose = False):
 		# compare the model's predictions to the actual values
 		predictions = np.asarray([], dtype = np.uint8)
-		for start, end in zip(range(0, len(teX), batch_size), range(batch_size, len(teX)+batch_size, batch_size)):
+		for start, end in zip(range(0, teX.shape[0], batch_size), range(batch_size, teX.shape[0]+batch_size, batch_size)):
 			predictions = np.append(predictions, self.predict(teX[start:end]))
 
 		if verbose:
