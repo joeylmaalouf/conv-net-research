@@ -47,11 +47,12 @@ class MultiNetModel(object):
 		return cnn
 
 
-	def train(self, trX, trY, epochs = 10, verbose = False):
+	def train(self, trX, trY, epochs = 10, verbose = False, batch_size = 100):
 		if self.mode == "frozen":
-			# find any new tasks that we don't have a net for
+			# find any new tasks that we don't already have a net for
 			tasks = np.setdiff1d(np.unique(trY), np.asarray(self.tasks))
-		elif self.mode == "stacked":
+		elif self.mode == "unfrozen" or self.mode == "stacked":
+			# use all tasks
 			tasks = np.unique(trY)
 		# for each one, train it on a binarized random sampling, keeping all positive examples of
 		# the current task and using a percentage of all other tasks as the negative examples,
@@ -64,15 +65,22 @@ class MultiNetModel(object):
 			trB = binarize(trYr, task)[:, np.newaxis]
 			trB = np.concatenate((np.logical_not(trB).astype(np.uint8), trB), axis = 1)
 
-			if self.mode == "frozen":
+			if self.mode == "frozen" or self.mode == "unfrozen":
 				prev = None if len(self.nets) == 0 else self.nets[self.newest]
 			elif self.mode == "stacked":
 				prev = None if len(self.nets) == 0 else self.nets[self.newest][-1]
 
-			cnn = self.nnet(trXr, trB, prev, epochs)
+			if self.mode == "unfrozen" and task in np.asarray(self.tasks):
+				cnn = self.nets[task]
+				for _ in range(epochs):
+					for start, end in zip(range(0, len(trX), batch_size), range(batch_size, len(trX)+batch_size, batch_size)):
+						cnn.cost = cnn.train(trXr[start:end], trB[start:end])
+			else:
+				cnn = self.nnet(trXr, trB, prev, epochs)
+
 			self.tasks.append(task)
 			self.newest = task
-			if self.mode == "frozen":
+			if self.mode == "frozen" or self.mode == "unfrozen":
 				self.nets[task] = cnn
 			elif self.mode == "stacked":
 				if task not in self.nets:
@@ -85,7 +93,7 @@ class MultiNetModel(object):
 	def test(self, teX, teY, task, batch_size = 100):
 		vround = np.vectorize(lambda x: int(round(x))) # vround turns outputs from probabilities to binary 0/1
 
-		if self.mode == "frozen":
+		if self.mode == "frozen" or self.mode == "unfrozen":
 			cnn = self.nets[task]
 			probabilities = np.asarray([])
 			for start, end in zip(range(0, len(teX), batch_size), range(batch_size, len(teX)+batch_size, batch_size)):
@@ -112,7 +120,7 @@ class MultiNetModel(object):
 		classes = []
 		probabilities = []
 
-		if self.mode == "frozen":
+		if self.mode == "frozen" or self.mode == "unfrozen":
 			for task, net in self.nets.items():
 				classes.append(task)
 				probabilities.append(net.predict_probs(teX)[:, 1])
