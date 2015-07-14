@@ -4,12 +4,9 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.svm import LinearSVC
 import sys
 sys.path.append("..")
+from functions.Binarize import binarize
 from convnet import ConvolutionalNeuralNetwork
 from ELLA import ELLA
-
-
-def binarize(classifications, task_id):
-	return np.asarray(np.asarray(classifications) == task_id, dtype = np.uint8)
 
 
 def split_dataset(excluded, data_set, data_labels):

@@ -4,6 +4,8 @@ from optparse import OptionParser
 import os
 import sys
 import time
+sys.path.append("..")
+from functions.Binarize import binarize
 from convnet import ConvolutionalNeuralNetwork
 from load import mnist
 
@@ -144,11 +146,6 @@ class MultiNetModel(object):
 			print(diff(teY, predictions))
 
 		return np.mean(predictions == teY)
-
-
-def binarize(classes, task_id):
-	# take a set of data labels and binarize them to 1s and 0s depending on whether or not they match the current task
-	return (np.asarray(classes) == task_id).astype(np.uint8)
 
 
 def diff(actual, predictions):

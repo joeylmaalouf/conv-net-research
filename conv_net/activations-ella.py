@@ -1,22 +1,23 @@
 import numpy as np
 from sklearn.linear_model import LogisticRegression
+import sys
+sys.path.append("../")
+from functions.Binarize import binarize
 import load
 import convnet
 import ELLA
-
-
-def binarize(classifications, task_id):
-	return np.asarray(np.asarray(classifications) == task_id, dtype = np.uint8)
 
 
 if __name__ == "__main__":
 	print("\nLoading Data...")
 	load_activations = convnet.ConvolutionalNeuralNetwork().load_data
 	num_chunks = 20
-	trAs = [load_activations("saved/trA{0:02d}.txt".format(i), (60000 / num_chunks, 625)) for i in range(num_chunks)]
+	trAs = [np.asarray(load_activations("saved/trA{0:02d}.txt".format(i), (60000 / num_chunks, 625)).eval()) for i in range(num_chunks)]
 	trA = np.concatenate(trAs)
 	print("trA.shape: {0}".format(trA.shape))
-	teA = load_activations("saved/teA.txt", (10000, 625))
+	num_chunks = 20
+	teAs = [np.asarray(load_activations("saved/teA{0:02d}.txt".format(i), (10000 / num_chunks, 625)).eval()) for i in range(num_chunks)]
+	teA = np.concatenate(teAs)
 	print("teA.shape: {0}".format(teA.shape))
 	trX, teX, trY, teY = load.mnist(onehot = True)
 	trC = np.argmax(trY, axis = 1)
