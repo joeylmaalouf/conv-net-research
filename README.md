@@ -9,6 +9,8 @@ The team:
   * Catastrophic Interference Demonstration
   * Top-Layer Model Integration/Comparison (ELLA/SVC/etc.)
   * Multi-Net Model Design/Creation/Experimentation
+  * General Functions Module Creation
+  * Caffe Experimentation
 * [Sean Carter](https://github.com/seanccarter)
   * Modern Neural Network Configuration
   * Neural Network Generalization/Experimentation
