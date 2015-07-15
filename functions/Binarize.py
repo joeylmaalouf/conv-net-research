@@ -1,12 +1,12 @@
 import numpy as np
 
 
-def binarize(l, v, dtype = np.uint8):
-	""" Return a binarized version of an input list l,
+def binarize(data, val, dtype = np.uint8):
+	""" Return a binarized version of an input list
 		with values based on whether or not its contents
-		are equal to some value v.
+		are equal to some value.
 	"""
-	return (np.asarray(l) == v).astype(dtype)
+	return (np.asarray(data) == val).astype(dtype)
 
 
 if __name__ == "__main__":
