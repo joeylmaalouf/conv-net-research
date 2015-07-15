@@ -63,14 +63,13 @@ for _ in range(epochs):
 # testing accuracy
 print("Accuracy: {0}".format(np.mean(solver.test_nets[0].blobs["ip2"].data.argmax(1) == solver.test_nets[0].blobs["label"].data)))
 
-"""
 # experimenting with db stuff
 # env = lmdb.Environment("examples/mnist/mnist_train_lmdb", map_size = 100000000)
 # db = env.open_db()
 # txn = lmdb.Transaction(env, db)
 # csr = lmdb.Cursor(db, txn)
-train_cursor = lmdb.open("examples/mnist/mnist_train_lmdb", map_size = 100000000).begin().cursor()
-test_cursor = lmdb.open("examples/mnist/mnist_test_lmdb", map_size = 100000000).begin().cursor()
+train_cursor = lmdb.open("examples/mnist/mnist_train_lmdb", map_size = 100000000).begin(write = True).cursor()
+test_cursor = lmdb.open("examples/mnist/mnist_test_lmdb", map_size = 100000000).begin(write = True).cursor()
 
 #for key, value in train_cursor:
 #	print key, value
@@ -79,8 +78,18 @@ test_cursor = lmdb.open("examples/mnist/mnist_test_lmdb", map_size = 100000000).
 print("{0} training samples".format(sum(1 for _ in train_cursor)))
 print("{0} testing samples".format(sum(1 for _ in test_cursor)))
 
+def rewrite_binarized(db_cursor, datum_id, task):
+	string = db_cursor.get(datum_id)
+	datum = caffe.proto.caffe_pb2.Datum.FromString(string)
+	datum.label = int(datum.label == task)
+	string = datum.SerializeToString()
+	db_cursor.put(datum_id, string, overwrite = True)
 
-sample = train_cursor.get("00000000")
-print sample
-print repr(sample)
-"""
+def data_from_db(db_cursor, datum_id):
+	string = db_cursor.get(datum_id)
+	datum = caffe.proto.caffe_pb2.Datum.FromString(string)	
+	return caffe.io.datum_to_array(datum), datum.label
+
+print data_from_db(train_cursor, "00000000")[1]
+rewrite_binarized(train_cursor, "00000000", 0)
+print data_from_db(train_cursor, "00000000")[1]
