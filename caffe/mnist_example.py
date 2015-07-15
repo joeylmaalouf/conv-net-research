@@ -16,7 +16,7 @@ from caffe import layers as L
 from caffe import params as P
 
 
-# create the net and save its structurr
+# create the net and save its structure
 def lenet(lmdb, batch_size):
 	n = caffe.NetSpec()
 	n.data, n.label = L.Data(batch_size = batch_size, backend = P.Data.LMDB, source = lmdb, transform_param = dict(scale = 1./255), ntop = 2)
@@ -63,7 +63,7 @@ for _ in range(epochs):
 # testing accuracy
 print("Accuracy: {0}".format(np.mean(solver.test_nets[0].blobs["ip2"].data.argmax(1) == solver.test_nets[0].blobs["label"].data)))
 
-
+"""
 # experimenting with db stuff
 # env = lmdb.Environment("examples/mnist/mnist_train_lmdb", map_size = 100000000)
 # db = env.open_db()
@@ -83,3 +83,4 @@ print("{0} testing samples".format(sum(1 for _ in test_cursor)))
 sample = train_cursor.get("00000000")
 print sample
 print repr(sample)
+"""
