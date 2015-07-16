@@ -73,11 +73,11 @@ def run_solver(solver, epochs = 100):
 		solver.net.forward(start = "conv1")
 		solver.test_nets[0].forward(start = "conv1")
 
-	# predictions are the argmax"d values from the final layer, "ip2"
+	# predictions are the argmaxed values from the final layer, "ip2"
 	# training accuracy
 	# print np.mean(solver.net.blobs["ip2"].data.argmax(1) == solver.net.blobs["label"].data)
 	# testing accuracy
-	return np.mean(solver.test_nets[0].blobs["ip2"].data.argmax(1) == solver.test_nets[0].blobs["label"].data)
+	# print np.mean(solver.test_nets[0].blobs["ip2"].data.argmax(1) == solver.test_nets[0].blobs["label"].data)
 
 
 def load_db_cursor(db_path, verbose = True):
@@ -111,10 +111,12 @@ def dataset_from_db(db_cursor):
 
 
 if __name__ == "__main__":
+	# net structure
 	make_prototxts(batch_size = 200)
 	solver = load_solver(verbose = True)
-	accuracy = run_solver(solver, epochs = 200)
-	print("Accuracy: {0}".format(accuracy))
+	run_solver(solver, epochs = 100)
+
+	# data preprocessing
 	train_cursor = load_db_cursor("examples/mnist/mnist_train_lmdb", verbose = True)
 	test_cursor = load_db_cursor("examples/mnist/mnist_test_lmdb", verbose = True)
 	trX, trY = dataset_from_db(train_cursor)
@@ -123,3 +125,5 @@ if __name__ == "__main__":
 	print trY[:20].tolist()
 	for c in range(10):
 		print binarize(trY[:20], c).tolist()
+
+	# solver.solve() # ????
