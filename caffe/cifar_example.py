@@ -1,13 +1,14 @@
 import os
 # so we can access the data files
-os.chdir("../../caffe")
+os.chdir("../../../caffe")
 import sys
 sys.path.insert(0, './python')
-import caffe
+# hide caffe output
+os.environ["GLOG_minloglevel"] = "2"
 
 from pylab import *
-%matplotlib inline
 
+import caffe
 from caffe import layers as L
 from caffe import params as P
 
@@ -16,9 +17,11 @@ def lenet(lmdb, batch_size):
     n = caffe.NetSpec()
     n.data, n.label = L.Data(batch_size=batch_size, backend=P.Data.LMDB, source=lmdb,
                              transform_param=dict(scale=1./255), ntop=2)
-    n.conv1 = L.Convolution(n.data, kernel_size=3, num_output=32, weight_filler=dict(type='xavier'))
-    n.pool1 = L.Pooling(n.conv1, kernel_size=2, stride=2, pool=P.Pooling.MAX)
-    n.conv2 = L.Convolution(n.pool1, kernel_size=3, num_output=64, weight_filler=dict(type='xavier'))
+    n.conv1 = L.Convolution(n.data, kernel_size=5, num_output=32, weight_filler=dict(type='xavier'))
+    n.pool1 = L.Pooling(n.conv1, kernel_size=3, stride=2, pool=P.Pooling.MAX)
+    n.relu1 = L.ReLU(n.pool1)
+    n.norm1 = L.LRN(n.pool1, local_size=3, alpha =.00005, beta = .75, norm_region=P.WITHIN_CHANNEL)
+    n.conv2 = L.Convolution(n.norm1, kernel_size=3, num_output=64, weight_filler=dict(type='xavier'))
     n.pool2 = L.Pooling(n.conv2, kernel_size=2, stride=2, pool=P.Pooling.MAX)
     n.conv3 = L.Convolution(n.pool1, kernel_size=3, num_output=128, weight_filler=dict(type='xavier'))
     n.pool3 = L.Pooling(n.conv2, kernel_size=2, stride=2, pool=P.Pooling.MAX)
@@ -45,7 +48,7 @@ for k, v in solver.net.blobs.items():
 solver.net.forward()
 solver.test_nets[0].forward()
 
-epochs = 200
+epochs = 11000
 for _ in range(epochs):
 	# step forward in the training, starting from the conv layer because starting at the input layer would reload the data
 	solver.step(1)
