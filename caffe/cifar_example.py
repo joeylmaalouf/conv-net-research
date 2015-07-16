@@ -20,9 +20,11 @@ def lenet(lmdb, batch_size):
     n.conv1 = L.Convolution(n.data, kernel_size=5, num_output=32, weight_filler=dict(type='xavier'))
     n.pool1 = L.Pooling(n.conv1, kernel_size=3, stride=2, pool=P.Pooling.MAX)
     n.relu1 = L.ReLU(n.pool1)
-    n.norm1 = L.LRN(n.pool1, local_size=3, alpha =.00005, beta = .75, norm_region=P.WITHIN_CHANNEL)
+    n.norm1 = L.LRN(n.pool1, local_size=3, alpha =.00005, beta = .75)
     n.conv2 = L.Convolution(n.norm1, kernel_size=3, num_output=64, weight_filler=dict(type='xavier'))
     n.pool2 = L.Pooling(n.conv2, kernel_size=2, stride=2, pool=P.Pooling.MAX)
+    n.relu2 = L.ReLU(n.pool2)
+    n.norm2 = L.LRN(n.pool2, local_size=3, alpha =.00005, beta = .75)
     n.conv3 = L.Convolution(n.pool1, kernel_size=3, num_output=128, weight_filler=dict(type='xavier'))
     n.pool3 = L.Pooling(n.conv2, kernel_size=2, stride=2, pool=P.Pooling.MAX)
     n.ip1 = L.InnerProduct(n.pool2, num_output=128*3*3, weight_filler=dict(type='xavier'))
@@ -48,11 +50,12 @@ for k, v in solver.net.blobs.items():
 solver.net.forward()
 solver.test_nets[0].forward()
 
-epochs = 11000
+epochs = 10000
+
 for _ in range(epochs):
 	# step forward in the training, starting from the conv layer because starting at the input layer would reload the data
 	solver.step(1)
-	solver.net.forward(start = "conv1")
+	solver.net.forward_backward_all(start = "conv1")
 	solver.test_nets[0].forward(start = "conv1")
 
 # predictions are the argmax"d values from the final layer, "ip2"
