@@ -1,13 +1,14 @@
 import os
 # so we can access the data files
-os.chdir("../../caffe")
+os.chdir("../../../caffe")
 import sys
 sys.path.insert(0, './python')
-import caffe
+# hide caffe output
+os.environ["GLOG_minloglevel"] = "2"
 
 from pylab import *
-%matplotlib inline
 
+import caffe
 from caffe import layers as L
 from caffe import params as P
 
@@ -47,7 +48,7 @@ for k, v in solver.net.blobs.items():
 solver.net.forward()
 solver.test_nets[0].forward()
 
-epochs = 200
+epochs = 11000
 for _ in range(epochs):
 	# step forward in the training, starting from the conv layer because starting at the input layer would reload the data
 	solver.step(1)
