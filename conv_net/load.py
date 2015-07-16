@@ -47,8 +47,9 @@ def mnist(ntrain = 60000, ntest = 10000, onehot = True):
 	return trX,teX,trY,teY
 
 if __name__ == "__main__":
-	trX,teX,trY,teY = mnist()
-	trX = trX.reshape(60000, 28, 28)
+	trX, teX, trY, teY = mnist()
+	trX = trX.reshape(-1, 1, 28, 28)
+	teX = teX.reshape(-1, 1, 28, 28)
 	from matplotlib import pyplot as plt
 	plt.imshow(trX[0], "gray")
 	plt.show()

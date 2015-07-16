@@ -4,6 +4,9 @@ import os
 import sys
 import time
 
+sys.path.append("../")
+from functions.Binarize import binarize
+
 # so we can access the data files
 os.chdir("../../caffe")
 # let us import caffe
@@ -17,7 +20,7 @@ from caffe import params as P
 
 
 def lenet(lmdb, batch_size = 200):
-	""" Create our net structure.
+	""" Create our net structure
 	"""
 	n = caffe.NetSpec()
 	n.data, n.label = L.Data(batch_size = batch_size, backend = P.Data.LMDB, source = lmdb, transform_param = dict(scale = 1./255), ntop = 2)
@@ -33,7 +36,7 @@ def lenet(lmdb, batch_size = 200):
 
 
 def make_prototxts(batch_size = 200):
-	""" Save the net structure to prototxt files.
+	""" Save the net structure to prototxt files
 	"""
 	with open("examples/mnist/lenet_auto_train.prototxt", "w") as f:
 		f.write(str(lenet("examples/mnist/mnist_train_lmdb", batch_size)))
@@ -42,7 +45,7 @@ def make_prototxts(batch_size = 200):
 
 
 def load_solver(verbose = True):
-	""" Create a solver from the loaded net structure.
+	""" Create a solver from the loaded net structure
 	"""
 	caffe.set_device(0)
 	caffe.set_mode_gpu()
@@ -58,7 +61,7 @@ def load_solver(verbose = True):
 
 def run_solver(solver, epochs = 100):
 	""" Run the given solver and return its testing
-		accuracy after a certain number of epochs.
+		accuracy after a certain number of epochs
 	"""
 	# initialize the nets
 	solver.net.forward()
@@ -77,36 +80,34 @@ def run_solver(solver, epochs = 100):
 	return np.mean(solver.test_nets[0].blobs["ip2"].data.argmax(1) == solver.test_nets[0].blobs["label"].data)
 
 
-def load_db_cursors(train_db_path, test_db_path, verbose = True):
-	""" Load the given databases and return cursors created from them.
+def load_db_cursor(db_path, verbose = True):
+	""" Load the given database and return its cursor
 	"""
-	train_cursor = lmdb.open(train_db_path, map_size = 100000000).begin(write = True).cursor()
-	test_cursor = lmdb.open(test_db_path, map_size = 100000000).begin(write = True).cursor()
-
-	# for key, value in train_cursor:
-		# print key, value
-	# for key, value in test_cursor:
-		# print key, value
-
+	cursor = lmdb.open(db_path, map_size = 100000000).begin(write = True).cursor()
 	if verbose:
-		print("{0} training samples".format(sum(1 for _ in train_cursor)))
-		print("{0} testing samples".format(sum(1 for _ in test_cursor)))
-
-	return train_cursor, test_cursor
+		print("{0} samples in {1}".format(sum(1 for _ in cursor), db_path))
+	return cursor
 
 
-def rewrite_binarized(db_cursor, datum_id, task):
-	string = db_cursor.get(datum_id)
-	datum = caffe.proto.caffe_pb2.Datum.FromString(string)
-	datum.label = int(datum.label == task)
-	string = datum.SerializeToString()
-	db_cursor.put(datum_id, string, overwrite = True)
-
-
-def data_from_db(db_cursor, datum_id):
-	string = db_cursor.get(datum_id)
-	datum = caffe.proto.caffe_pb2.Datum.FromString(string)	
+def data_from_db(db_cursor, datum_id = "", datum_string = None):
+	""" Given either the datum ID or the datum string itself,
+		return the data as a tuple: a numpy array for the image
+		data and an integer for the class label
+	"""
+	if not datum_string:
+		datum_string = db_cursor.get(datum_id) # opposite of db_cursor.put(datum_id, string, overwrite = True)
+	datum = caffe.proto.caffe_pb2.Datum.FromString(datum_string) # opposite of datum.SerializeToString()
 	return caffe.io.datum_to_array(datum), datum.label
+
+
+def dataset_from_db(db_cursor):
+	X = [] # preallocate?
+	Y = []
+	for key, value in db_cursor:
+		x, y = data_from_db(db_cursor, datum_string = value) # one less operation per call to use datum_string = value instead of datum_id = key
+		X.append(x)
+		Y.append(y)
+	return np.asarray(X), np.asarray(Y)
 
 
 if __name__ == "__main__":
@@ -114,7 +115,11 @@ if __name__ == "__main__":
 	solver = load_solver(verbose = True)
 	accuracy = run_solver(solver, epochs = 200)
 	print("Accuracy: {0}".format(accuracy))
-	train_cursor, test_cursor = load_db_cursors("examples/mnist/mnist_train_lmdb", "examples/mnist/mnist_test_lmdb", True)
-	print data_from_db(train_cursor, "00000000")[1]
-	rewrite_binarized(train_cursor, "00000000", 0)
-	print data_from_db(train_cursor, "00000000")[1]
+	train_cursor = load_db_cursor("examples/mnist/mnist_train_lmdb", verbose = True)
+	test_cursor = load_db_cursor("examples/mnist/mnist_test_lmdb", verbose = True)
+	trX, trY = dataset_from_db(train_cursor)
+	teX, teY = dataset_from_db(test_cursor)
+
+	print trY[:20].tolist()
+	for c in range(10):
+		print binarize(trY[:20], c).tolist()
