@@ -4,6 +4,8 @@ os.chdir("../../caffe")
 import sys
 sys.path.insert(0, './python')
 import caffe
+# hide caffe output
+os.environ["GLOG_minloglevel"] = "2" 
 
 from pylab import *
 %matplotlib inline
@@ -26,6 +28,7 @@ def lenet(lmdb, batch_size):
     n.norm2 = L.LRN(n.pool2, local_size=3, alpha =.00005, beta = .75)
     n.conv3 = L.Convolution(n.pool1, kernel_size=3, num_output=128, weight_filler=dict(type='xavier'))
     n.pool3 = L.Pooling(n.conv2, kernel_size=2, stride=2, pool=P.Pooling.MAX)
+    n.relu3 = L.ReLU(n.pool3)
     n.ip1 = L.InnerProduct(n.pool2, num_output=128*3*3, weight_filler=dict(type='xavier'))
     n.relu1 = L.ReLU(n.ip1, in_place=True)
     n.ip2 = L.InnerProduct(n.relu1, num_output=10, weight_filler=dict(type='xavier'))
@@ -115,8 +118,8 @@ if __name__ == "__main__":
     run_solver(solver, epochs = 100)
 
     # data preprocessing
-    train_cursor = load_db_cursor("examples/mnist/mnist_train_lmdb", verbose = True)
-    test_cursor = load_db_cursor("examples/mnist/mnist_test_lmdb", verbose = True)
+    train_cursor = load_db_cursor("examples/cifar10/cifar10t_train_lmdb", verbose = True)
+    test_cursor = load_db_cursor("examples/cifar10/cifar10_test_lmdb", verbose = True)
     trX, trY = dataset_from_db(train_cursor)
     teX, teY = dataset_from_db(test_cursor)
 
