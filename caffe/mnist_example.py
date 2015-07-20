@@ -12,7 +12,7 @@ os.chdir("../../caffe")
 # let us import caffe
 sys.path.insert(0, "./python")
 # hide caffe output
-os.environ["GLOG_minloglevel"] = "2" 
+os.environ["GLOG_minloglevel"] = "2"
 
 import caffe
 from caffe import layers as L
@@ -70,7 +70,7 @@ def run_solver(solver, epochs = 100):
 	for _ in range(epochs):
 		# step forward in the training, starting from the conv layer because starting at the input layer would reload the data
 		solver.step(1)
-		solver.net.forward(start = "conv1")
+		solver.net.forward(start = "conv1") # note: does the next minibatch, not all the data
 		solver.test_nets[0].forward(start = "conv1")
 
 	# predictions are the argmaxed values from the final layer, "ip2"
@@ -126,4 +126,4 @@ if __name__ == "__main__":
 	for c in range(10):
 		print binarize(trY[:20], c).tolist()
 
-	# solver.solve() # ????
+	# solver.solve() # ???? I want a predict...
