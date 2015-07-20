@@ -27,6 +27,5 @@ if __name__ == "__main__":
 	image = np.reshape(np.arange(16), (4, 4))
 	print("\nOriginal array:")
 	print(image)
-	print "Cropped sub-arrays:"
-	for c in crop_sampling(image, (3, 2)):
-		print(c)
+	print("Cropped sub-arrays:")
+	print(crop_sampling(image, (3, 2)))
