@@ -4,7 +4,7 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.svm import LinearSVC
 import sys
 sys.path.append("..")
-from functions.Binarize import binarize
+from functions.Array import binarize
 from convnet import ConvolutionalNeuralNetwork
 from ELLA import ELLA
 

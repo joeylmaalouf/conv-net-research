@@ -5,7 +5,7 @@ import os
 import sys
 import time
 sys.path.append("..")
-from functions.Binarize import binarize
+from functions.Array import binarize
 from convnet import ConvolutionalNeuralNetwork
 from load import mnist
 

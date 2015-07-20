@@ -5,7 +5,7 @@ import sys
 import time
 
 sys.path.append("../")
-from functions.Binarize import binarize
+from functions.Array import binarize
 
 # so we can access the data files
 os.chdir("../../caffe")

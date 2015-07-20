@@ -2,7 +2,7 @@ import numpy as np
 from sklearn.linear_model import LogisticRegression
 import sys
 sys.path.append("../")
-from functions.Binarize import binarize
+from functions.Array import binarize
 import load
 import convnet
 import ELLA
