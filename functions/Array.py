@@ -10,27 +10,26 @@ def binarize(data, val, dtype = np.uint8):
 	return (np.asarray(data) == val).astype(dtype)
 
 
-def crop_sampling(original, cropped_size, im_dims = (0, 1)):
+def crop_sampling(original, cropped_size, crop_dims = (0, 1)):
 	""" Given a NumPy array and a cropped size that is less than or equal to the
 		size of the original array return a list of all possible cropped variations.
-		The cropped_size variable must have the same number of dimensions as the
-		original input array. The im_dims variable can be used to specify the
-		dimensions to crop across. This function supports any number of dimensions
-		for the input array, as well as any number of dimensions to crop across.
+		The crop_dims variable can be used to specify the dimensions to crop across.
+		This function supports any number of dimensions for the input array, as well
+		as any number of dimensions to crop across.
 
-		original: n-dimensional NumPy array
-		cropped_size: n-dimensional iteratable
-		im_dims: m-dimensional iteratable (m <= n)
+		original: m-dimensional NumPy array
+		cropped_size: n-length tuple (n <= m)
+		crop_dims: n-length tuple
 	"""
-	ranges = [range(0, 1+original.shape[dim]-cropped_size[dim]) for dim in im_dims]
+	ranges = [range(0, 1+original.shape[dim]-cropped_size[ind]) for ind, dim in enumerate(crop_dims)]
 	crops = []
 	for corner in itertools.product(*ranges):
 		extended = [None]*len(original.shape)
-		for ind, dim in zip(range(len(corner)), im_dims):
+		for ind, dim in zip(range(len(corner)), crop_dims):
 			extended[dim] = corner[ind]
 		indices = [Ellipsis]*len(original.shape)
-		for dim in im_dims:
-			indices[dim] = slice(extended[dim], (extended[dim]+cropped_size[dim]))
+		for ind, dim in enumerate(crop_dims):
+			indices[dim] = slice(extended[dim], (extended[dim]+cropped_size[ind]))
 		crops.append(original[indices])
 	return np.asarray(crops)
 
@@ -51,4 +50,4 @@ if __name__ == "__main__":
 	print("\n\nOriginal 3D array:")
 	print(image)
 	print("\nCropped sub-arrays across dimensions 1, 2:")
-	print(crop_sampling(image, cropped_size = (3, 3, 2), im_dims = (1, 2)))
+	print(crop_sampling(image, cropped_size = (3, 2), crop_dims = (1, 2)))
