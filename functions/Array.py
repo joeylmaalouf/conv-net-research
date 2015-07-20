@@ -15,7 +15,7 @@ def crop_sampling(original, cropped_size):
 		original array, return a list of all possible cropped variations.
 	"""
 	corners = itertools.product(range(0, 1+original.shape[0]-cropped_size[0]), range(0, 1+original.shape[1]-cropped_size[1]))
-	return [original[c[0]:(c[0]+cropped_size[0]), c[1]:(c[1]+cropped_size[1])] for c in corners]
+	return np.asarray([original[c[0]:(c[0]+cropped_size[0]), c[1]:(c[1]+cropped_size[1])] for c in corners])
 
 
 if __name__ == "__main__":
