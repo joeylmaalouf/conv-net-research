@@ -24,12 +24,9 @@ def crop_sampling(original, cropped_size, crop_dims = (0, 1)):
 	ranges = [range(0, 1+original.shape[dim]-cropped_size[ind]) for ind, dim in enumerate(crop_dims)]
 	crops = []
 	for corner in itertools.product(*ranges):
-		extended = [None]*len(original.shape)
-		for ind, dim in zip(range(len(corner)), crop_dims):
-			extended[dim] = corner[ind]
 		indices = [Ellipsis]*len(original.shape)
 		for ind, dim in enumerate(crop_dims):
-			indices[dim] = slice(extended[dim], (extended[dim]+cropped_size[ind]))
+			indices[dim] = slice(corner[ind], (corner[ind]+cropped_size[ind]))
 		crops.append(original[indices])
 	return np.asarray(crops)
 
