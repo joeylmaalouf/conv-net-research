@@ -21,6 +21,10 @@ def crop_sampling(original, cropped_size, crop_dims = (0, 1)):
 		cropped_size: n-length tuple (n <= m)
 		crop_dims: n-length tuple
 	"""
+	if type(cropped_size) == type(0):
+		cropped_size = (cropped_size,)
+	if type(crop_dims) == type(0):
+		crop_dims = (crop_dims,)
 	ranges = [range(0, 1+original.shape[dim]-cropped_size[ind]) for ind, dim in enumerate(crop_dims)]
 	crops = []
 	for corner in itertools.product(*ranges):
@@ -48,3 +52,8 @@ if __name__ == "__main__":
 	print(image)
 	print("\nCropped sub-arrays across dimensions 1, 2:")
 	print(crop_sampling(image, cropped_size = (3, 2), crop_dims = (1, 2)))
+
+	# e.g. splitting color channels in an image:
+	# you want each element in the output array to be of size 1 (down from, say, 3) in the specified dimension,
+	# and you are referring to dimension 0 in the input array as the one to crop across
+	# print(crop_sampling(image, cropped_size = 1, crop_dims = 0))
