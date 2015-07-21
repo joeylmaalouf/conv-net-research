@@ -19,19 +19,14 @@ def grid_search(model, params):
 	for valuelist in itertools.product(*vals):
 		params = { names[i]: valuelist[i] for i in range(len(valuelist)) }
 
-		if type(model) == type(object):
-			m = model()
-			instance = m
-		else:
-			instance = model
-
+		instance = model() if type(model) == type(object) else model
 		for k, v in params.items():
 			setattr(instance, k, v)
 
 		acc = instance.eval()
-
 		if acc > best[1]:
 			best = (params, acc)
+
 	return best[0]
 
 
@@ -45,9 +40,6 @@ class DummyModel(object):
 		self.par1 = par1
 		self.par2 = par2
 		self.par3 = par3
-
-	def __str__(self):
-		return "DummyModel with parameters {0}, {1}, {2}, and {3}".format(self.par0, self.par1, self.par2, self.par3)
 
 	def eval(self):
 		return random.random()
