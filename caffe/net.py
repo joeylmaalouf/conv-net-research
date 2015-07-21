@@ -48,3 +48,8 @@ predictions = np.asarray(predictions)
 print Counter(predictions)
 print Counter(teY)
 print np.mean(predictions == teY)
+
+# figure out how to extract activations
+print "blobs:"
+for blob in net.blobs:
+	print blob
