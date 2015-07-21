@@ -65,7 +65,7 @@ class MultiNetModel(object):
 
 			trXr, trYr = random_sampling(data_set = trX, data_labels = trY, p_kept = 0.2, to_keep = task)
 			trB = binarize(trYr, task)[:, np.newaxis]
-			trB = np.concatenate((np.logical_not(trB).astype(np.uint8), trB), axis = 1)
+			trB = np.concatenate((np.logical_not(trB).astype(np.int64), trB), axis = 1)
 
 			if self.mode == "frozen" or self.mode == "unfrozen":
 				prev = None if len(self.nets) == 0 else self.nets[self.newest]
@@ -138,7 +138,7 @@ class MultiNetModel(object):
 
 	def evaluate(self, teX, teY, batch_size = 100, verbose = False):
 		# compare the model's predictions to the actual values
-		predictions = np.asarray([], dtype = np.uint8)
+		predictions = np.asarray([], dtype = np.int64)
 		for start, end in zip(range(0, teX.shape[0], batch_size), range(batch_size, teX.shape[0]+batch_size, batch_size)):
 			predictions = np.append(predictions, self.predict(teX[start:end]))
 

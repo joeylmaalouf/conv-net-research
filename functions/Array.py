@@ -2,7 +2,7 @@ import itertools
 import numpy as np
 
 
-def binarize(data, val, dtype = np.uint8):
+def binarize(data, val, dtype = np.int64):
 	""" Return a binarized version of an input list
 		with values based on whether or not its contents
 		are equal to some value.
