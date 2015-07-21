@@ -23,15 +23,25 @@ def pad_images(images, image_shape):
 	return images
 
 def translate_image(image, xtranslate, ytranslate):
+	shape = image.shape
+	image = image.reshape((shape[0], shape[1], 3))
 	rows,cols = img.shape[2], img.shape[3]
 	M = np.float32([[1,0,xtranslate],[0,1,ytranslate]])
 	dst = cv2.warpAffine(img,M,(cols,rows))
 	return dst
 
 def rotate_image(image, degrees):
+	shape = image.shape
+	image = image.reshape((shape[0], shape[1], 3))
 	rows,cols = img.shape[2], img.shape[3]
 	M = cv2.getRotationMatrix2D((cols/2,rows/2),degrees,1)
 	dst = cv2.warpAffine(img,M,(cols,rows))
+
+def swap_color_axis(image):
+	if image.shape[0] == 3:
+		image = np.swapaxes(image, 0, 2)
+		image = np.swapaxes(image, 0,1)
+	return image
 
 def random_affine_transformations(images):
 	if len(images.shape) < 4:
