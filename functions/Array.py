@@ -25,7 +25,7 @@ def crop_sampling(original, cropped_size, crop_dims = (0, 1)):
 		cropped_size = (cropped_size,)
 	if type(crop_dims) == type(0):
 		crop_dims = (crop_dims,)
-	ranges = [range(0, 1+original.shape[dim]-cropped_size[ind]) for ind, dim in enumerate(crop_dims)]
+	ranges = [range(0, 1+original.shape[dim]-size) for size, dim in zip(cropped_size, crop_dims)]
 	crops = []
 	for corner in itertools.product(*ranges):
 		indices = [Ellipsis]*len(original.shape)
