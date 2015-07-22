@@ -38,7 +38,6 @@ total_size = teX.shape[0]
 num_batches = total_size/batch_size
 
 # net.forward_backward_all() # figure this out to do everything without needing to go batch by batch like I do below
-
 predictions = []
 for i in range(num_batches):
 	net.forward()
@@ -53,3 +52,17 @@ print "accuracy:", np.mean(predictions == teY)
 print "blobs:"
 for key, val in net.blobs.items():
 	print " ", key, val.data.shape
+
+# create our own prediction function
+def __predict(self, input):
+	data = self.blobs["data"].data
+	data = np.resize(data, input.shape)
+	for ind, val in enumerate(input):
+		data[ind] = val
+	self.forward()
+	return self.blobs["ip2"].data.argmax(1)[:input.shape[0]]
+caffe.Net.predict = __predict
+
+# look, it works :)
+print "predicted:", net.predict(teX[:10])
+print "actual:", teY[:10]
