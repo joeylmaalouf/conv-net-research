@@ -17,7 +17,7 @@ os.environ["GLOG_minloglevel"] = "2"
 
 import caffe
 
-net = caffe.Net("examples/mnist/lenet_auto_test.prototxt", "examples/mnist/mnist_autoencoder_iter_50000.caffemodel", caffe.TEST)
+net = caffe.Net("examples/mnist/lenet_auto_test.prototxt", "examples/mnist/lenet_iter_10000.caffemodel", caffe.TEST)
 
 test_cursor = lmdb.open("examples/mnist/mnist_test_lmdb", map_size = 100000000).begin(write = True).cursor()
 teX = []
@@ -45,11 +45,11 @@ for i in range(num_batches):
 	predictions.extend(net.blobs["ip2"].data.argmax(1))	
 predictions = np.asarray(predictions)
 
-print Counter(predictions)
-print Counter(teY)
-print np.mean(predictions == teY)
+print "predicted:", Counter(predictions)
+print "actual:", Counter(teY)
+print "accuracy:", np.mean(predictions == teY)
 
 # figure out how to extract activations
 print "blobs:"
-for blob in net.blobs:
-	print blob
+for key, val in net.blobs.items():
+	print " ", key, val.data.shape
