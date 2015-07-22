@@ -1,3 +1,4 @@
+
 from collections import Counter
 import lmdb
 import math
@@ -6,7 +7,7 @@ import os
 import sys
 import time
 
-sys.path.append("../")
+sys.path.insert(0, "../")
 from functions.Array import binarize
 
 # so we can access the data files
@@ -58,16 +59,24 @@ if __name__ == "__main__":
 	caffe.set_mode_gpu()
 
 	net = caffe.Net("examples/mnist/lenet_auto_test.prototxt", "examples/mnist/lenet_iter_10000.caffemodel", caffe.TEST)
+	trX, trY = open_dataset("examples/mnist/mnist_train_lmdb")
 	teX, teY = open_dataset("examples/mnist/mnist_test_lmdb")
 	predictions = net.predict(teX)
+	print("\nNet Predictions:")
 	print("Predicted: {0}".format(Counter(predictions)))
 	print("Actual:    {0}".format(Counter(teY)))
-	print("Accuracy: {0:0.04f}".format(np.mean(predictions == teY)))
+	print("Accuracy:  {0:0.04f}".format(np.mean(predictions == teY)))
 
-	print("\nBlobs:")
+
+	# todo:
+
+	# figure out how to extract activations for top-layer model
+	print("\nNet Blobs:")
 	for key, val in net.blobs.items():
 		print("  {0}, {1}".format(key, val.data.shape))
 
-	# todo:
-		# figure out how to extract activations for top-layer model
-		# make binary nets for multi-net model
+	# make binary nets for multi-net model
+	print("\nBinarized Labels:")
+	print(trY[:20].tolist())
+	for c in range(10):
+		print(binarize(trY[:20], c).tolist())
