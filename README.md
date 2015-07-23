@@ -10,7 +10,7 @@ The team:
   * Top-Layer Model Integration/Comparison (ELLA/SVC/etc.)
   * Multi-Net Model Design/Creation/Experimentation
   * General Functions Module Creation
-  * Caffe Experimentation
+  * Caffe Experimentation/Prediction Extension
 * [Sean Carter](https://github.com/seanccarter)
   * Modern Neural Network Configuration
   * Neural Network Generalization/Experimentation
