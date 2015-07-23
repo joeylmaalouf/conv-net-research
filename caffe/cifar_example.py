@@ -31,32 +31,62 @@ def lenet(lmdb, batch_size):
     n.loss = L.SoftmaxWithLoss(n.ip2, n.label)
     return n.to_proto()
 
-with open('experimentation/multi-net/cifarnet_auto_train.prototxt', 'w') as f:
-    f.write(str(lenet('examples/cifar10/cifar10_train_lmdb', 128)))
-    
-with open('experimentation/multi-net/cifarnet_auto_test.prototxt', 'w') as f:
-    f.write(str(lenet('examples/cifar10/cifar10_test_lmdb', 128)))
 
-caffe.set_device(0)
-caffe.set_mode_gpu()
-solver = caffe.SGDSolver("experimentation/multi-net/cifar10_auto_solver.prototxt")
+# create our own prediction function
+def __predict(self, input):
+    if len(input.shape) > 4:
+        input = input[np.newaxis]
 
-print("Model structure:")
-for k, v in solver.net.blobs.items():
-	print("  {0} of shape {1}".format(k, v.data.shape))
+    num_items = input.shape[0]
+    batch_items = net.blobs["data"].data.shape[0]
+    num_batches = int(math.ceil(float(num_items)/batch_items))
 
-solver.net.forward()
-solver.test_nets[0].forward()
+    predictions = np.zeros(input.shape[0], dtype = np.int64)
 
-epochs = 11000
-for _ in range(epochs):
-	# step forward in the training, starting from the conv layer because starting at the input layer would reload the data
-	solver.step(1)
-	solver.net.forward(start = "conv1")
-	solver.test_nets[0].forward(start = "conv1")
+    for batch in range(num_batches):
+        indices = slice(batch*batch_items, (batch+1)*batch_items)
+        batch_data = input[indices]
 
-# predictions are the argmax"d values from the final layer, "ip2"
-# training accuracy
-# print np.mean(solver.net.blobs["ip2"].data.argmax(1) == solver.net.blobs["label"].data)
-# testing accuracy
-print("Accuracy: {0:0.04f}".format(np.mean(solver.test_nets[0].blobs["ip2"].data.argmax(1) == solver.test_nets[0].blobs["label"].data)))
+        for ind, val in enumerate(batch_data):
+            self.blobs["data"].data[ind] = val
+
+        self.forward(start = "conv1")
+
+        predictions[indices] = self.blobs["ip2"].data.argmax(1)[:len(batch_data)].copy()
+    return predictions
+
+caffe.Net.predict = __predict
+
+if __name__ == "__main__":
+    train = True
+    if train:
+        with open('experimentation/multi-net/cifarnet_auto_train.prototxt', 'w') as f:
+            f.write(str(lenet('examples/cifar10/cifar10_train_lmdb', 128)))
+        with open('experimentation/multi-net/cifarnet_auto_test.prototxt', 'w') as f:
+            f.write(str(lenet('examples/cifar10/cifar10_test_lmdb', 128)))
+
+        caffe.set_device(0)
+        caffe.set_mode_gpu()
+        solver = caffe.SGDSolver("experimentation/multi-net/cifar10_auto_solver.prototxt")
+
+        print("Model structure:")
+        for k, v in solver.net.blobs.items():
+            print("  {0} of shape {1}".format(k, v.data.shape))
+
+        solver.net.forward()
+        solver.test_nets[0].forward()
+
+        epochs = 11000
+        for _ in range(epochs):
+        	# step forward in the training, starting from the conv layer because starting at the input layer would reload the data
+        	solver.step(1)
+        	solver.net.forward(start = "conv1")
+        	solver.test_nets[0].forward(start = "conv1")
+        print("Accuracy: {0:0.04f}".format(np.mean(solver.test_nets[0].blobs["ip2"].data.argmax(1) == solver.test_nets[0].blobs["label"].data)))
+
+    else:
+        caffe.set_device(0)
+    	caffe.set_mode_gpu()
+
+    	net = caffe.Net("examples/mnist/lenet_auto_test.prototxt", "examples/mnist/lenet_iter_10000.caffemodel", caffe.TEST)
+
