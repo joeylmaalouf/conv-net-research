@@ -12,10 +12,12 @@ def binarize(data, val, dtype = np.int64):
 
 def crop_sampling(original, cropped_size, crop_dims = (0, 1)):
 	""" Given a NumPy array and a cropped size that is less than or equal to the
-		size of the original array return a list of all possible cropped variations.
-		The crop_dims variable can be used to specify the dimensions to crop across.
-		This function supports any number of dimensions for the input array, as well
-		as any number of dimensions to crop across.
+		size of the original array, return an array of all possible cropped variations.
+		The cropped_size variable must be equal in length to the crop_dims variable
+		because each dimension length value in cropped_size corresponds to a dimension
+		to crop across specified in crop_dims. This function supports any number of
+		dimensions for the input array, as well as any number of dimensions to crop
+		across that is less than or equal to the number of dimensions in the input.
 
 		original: m-dimensional NumPy array
 		cropped_size: n-length tuple (n <= m)
@@ -53,7 +55,14 @@ if __name__ == "__main__":
 	print("\nCropped sub-arrays across dimensions 1, 2:")
 	print(crop_sampling(image, cropped_size = (3, 2), crop_dims = (1, 2)))
 
-	# e.g. splitting color channels in an image:
-	# you want each element in the output array to be of size 1 (down from, say, 3) in the specified dimension,
-	# and you are referring to dimension 0 in the input array as the one to crop across
-	# print(crop_sampling(image, cropped_size = 1, crop_dims = 0))
+	image = np.reshape(np.arange(240), (5, 3, 4, 4))
+	print("\n\nOriginal 4D array shape:")
+	print("(index, channel, row, column)")
+	print(image.shape)
+	# you want each element in the output array to be of size 1 (down from, say, 3) in the specified
+	# dimension, and you are referring to dimension 1 in the input array as the one to crop across
+	crops = crop_sampling(image, cropped_size = 1, crop_dims = 1)
+	print("\nShape output from splitting color channels in a list of images:")
+	for crop in crops:
+		print(crop.shape)
+	print("Overall shape of {0}".format(crops.shape))
