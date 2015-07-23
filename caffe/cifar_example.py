@@ -1,3 +1,5 @@
+
+from collections import Counter
 import os
 # so we can access the data files
 os.chdir("../../../caffe")
@@ -7,6 +9,7 @@ sys.path.insert(0, './python')
 os.environ["GLOG_minloglevel"] = "2"
 
 from pylab import *
+import lmdb
 
 import caffe
 from caffe import layers as L
@@ -20,7 +23,7 @@ def lenet(lmdb, batch_size):
     n.conv1 = L.Convolution(n.data, kernel_size=5, num_output=32, weight_filler=dict(type='xavier'))
     n.pool1 = L.Pooling(n.conv1, kernel_size=3, stride=2, pool=P.Pooling.MAX)
     n.relu1 = L.ReLU(n.pool1)
-    n.norm1 = L.LRN(n.pool1, local_size=3, alpha =.00005, beta = .75, norm_region=P.WITHIN_CHANNEL)
+    n.norm1 = L.LRN(n.pool1, local_size=3, alpha =.00005, beta = .75)
     n.conv2 = L.Convolution(n.norm1, kernel_size=3, num_output=64, weight_filler=dict(type='xavier'))
     n.pool2 = L.Pooling(n.conv2, kernel_size=2, stride=2, pool=P.Pooling.MAX)
     n.conv3 = L.Convolution(n.pool1, kernel_size=3, num_output=128, weight_filler=dict(type='xavier'))
@@ -57,6 +60,15 @@ def __predict(self, input):
 
 caffe.Net.predict = __predict
 
+def open_dataset(path):
+	cursor = lmdb.open(path, map_size = 100000000).begin(write = False).cursor()
+	X, Y = [], []
+	for key, val in cursor:
+		datum = caffe.proto.caffe_pb2.Datum.FromString(val) # opposite of val = datum.SerializeToString(), just like the opposite of val = cursor.get(id) is db_cursor.put(id, val, overwrite = True)
+		X.append(caffe.io.datum_to_array(datum))
+		Y.append(datum.label)
+	return np.asarray(X), np.asarray(Y)
+
 if __name__ == "__main__":
     train = True
     if train:
@@ -76,7 +88,7 @@ if __name__ == "__main__":
         solver.net.forward()
         solver.test_nets[0].forward()
 
-        epochs = 11000
+        epochs = 20000
         for _ in range(epochs):
         	# step forward in the training, starting from the conv layer because starting at the input layer would reload the data
         	solver.step(1)
@@ -88,5 +100,11 @@ if __name__ == "__main__":
         caffe.set_device(0)
     	caffe.set_mode_gpu()
 
-    	net = caffe.Net("examples/mnist/lenet_auto_test.prototxt", "examples/mnist/lenet_iter_10000.caffemodel", caffe.TEST)
-
+    	net = caffe.Net("experimentation/multi-net/cifarnet_auto_test.prototxt", "experimentation/multi-net/cifar10_full_iter_10000.caffemodel", caffe.TEST)
+	trX, trY = open_dataset("./examples/cifar10/cifar10_train_lmdb")
+	teX, teY = open_dataset("./examples/cifar10/cifar10_test_lmdb")
+	predictions = net.predict(teX)
+	print("\nNet Predictions:")
+	print("Predicted: {0}".format(Counter(predictions)))
+	print("Actual:    {0}".format(Counter(teY)))
+	print("Accuracy:  {0:0.04f}".format(np.mean(predictions == teY)))	
