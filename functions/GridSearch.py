@@ -10,7 +10,11 @@ def grid_search(model, params):
 		is a class type, grid_search will initialize a new
 		model for each evaluation; if it is a class instance,
 		grid_search will use that instance, re-setting
-		just the attributes passed in for testing.
+		just the attributes passed in for testing. The only
+		requirement for the model is that it has an eval()
+		method that returns a number; if there is any code that
+		needs to be run after __init__() and before eval(), it
+		can go in a prep() method that will be run if it exists.
 	"""
 	best = ({}, -float("Inf"))
 	names = params.keys()
@@ -22,6 +26,9 @@ def grid_search(model, params):
 		instance = model() if type(model) == type(object) else model
 		for k, v in params.items():
 			setattr(instance, k, v)
+
+		if hasattr(instance, "prep"):
+			instance.prep()
 
 		acc = instance.eval()
 		if acc > best[1]:
@@ -41,7 +48,17 @@ class DummyModel(object):
 		self.par2 = par2
 		self.par3 = par3
 
+	def prep(self):
+		""" Do any work that, for some reason, needs to
+			be done before eval and can't be combined with it.
+			This method does not need to exist in your object.
+		"""
+		pass
+
 	def eval(self):
+		""" Return the model's evaluation (usually accuracy) as a
+			single number. This method must exist in your object.
+		"""
 		return random.random()
 
 
