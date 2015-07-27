@@ -10,10 +10,11 @@ def binarize(data, val, dtype = np.int64):
 	return (np.asarray(data) == val).astype(dtype)
 
 
-def crop_sampling(original, cropped_size, crop_dims = (0, 1)):
+def crop_sampling(original, cropped_size, crop_dims = (0, 1), steps = (1, 1)):
 	""" Given a NumPy array and a cropped size that is less than or equal to the
-		size of the original array, return an array of all possible cropped variations.
-		The cropped_size variable must be equal in length to the crop_dims variable
+		size of the original array, return an array of all possible cropped variations
+		that can be created by shifting each dimension by the given step size. The
+		cropped_size variable must be equal in length to the crop_dims variable
 		because each dimension length value in cropped_size corresponds to a dimension
 		to crop across specified in crop_dims. This function supports any number of
 		dimensions for the input array, as well as any number of dimensions to crop
@@ -22,12 +23,13 @@ def crop_sampling(original, cropped_size, crop_dims = (0, 1)):
 		original: m-dimensional NumPy array
 		cropped_size: n-length tuple (n <= m)
 		crop_dims: n-length tuple
+		steps: n-length tuple
 	"""
 	if type(cropped_size) == type(0):
 		cropped_size = (cropped_size,)
 	if type(crop_dims) == type(0):
 		crop_dims = (crop_dims,)
-	ranges = [range(0, 1+original.shape[dim]-size) for size, dim in zip(cropped_size, crop_dims)]
+	ranges = [range(0, 1+original.shape[dim]-size, step) for size, dim, step in zip(cropped_size, crop_dims, steps)]
 	crops = []
 	for corner in itertools.product(*ranges):
 		indices = [Ellipsis]*len(original.shape)
@@ -46,8 +48,8 @@ if __name__ == "__main__":
 	image = np.reshape(np.arange(16), (4, 4))
 	print("\n\nOriginal 2D array:")
 	print(image)
-	print("\nCropped sub-arrays across dimensions 0, 1:")
-	print(crop_sampling(image, (3, 2)))
+	print("\nCropped sub-arrays across dimensions 0, 1, stepping over every row and every other column:")
+	print(crop_sampling(image, (3, 2), steps = (1, 2)))
 
 	image = np.reshape(np.arange(48), (3, 4, 4))
 	print("\n\nOriginal 3D array:")
