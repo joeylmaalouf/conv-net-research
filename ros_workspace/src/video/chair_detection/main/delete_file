@@ -1,0 +1,3 @@
+import glob
+
+datasets_dir = os.path.abspath(__file__)

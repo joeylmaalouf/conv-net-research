@@ -1,0 +1,1 @@
+/home/zhecan/github/summer_research_conv_net/conv-net-ella/ros_workspace/src/video/chair_detection/main/subset.bag
