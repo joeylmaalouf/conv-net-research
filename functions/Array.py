@@ -10,7 +10,7 @@ def binarize(data, val, dtype = np.int64):
 	return (np.asarray(data) == val).astype(dtype)
 
 
-def crop_sampling(original, cropped_size, crop_dims = (0, 1), steps = (1, 1)):
+def crop_sampling(array, cropped_size, crop_dims = (0, 1), steps = (1, 1)):
 	""" Given a NumPy array and a cropped size that is less than or equal to the
 		size of the original array, return an array of all possible cropped variations
 		that can be created by shifting each dimension by the given step size. The
@@ -20,7 +20,7 @@ def crop_sampling(original, cropped_size, crop_dims = (0, 1), steps = (1, 1)):
 		dimensions for the input array, as well as any number of dimensions to crop
 		across that is less than or equal to the number of dimensions in the input.
 
-		original: m-dimensional NumPy array
+		array: m-dimensional NumPy array
 		cropped_size: n-length tuple (n <= m)
 		crop_dims: n-length tuple
 		steps: n-length tuple
@@ -29,13 +29,13 @@ def crop_sampling(original, cropped_size, crop_dims = (0, 1), steps = (1, 1)):
 		cropped_size = (cropped_size,)
 	if type(crop_dims) == type(0):
 		crop_dims = (crop_dims,)
-	ranges = [range(0, 1+original.shape[dim]-size, step) for size, dim, step in zip(cropped_size, crop_dims, steps)]
+	ranges = [range(0, 1+array.shape[dim]-size, step) for size, dim, step in zip(cropped_size, crop_dims, steps)]
 	crops = []
 	for corner in itertools.product(*ranges):
-		indices = [Ellipsis]*len(original.shape)
+		indices = [Ellipsis]*len(array.shape)
 		for ind, dim in enumerate(crop_dims):
 			indices[dim] = slice(corner[ind], (corner[ind]+cropped_size[ind]))
-		crops.append(original[indices])
+		crops.append(array[indices])
 	return np.asarray(crops)
 
 
@@ -49,13 +49,19 @@ if __name__ == "__main__":
 	print("\n\nOriginal 2D array:")
 	print(image)
 	print("\nCropped sub-arrays across dimensions 0, 1, stepping over every row and every other column:")
-	print(crop_sampling(image, (3, 2), steps = (1, 2)))
+	print(crop_sampling(array = image, cropped_size = (3, 2), steps = (1, 2)))
 
 	image = np.reshape(np.arange(48), (3, 4, 4))
 	print("\n\nOriginal 3D array:")
 	print(image)
 	print("\nCropped sub-arrays across dimensions 1, 2:")
-	print(crop_sampling(image, cropped_size = (3, 2), crop_dims = (1, 2)))
+	print(crop_sampling(array = image, cropped_size = (3, 2), crop_dims = (1, 2)))
+
+	image = np.reshape(np.arange(30), (6, 5))
+	print("\n\nOriginal 2D array:")
+	print(image)
+	print("\nCropped sub-arrays across dimensions 0, 1, stepping to the corners:")
+	print(crop_sampling(array = image, cropped_size = (2, 2), steps = (4, 3)))
 
 	image = np.reshape(np.arange(240), (5, 3, 4, 4))
 	print("\n\nOriginal 4D array shape:")
@@ -63,7 +69,7 @@ if __name__ == "__main__":
 	print(image.shape)
 	# you want each element in the output array to be of size 1 (down from, say, 3) in the specified
 	# dimension, and you are referring to dimension 1 in the input array as the one to crop across
-	crops = crop_sampling(image, cropped_size = 1, crop_dims = 1)
+	crops = crop_sampling(array = image, cropped_size = 1, crop_dims = 1)
 	print("\nShape output from splitting color channels in a list of images:")
 	for crop in crops:
 		print(crop.shape)
