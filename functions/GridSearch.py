@@ -2,7 +2,7 @@ import itertools
 import random
 
 
-def grid_search(model, params):
+def grid_search(model, params, verbose = False):
 	""" Simple parameter optimization by iterate through
 		all possible combinations of the given parameters
 		for the model and returning the combination that
@@ -30,9 +30,11 @@ def grid_search(model, params):
 		if hasattr(instance, "prep"):
 			instance.prep()
 
-		acc = instance.eval()
-		if acc > best[1]:
-			best = (params, acc)
+		val = instance.eval()
+		if verbose:
+			print("Parameter combination {0} yields an evaluation of {1}".format(params, val))
+		if val > best[1]:
+			best = (params, val)
 
 	return best[0]
 
