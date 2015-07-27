@@ -248,5 +248,5 @@ def calculate_catastrophic_interference(num_tasks, exclude_start, exclude_end, t
 
 if __name__ == "__main__":
 	n_t = 10
-	for i in range(1, n_t):
-		calculate_catastrophic_interference(num_tasks = n_t, exclude_start = 0, exclude_end = i, top_layer = "cnn, ella, lr, svc", epochs = 15)
+	for i in range(n_t-2, n_t):
+		calculate_catastrophic_interference(num_tasks = n_t, exclude_start = i, exclude_end = n_t, top_layer = "cnn, ella, lr, svc", epochs = 15, verbose = True)
