@@ -39,4 +39,4 @@ if __name__ == "__main__":
 		"epochs": [0, 5, 10],
 		"batch_size": [100, 150, 200]
 	}
-	print("Best parameter combination: {0}".format(grid_search(ConvWrapper, paramdict)))
+	print("Best parameter combination: {0}".format(grid_search(ConvWrapper, paramdict, verbose = True)))
