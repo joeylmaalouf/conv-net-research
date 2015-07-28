@@ -81,14 +81,14 @@ class ConvolutionalNeuralNetwork(object):
 			self.w4 = self.init_weights((128 * 3 * 3, 625))
 			self.wo = self.init_weights((625, 10))
 
-	def create_model_functions(self):
-		self.noise_l1, self.noise_l2, self.noise_l3, self.noise_l4, self.noise_py_x = self.model(self.X, self.w1, self.w2, self.w3, self.w4, self.wo, 0.2, 0.5)
+	def create_model_functions(self, dropout_conv_prob = 0.2, dropout_hidden_prob = 0.5, learning_rate = 0.001):
+		self.noise_l1, self.noise_l2, self.noise_l3, self.noise_l4, self.noise_py_x = self.model(self.X, self.w1, self.w2, self.w3, self.w4, self.wo, dropout_conv_prob, dropout_hidden_prob)
 		self.l1, self.l2, self.l3, self.l4, self.py_x = self.model(self.X, self.w1, self.w2, self.w3, self.w4, self.wo, 0., 0.)
 		self.y_x = T.argmax(self.py_x, axis = 1)
 
 		self.cost = T.mean(T.nnet.categorical_crossentropy(self.noise_py_x, self.Y))
 		self.params = [self.w1, self.w2, self.w3, self.w4, self.wo]
-		self.updates = self.RMSprop(self.cost, self.params, lr=0.001)
+		self.updates = self.RMSprop(self.cost, self.params, lr = learning_rate)
 
 		self.train = theano.function(inputs = [self.X, self.Y], outputs = self.cost, updates = self.updates, allow_input_downcast = True)
 		self.predict = theano.function(inputs = [self.X], outputs = self.y_x, allow_input_downcast = True)
