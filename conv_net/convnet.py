@@ -71,15 +71,29 @@ class ConvolutionalNeuralNetwork(object):
 		self.trX, self.teX, self.trY, self.teY = mnist(onehot = True)
 		self.trX = self.trX.reshape(-1, 1, 28, 28)
 		self.teX = self.teX.reshape(-1, 1, 28, 28)
-		self.set_weights("mnist")
+		self.w1 = self.init_weights((32, 1, 3, 3))
+		self.w2 = self.init_weights((64, 32, 3, 3))
+		self.w3 = self.init_weights((128, 64, 3, 3))
+		self.w4 = self.init_weights((128 * 3 * 3, 625))
+		self.wo = self.init_weights((625, 10))
+		return self
 
-	def set_weights(self, dataset = "mnist"):
-		if dataset.lower() == "mnist":
-			self.w1 = self.init_weights((32, 1, 3, 3))
-			self.w2 = self.init_weights((64, 32, 3, 3))
-			self.w3 = self.init_weights((128, 64, 3, 3))
-			self.w4 = self.init_weights((128 * 3 * 3, 625))
-			self.wo = self.init_weights((625, 10))
+	def initialize_office(self):
+		data_dir = "/data1/user_data/office_objects/"
+		self.trX = np.load(data_dir + "trX.npy")
+		self.trX = self.trX.reshape(-1, 1, 96, 128)
+		self.trY = np.load(data_dir + "trY.npy")
+		self.trY = np.concatenate((np.logical_not(self.trY).astype(np.int64), self.trY), axis = 1)
+		self.teX = np.load(data_dir + "teX.npy")
+		self.teX = self.teX.reshape(-1, 1, 96, 128)
+		self.teY = np.load(data_dir + "teY.npy")
+		self.teY = np.concatenate((np.logical_not(self.teY).astype(np.int64), self.teY), axis = 1)
+		self.w1 = self.init_weights((32, 1, 3, 3))
+		self.w2 = self.init_weights((64, 32, 3, 3))
+		self.w3 = self.init_weights((128, 64, 3, 3))
+		self.w4 = self.init_weights((128 * 15 * 11, 11625))
+		self.wo = self.init_weights((11625, 2))
+		return self
 
 	def create_model_functions(self, dropout_conv_prob = 0.2, dropout_hidden_prob = 0.5, learning_rate = 0.001):
 		self.noise_l1, self.noise_l2, self.noise_l3, self.noise_l4, self.noise_py_x = self.model(self.X, self.w1, self.w2, self.w3, self.w4, self.wo, dropout_conv_prob, dropout_hidden_prob)
@@ -94,8 +108,9 @@ class ConvolutionalNeuralNetwork(object):
 		self.predict = theano.function(inputs = [self.X], outputs = self.y_x, allow_input_downcast = True)
 		self.predict_probs = theano.function(inputs = [self.X], outputs = self.py_x, allow_input_downcast = True)
 		self.activate = theano.function(inputs = [self.X], outputs = self.l4, allow_input_downcast = True)
+		return self
 
-	def train_mnist(self, verbose, epochs = 10, batch_size = 128):
+	def train_model(self, verbose, epochs = 10, batch_size = 128):
 		accuracies = []
 		for i in range(epochs):
 			for start, end in zip(range(0, len(self.trX), batch_size), range(batch_size, len(self.trX), batch_size)):
@@ -107,10 +122,11 @@ class ConvolutionalNeuralNetwork(object):
 		return np.asarray(accuracies)
 
 	def save_data(self, filename, data):
-		if theano.config.device.startswith("gpu"):
+#		if theano.config.device.startswith("gpu"):
+		if type(data) != type(np.asarray([])):
 			data = host_from_gpu(data)
+			data = np.asarray(data.eval())
 		mult = lambda x, y: x * y
-		data = np.asarray(data.eval())
 		length = reduce(mult, data.shape)
 		data = data.reshape(length)
 		data = "\n".join([str(i) for i in data])
@@ -142,7 +158,7 @@ class ConvolutionalNeuralNetwork(object):
 	def mnist_example(self, verbose = False, save = False):
 		self.initialize_mnist()
 		self.create_model_functions()
-		self.train_mnist(verbose, epochs = 5)
+		self.train_model(verbose, epochs = 5)
 		if save:
 			self.save_all_weights()
 			print("Saved weights to \"./saved/W*.txt\".")
