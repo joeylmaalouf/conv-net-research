@@ -110,16 +110,23 @@ class ConvolutionalNeuralNetwork(object):
 		self.activate = theano.function(inputs = [self.X], outputs = self.l4, allow_input_downcast = True)
 		return self
 
-	def train_model(self, verbose, epochs = 10, batch_size = 128):
-		accuracies = []
-		for i in range(epochs):
-			for start, end in zip(range(0, len(self.trX), batch_size), range(batch_size, len(self.trX), batch_size)):
-				self.cost = self.train(self.trX[start:end], self.trY[start:end])
-			accuracy = np.mean(np.argmax(self.teY, axis = 1) == self.predict(self.teX))
-			accuracies.append(accuracy)
+	def train_model(self, epochs = 10, batch_size = 128, verbose = False, trX = None, trY = None, teX = None, teY = None):
+		if trX == None: trX = self.trX
+		if trY == None: trY = self.trY
+		if teX == None: teX = self.teX
+		if teY == None: teY = self.teY
+		for _ in range(epochs):
+			for start, end in zip(range(0, len(trX), batch_size), range(batch_size, len(trX)+batch_size, batch_size)):
+				self.cost = self.train(trX[start:end], trY[start:end])
 			if verbose:
-				print(accuracy)
-		return np.asarray(accuracies)
+				print(self.calc_accuracy(teX, teY, batch_size))
+		return self
+
+	def calc_accuracy(self, teX, teY, batch_size = 128):
+		predictions = []
+		for start, end in zip(range(0, len(teX), batch_size), range(batch_size, len(teX)+batch_size, batch_size)):
+			predictions.extend(self.predict(teX[start:end]))
+		return np.mean(np.argmax(teY, axis = 1) == np.asarray(predictions))
 
 	def save_data(self, filename, data):
 #		if theano.config.device.startswith("gpu"):
@@ -158,7 +165,7 @@ class ConvolutionalNeuralNetwork(object):
 	def mnist_example(self, verbose = False, save = False):
 		self.initialize_mnist()
 		self.create_model_functions()
-		self.train_model(verbose, epochs = 5)
+		self.train_model(epochs = 5, verbose = verbose)
 		if save:
 			self.save_all_weights()
 			print("Saved weights to \"./saved/W*.txt\".")
@@ -175,5 +182,5 @@ class ConvolutionalNeuralNetwork(object):
 
 if __name__ == "__main__":
 	cnn = ConvolutionalNeuralNetwork()
-	cnn.mnist_example(verbose = True, save = True)
+	cnn.mnist_example(verbose = True, save = False)
 	print("Program complete.")
