@@ -110,11 +110,11 @@ class ConvolutionalNeuralNetwork(object):
 		self.activate = theano.function(inputs = [self.X], outputs = self.l4, allow_input_downcast = True)
 		return self
 
-	def train_model(self, epochs = 10, batch_size = 128, verbose = False, trX = None, trY = None, teX = None, teY = None):
-		if trX == None: trX = self.trX
-		if trY == None: trY = self.trY
-		if teX == None: teX = self.teX
-		if teY == None: teY = self.teY
+	def train_net(self, epochs = 10, batch_size = 128, verbose = False, trX = None, trY = None, teX = None, teY = None):
+		if             trX == None: trX = self.trX
+		if             trY == None: trY = self.trY
+		if verbose and teX == None: teX = self.teX
+		if verbose and teY == None: teY = self.teY
 		for _ in range(epochs):
 			for start, end in zip(range(0, len(trX), batch_size), range(batch_size, len(trX)+batch_size, batch_size)):
 				self.cost = self.train(trX[start:end], trY[start:end])
@@ -165,7 +165,7 @@ class ConvolutionalNeuralNetwork(object):
 	def mnist_example(self, verbose = False, save = False):
 		self.initialize_mnist()
 		self.create_model_functions()
-		self.train_model(epochs = 5, verbose = verbose)
+		self.train_net(epochs = 5, verbose = verbose)
 		if save:
 			self.save_all_weights()
 			print("Saved weights to \"./saved/W*.txt\".")

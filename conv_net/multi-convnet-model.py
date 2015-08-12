@@ -43,9 +43,7 @@ class MultiNetModel(object):
 			cnn.wo = cnn.load_data(filename, (625, 2))
 			os.remove(filename)
 		cnn.create_model_functions()
-		for _ in range(epochs):
-			for start, end in zip(range(0, trX.shape[0], batch_size), range(batch_size, trX.shape[0]+batch_size, batch_size)):
-				cnn.cost = cnn.train(trX[start:end], trY[start:end])
+		cnn.train_net(epochs, batch_size, trX = trX, trY = trY)
 		return cnn
 
 
@@ -74,9 +72,7 @@ class MultiNetModel(object):
 
 			if self.mode == "unfrozen" and task in np.asarray(self.tasks):
 				cnn = self.nets[task]
-				for _ in range(epochs):
-					for start, end in zip(range(0, trXr.shape[0], batch_size), range(batch_size, trXr.shape[0]+batch_size, batch_size)):
-						cnn.cost = cnn.train(trXr[start:end], trB[start:end])
+				cnn.train_net(epochs, batch_size, trX = trXr, trY = trB)
 			else:
 				cnn = self.nnet(trXr, trB, prev, epochs)
 
