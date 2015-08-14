@@ -67,34 +67,16 @@ class ConvolutionalNeuralNetwork(object):
 		pyx = self.softmax(T.dot(l4, wo))
 		return l1, l2, l3, l4, pyx
 
-	def initialize_dataset(self, name = "mnist"):
-		# this is the only method in this convnet that is not fully generalizable;
-		# if you want to use a new dataset, you have to set the data variables
-		# (trX, trY, teX, teY) and weight layers (w1, w2, w3, w4, wo) accordingly
-		if name.lower() == "mnist":
-			self.trX, self.teX, self.trY, self.teY = mnist(onehot = True)
-			self.trX = self.trX.reshape(-1, 1, 28, 28)
-			self.teX = self.teX.reshape(-1, 1, 28, 28)
-			self.w1 = self.init_weights((32, 1, 3, 3))
-			self.w2 = self.init_weights((64, 32, 3, 3))
-			self.w3 = self.init_weights((128, 64, 3, 3))
-			self.w4 = self.init_weights((128 * 3 * 3, 625))
-			self.wo = self.init_weights((625, 10))
-		elif name.lower() == "office":
-			data_dir = "/data1/user_data/office_objects/"
-			self.trX = np.load(data_dir + "trX.npy")
-			self.trX = self.trX.reshape(-1, 1, 96, 128)
-			self.trY = np.load(data_dir + "trY.npy")
-			self.trY = np.concatenate((np.logical_not(self.trY).astype(np.int64), self.trY), axis = 1)
-			self.teX = np.load(data_dir + "teX.npy")
-			self.teX = self.teX.reshape(-1, 1, 96, 128)
-			self.teY = np.load(data_dir + "teY.npy")
-			self.teY = np.concatenate((np.logical_not(self.teY).astype(np.int64), self.teY), axis = 1)
-			self.w1 = self.init_weights((32, 1, 3, 3))
-			self.w2 = self.init_weights((64, 32, 3, 3))
-			self.w3 = self.init_weights((128, 64, 3, 3))
-			self.w4 = self.init_weights((128 * 15 * 11, 11625))
-			self.wo = self.init_weights((11625, 2))
+	def initialize_dataset(self, trX, trY, teX, teY, shape_dict):
+		self.trX = trX.reshape(*shape_dict["trX"])
+		self.teX = teX.reshape(*shape_dict["teX"])
+		self.trY = trY
+		self.teY = teY
+		self.w1 = self.init_weights(shape_dict["w1"])
+		self.w2 = self.init_weights(shape_dict["w2"])
+		self.w3 = self.init_weights(shape_dict["w3"])
+		self.w4 = self.init_weights(shape_dict["w4"])
+		self.wo = self.init_weights(shape_dict["wo"])
 		return self
 
 	def create_model_functions(self, dropout_conv_prob = 0.2, dropout_hidden_prob = 0.5, learning_rate = 0.001):
@@ -163,10 +145,26 @@ class ConvolutionalNeuralNetwork(object):
 		self.w4 = self.load_data("saved/W4.txt", (128 * 3 * 3, 625))
 		self.wo = self.load_data("saved/Wo.txt", (625, 10))
 
+	def initialize_mnist(self):
+		# This method is provided as an example of how to use the provided
+		# initialize_dataset method for a given set of data with known shapes.
+		trX, teX, trY, teY = mnist(onehot = True)
+		shape_dict = {
+			"trX": (-1, 1, 28, 28),
+			"teX": (-1, 1, 28, 28),
+			"w1": (32, 1, 3, 3),
+			"w2": (64, 32, 3, 3),
+			"w3": (128, 64, 3, 3),
+			"w4": (128 * 3 * 3, 625),
+			"wo": (625, 10)
+		}
+		self.initialize_dataset(trX, trY, teX, teY, shape_dict)
+		return self
+
 
 if __name__ == "__main__":
 	cnn = ConvolutionalNeuralNetwork()
-	cnn.initialize_dataset("mnist")
+	cnn.initialize_mnist()
 	cnn.create_model_functions()
 	cnn.train_net(epochs = 5, verbose = True)
 
