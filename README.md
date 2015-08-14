@@ -11,6 +11,7 @@ The team:
   * Multi-Net Model Design/Creation/Experimentation
   * General Functions Module Creation
   * Caffe Experimentation/Prediction Extension
+  * Real-World Dataset Testing
 * [Sean Carter](https://github.com/seanccarter)
   * Modern Neural Network Configuration
   * Neural Network Generalization/Experimentation
