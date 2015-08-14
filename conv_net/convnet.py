@@ -5,7 +5,6 @@ from theano.sandbox.cuda.basic_ops import host_from_gpu
 from theano.tensor.nnet.conv import conv2d
 from theano.tensor.signal.downsample import max_pool_2d
 import numpy as np
-from load import mnist
 
 
 class ConvolutionalNeuralNetwork(object):
@@ -148,6 +147,7 @@ class ConvolutionalNeuralNetwork(object):
 	def initialize_mnist(self):
 		# This method is provided as an example of how to use the provided
 		# initialize_dataset method for a given set of data with known shapes.
+		from load import mnist
 		trX, teX, trY, teY = mnist(onehot = True)
 		shape_dict = {
 			"trX": (-1, 1, 28, 28),
