@@ -51,7 +51,7 @@ class MultiNetModel(object):
 		if self.mode == "frozen":
 			# find any new tasks that we don't already have a net for
 			tasks = np.setdiff1d(np.unique(trY), np.asarray(self.tasks))
-		elif self.mode == "unfrozen" or self.mode == "stacked":
+		elif self.mode == "unfrozen" or self.mode == "stacking":
 			# use all tasks
 			tasks = np.unique(trY)
 		# for each one, train it on a binarized random sampling, keeping all positive examples of
@@ -67,7 +67,7 @@ class MultiNetModel(object):
 
 			if self.mode == "frozen" or self.mode == "unfrozen":
 				prev = None if len(self.nets) == 0 else self.nets[self.newest]
-			elif self.mode == "stacked":
+			elif self.mode == "stacking":
 				prev = None if len(self.nets) == 0 else self.nets[self.newest][-1]
 
 			if self.mode == "unfrozen" and task in np.asarray(self.tasks):
@@ -80,7 +80,7 @@ class MultiNetModel(object):
 			self.newest = task
 			if self.mode == "frozen" or self.mode == "unfrozen":
 				self.nets[task] = cnn
-			elif self.mode == "stacked":
+			elif self.mode == "stacking":
 				if task not in self.nets:
 					self.nets[task] = []
 				self.nets[task].append(cnn)
@@ -98,7 +98,7 @@ class MultiNetModel(object):
 				probabilities = np.append(probabilities, cnn.predict_probs(teX[start:end])[:, 1])
 			predictions = vround(probabilities)
 
-		elif self.mode == "stacked":
+		elif self.mode == "stacking":
 			predictions = []
 			for cnn in self.nets[task]:
 				probabilities = np.asarray([])
@@ -123,7 +123,7 @@ class MultiNetModel(object):
 				classes.append(task)
 				probabilities.append(net.predict_probs(teX)[:, 1])
 
-		elif self.mode == "stacked":
+		elif self.mode == "stacking":
 			for task, netlist in self.nets.items():
 				classes.append(task)
 				probabilities.append(np.mean([net.predict_probs(teX)[:, 1] for net in netlist], axis = 0))
@@ -191,7 +191,7 @@ if __name__ == "__main__":
 	parser.add_option("-c", "--clock", action = "store_true", dest = "clock", default = False, help = "print how long the program took to run")
 	parser.add_option("-t", "--test", action = "store_true", dest = "test", default = False, help = "run additional per-task accuracy tests")
 	parser.add_option("-e", "--epochs", action = "store", dest = "epochs", type = "int", default = 10, help = "number of epochs for net training")
-	parser.add_option("-m", "--mode", action = "store", dest = "mode", type = "choice", choices = ["frozen", "unfrozen", "stacked"], default = "frozen", help = "training mode (frozen, unfrozen, stacked)")
+	parser.add_option("-m", "--mode", action = "store", dest = "mode", type = "choice", choices = ["frozen", "unfrozen", "stacking"], default = "frozen", help = "training mode (frozen, unfrozen, stacking)")
 	(options, args) = parser.parse_args()
 
 	# custom help message
