@@ -70,11 +70,13 @@ if __name__ == "__main__":
 	# todo:
 
 	# figure out how to extract activations for top-layer model
+	# these seem to be the weights, not activations
 	print("\nNet Blobs:")
 	for key, val in net.blobs.items():
 		print("  {0}, {1}".format(key, val.data.shape))
 
 	# make binary nets for multi-net model
+	# I can change values here, but it needs to be done before training and loading the nets
 	print("\nBinarized Labels:")
 	print(trY[:20].tolist())
 	for c in range(10):
