@@ -36,6 +36,6 @@ if __name__ == "__main__":
 	print data.shape, labels.shape
 	data, labels = random_sampling(data, labels, 0.5)
 	print data.shape, labels.shape
-	data08, labels08, data_9, labels_9 = remove_task(data, labels, 9)
+	data08, labels08, data_9, labels_9 = remove_class(data, labels, 9)
 	print data08.shape, labels08.shape
 	print data_9.shape, labels_9.shape
