@@ -4,7 +4,7 @@ import time
 sys.path.append("..")
 from functions.Dataset import remove_class
 from convnet import ConvolutionalNeuralNetwork
-from load import mnist
+from load import mnist, one_hot
 
 
 if __name__ == "__main__":
@@ -17,6 +17,11 @@ if __name__ == "__main__":
 	teX09 = teX09.reshape(-1, 1, 28, 28)
 	teX08, teY08, teX_9, teY_9 = remove_class(teX09, teY09, 9)
 	teX07, teY07, teX_8, teY_8 = remove_class(teX08, teY08, 8)
+
+	trY07 = one_hot(trY07, 8)
+	teY07 = one_hot(teY07, 8)
+	trY09 = one_hot(trY09, 10)
+	teY09 = one_hot(teY09, 10)
 
 	start = time.time()
 	shape_dict = {
