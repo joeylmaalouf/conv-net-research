@@ -4,6 +4,7 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.svm import LinearSVC
 import sys
 sys.path.append("..")
+import time
 from functions.Array import binarize
 from convnet import ConvolutionalNeuralNetwork
 from ELLA import ELLA
@@ -97,13 +98,15 @@ def find_model_task_accuracies(model, num_tasks, data, classes):
 def calculate_catastrophic_interference(num_tasks, exclude_start, exclude_end, top_layer = "cnn", save_figs = False, verbose = False, epochs = 20, batch_size = 100):
 	excluded = range(exclude_start, exclude_end)
 	task_nums = [i for i in range(num_tasks) if i not in excluded]
+
+	start = time.time()
 	cnn = ConvolutionalNeuralNetwork()
 	cnn.initialize_mnist()
 
-	cnn.trX = cnn.trX[:int(len(cnn.trX)*.2)]
-	cnn.trY = cnn.trY[:int(len(cnn.trY)*.2)]
-	cnn.teX = cnn.teX[:int(len(cnn.teX)*.2)]
-	cnn.teY = cnn.teY[:int(len(cnn.teY)*.2)]
+#	cnn.trX = cnn.trX[:int(len(cnn.trX)*.2)]
+#	cnn.trY = cnn.trY[:int(len(cnn.trY)*.2)]
+#	cnn.teX = cnn.teX[:int(len(cnn.teX)*.2)]
+#	cnn.teY = cnn.teY[:int(len(cnn.teY)*.2)]
 
 	cnn.trX, cnn.trY, trXE, trYE = split_dataset(excluded, cnn.trX, cnn.trY)
 	cnn.teX, cnn.teY, teXE, teYE = split_dataset(excluded, cnn.teX, cnn.teY)
@@ -114,6 +117,8 @@ def calculate_catastrophic_interference(num_tasks, exclude_start, exclude_end, t
 
 	print("\nTraining on tasks {0}, excluding tasks {1}".format(task_nums, excluded))
 	base_accuracies = train_per_task(cnn, num_tasks, verbose, epochs, batch_size)
+	end = time.time()
+	print("Initial training: {0:0.02f}sec".format(end-start))
 
 #	base model, trained without excluded tasks
 #	(which are then added back in one of the three top-layer models)
@@ -143,9 +148,13 @@ def calculate_catastrophic_interference(num_tasks, exclude_start, exclude_end, t
 	# convolutional neural network
 	if "cnn" in top_layer:
 		print("\nRetraining convolutional neural network on all tasks after excluding {0} from initial training".format(excluded))
+		start = time.time()
 
 		# fit model with data
 		cnn_accs = train_new_tasks(cnn, total_trX, total_trY, total_teX, total_teY, num_tasks, verbose, epochs, batch_size)
+
+		end = time.time()
+		print("ConvNet Retraining: {0:0.02f}sec".format(end-start))
 
 		# show accuracy improvement from additional model layer
 		print("[ConvNet(exclusion)]              Testing data accuracy: {0:0.04f}".format(base_accuracies["total"][-1]))
@@ -168,6 +177,7 @@ def calculate_catastrophic_interference(num_tasks, exclude_start, exclude_end, t
 	# efficient lifelong learning algorithm
 	if "ella" in top_layer:
 		print("\nTraining efficient lifelong learning algorithm on all tasks after excluding {0} from convnet training".format(excluded))
+		start = time.time()
 
 		# fit model with data
 		ella = ELLA(d = 625, k = 5, base_learner = LogisticRegression, base_learner_kwargs = {"tol": 10**-2}, mu = 10**-3)
@@ -175,6 +185,9 @@ def calculate_catastrophic_interference(num_tasks, exclude_start, exclude_end, t
 			ella.fit(trA, binarize(trC, task), task)
 		predictions = np.argmax(np.asarray([ella.predict_logprobs(teA, i) for i in range(ella.T)]), axis = 0)
 		ella_acc = np.mean(predictions == teC)
+
+		end = time.time()
+		print("ELLA: {0:0.02f}sec".format(end-start))
 
 		# show accuracy improvement from additional model layer
 		print("[ConvNet]                         Testing data accuracy: {0:0.04f}".format(base_accuracies["total"][-1]))
@@ -188,11 +201,15 @@ def calculate_catastrophic_interference(num_tasks, exclude_start, exclude_end, t
 	# logistic regression model
 	if "lr" in top_layer:
 		print("\nTraining logistic regression model on all tasks after excluding {0} from convnet training".format(excluded))
+		start = time.time()
 
 		# fit model with data
 		lr = LogisticRegression()
 		lr.fit(trA, trC)
 		logreg_accs = find_model_task_accuracies(lr, num_tasks, teA, teC)
+
+		end = time.time()
+		print("Logistic Regression: {0:0.02f}sec".format(end-start))
 
 		# show accuracy improvement from additional model layer
 		print("[ConvNet]                         Testing data accuracy: {0:0.04f}".format(base_accuracies["total"][-1]))
@@ -217,11 +234,15 @@ def calculate_catastrophic_interference(num_tasks, exclude_start, exclude_end, t
 	# support vector classifier
 	if "svc" in top_layer:
 		print("\nTraining linear support vector classifier on all tasks after excluding {0} from convnet training".format(excluded))
+		start = time.time()
 
 		# fit model with data
 		svc = LinearSVC()
 		svc.fit(trA, trC)
 		svc_accs = find_model_task_accuracies(svc, num_tasks, teA, teC)
+
+		end = time.time()
+		print("Support Vector Classifier: {0:0.02f}sec".format(end-start))
 
 		# show accuracy improvement from additional model layer
 		print("[ConvNet]                         Testing data accuracy: {0:0.04f}".format(base_accuracies["total"][-1]))
@@ -247,4 +268,4 @@ def calculate_catastrophic_interference(num_tasks, exclude_start, exclude_end, t
 
 
 if __name__ == "__main__":
-	calculate_catastrophic_interference(num_tasks = 10, exclude_start = 8, exclude_end = 10, top_layer = "cnn, ella, lr, svc", epochs = 15)
+	calculate_catastrophic_interference(num_tasks = 10, exclude_start = 8, exclude_end = 10, top_layer = "cnn, ella, lr, svc", epochs = 10)
