@@ -2,13 +2,15 @@ import numpy as np
 import os
 datasets_dir = "/".join(__file__.split("/")[:-1])
 
-def one_hot(x,n):
+
+def one_hot(x, n):
 	if type(x) == list:
 		x = np.array(x)
 	x = x.flatten()
-	o_h = np.zeros((len(x),n))
-	o_h[np.arange(len(x)),x] = 1
+	o_h = np.zeros((len(x), n))
+	o_h[np.arange(len(x)), x] = 1
 	return o_h
+
 
 def mnist(ntrain = 60000, ntest = 10000, onehot = True):
 	data_dir = os.path.join(datasets_dir,"mnist/")
@@ -46,10 +48,11 @@ def mnist(ntrain = 60000, ntest = 10000, onehot = True):
 
 	return trX,teX,trY,teY
 
+
 if __name__ == "__main__":
 	trX, teX, trY, teY = mnist()
 	trX = trX.reshape(-1, 1, 28, 28)
 	teX = teX.reshape(-1, 1, 28, 28)
 	from matplotlib import pyplot as plt
-	plt.imshow(trX[0], "gray")
+	plt.imshow(trX[0, 0], "gray")
 	plt.show()
