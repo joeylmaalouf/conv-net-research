@@ -1,10 +1,20 @@
 import numpy as np
 
 
+def remove_class(data_set, data_labels, task, condense = False):
+	# condense the data from a binary array to a single value if necessary
+	classes = np.argmax(data_labels, axis = 1) if condense else data_labels
+	# find the indices corresponding (or not) to the task to be removed
+	nonmatching = np.nonzero(classes != task)[0]
+	matching = np.nonzero(classes == task)[0]
+	# return the split data using these indices
+	return data_set[nonmatching], data_labels[nonmatching], data_set[matching], data_labels[matching]
+
+
 def random_sampling(data_set, data_labels, p_kept = 0.5, to_keep = None):
 	# temporarily remove the task that we want to keep all examples of
 	if to_keep:
-		data_set, data_labels, kept_set, kept_labels = remove_task(data_set, data_labels, to_keep)
+		data_set, data_labels, kept_set, kept_labels = remove_class(data_set, data_labels, to_keep)
 	# pick random elements from leftover dataset, up to calculated limit
 	length = len(data_set)
 	limit = int(p_kept*length)
@@ -18,16 +28,6 @@ def random_sampling(data_set, data_labels, p_kept = 0.5, to_keep = None):
 	indices = np.random.permutation(len(data_set))
 	data_set, data_labels = data_set[indices], data_labels[indices]	
 	return data_set, data_labels
-
-
-def remove_class(data_set, data_labels, task, condense = False):
-	# condense the data from a binary array to a single value if necessary
-	classes = np.argmax(data_labels, axis = 1) if condense else data_labels
-	# find the indices corresponding (or not) to the task to be removed
-	nonmatching = np.nonzero(classes != task)[0]
-	matching = np.nonzero(classes == task)[0]
-	# return the split data using these indices
-	return data_set[nonmatching], data_labels[nonmatching], data_set[matching], data_labels[matching]
 
 
 if __name__ == "__main__":
