@@ -228,6 +228,10 @@ if __name__ == "__main__":
 			print("Accuracy on task {0}: {1:0.04f}".format(t, mnm.test(teX07, teY07, t)))
 	print("Accuracy on tasks 0-7: {0:0.04f}".format(mnm.evaluate(teX07, teY07, verbose = options.verbose)))
 
+	if options.clock:
+		mid = time.time()
+		print("Time to run batch: {0} seconds.".format(mid-start))
+
 	# train and evaluate model on classes 0-8
 	print("Incrementally training model on new task 8...")
 	mnm.train(trX08, trY08, epochs = options.epochs, verbose = options.verbose)
@@ -246,4 +250,5 @@ if __name__ == "__main__":
 
 	if options.clock:
 		end = time.time()
-		print("Time to run program: {0} seconds.".format(end-start))
+		print("Time to run incremental: {0} seconds.".format(end-mid))
+		print("Time to run total: {0} seconds.".format(end-start))
