@@ -11,8 +11,6 @@ if __name__ == "__main__":
 	teY = np.load(data_dir + "teY.npy")
 	teY = np.concatenate((np.logical_not(teY).astype(np.int64), teY), axis = 1)
 	shape_dict = {
-		"trX": (-1, 1, 96, 128),
-		"teX": (-1, 1, 96, 128),
 		"w1": (32, 1, 3, 3),
 		"w2": (64, 32, 3, 3),
 		"w3": (128, 64, 3, 3),

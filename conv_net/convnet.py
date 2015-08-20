@@ -67,8 +67,8 @@ class ConvolutionalNeuralNetwork(object):
 		return l1, l2, l3, l4, pyx
 
 	def initialize_dataset(self, trX, trY, teX, teY, shape_dict):
-		self.trX = trX.reshape(*shape_dict["trX"])
-		self.teX = teX.reshape(*shape_dict["teX"])
+		self.trX = trX
+		self.teX = teX
 		self.trY = trY
 		self.teY = teY
 		self.w1 = self.init_weights(shape_dict["w1"])
@@ -147,11 +147,11 @@ class ConvolutionalNeuralNetwork(object):
 	def initialize_mnist(self):
 		# This method is provided as an example of how to use the provided
 		# initialize_dataset method for a given set of data with known shapes.
-		from load import mnist
-		trX, teX, trY, teY = mnist(onehot = True)
+		import sys
+		sys.path.append("..")
+		from datasets.Load import mnist
+		trX, trY, teX, teY = mnist(onehot = True)
 		shape_dict = {
-			"trX": (-1, 1, 28, 28),
-			"teX": (-1, 1, 28, 28),
 			"w1": (32, 1, 3, 3),
 			"w2": (64, 32, 3, 3),
 			"w3": (128, 64, 3, 3),

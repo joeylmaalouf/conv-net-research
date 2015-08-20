@@ -7,8 +7,8 @@ import time
 sys.path.append("..")
 from functions.Array import binarize
 from functions.Dataset import random_sampling, remove_class
+from datasets.Load import mnist
 from convnet import ConvolutionalNeuralNetwork
-from load import mnist
 
 
 class MultiNetModel(object):
@@ -180,15 +180,13 @@ if __name__ == "__main__":
 		start = time.time()
 
 	# load data
-	trX09, teX09, trY09, teY09 = mnist(onehot = False)
+	trX09, trY09, teX09, teY09 = mnist(onehot = False)
 
 	# prep training data
-	trX09 = trX09.reshape(-1, 1, 28, 28)
 	trX08, trY08, trX_9, trY_9 = remove_class(trX09, trY09, 9)
 	trX07, trY07, trX_8, trY_8 = remove_class(trX08, trY08, 8)
 
 	# prep testing data
-	teX09 = teX09.reshape(-1, 1, 28, 28)
 	teX08, teY08, teX_9, teY_9 = remove_class(teX09, teY09, 9)
 	teX07, teY07, teX_8, teY_8 = remove_class(teX08, teY08, 8)
 

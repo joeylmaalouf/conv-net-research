@@ -80,7 +80,7 @@ class VideoWindow(object):
 
 	def predict_class(self):
 		frame = self.manipulate(self.frame)
-		frame = frame.reshape(-1, 1, 28, 28)
+		frame = frame.reshape(1, 1, 28, 28)
 		prediction = self.cnn.predict(frame)[0]
 		print("Predicted digit: {0}".format(prediction))
 		return prediction
