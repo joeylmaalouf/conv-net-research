@@ -168,7 +168,7 @@ if __name__ == "__main__":
 	cnn.create_model_functions()
 	cnn.train_net(epochs = 5, verbose = True)
 
-	save = False
+	save = False # set to True to output weights for loading net state and activations for a top-layer model
 	if save:
 		cnn.save_all_weights()
 		print("Saved weights to \"./saved/W*.txt\".")
