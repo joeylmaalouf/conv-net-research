@@ -35,9 +35,11 @@ if __name__ == "__main__":
 	elif dataset == "office":
 		data_dir = "/data1/user_data/office_objects/"
 		trX = np.load(data_dir + "trX.npy")
+		trX = trX[:, np.newaxis, :, :]
 		trY = np.load(data_dir + "trY.npy")
 		trY = np.concatenate((np.logical_not(trY).astype(np.int64), trY), axis = 1)
 		teX = np.load(data_dir + "teX.npy")
+		trX = teX[:, np.newaxis, :, :]
 		teY = np.load(data_dir + "teY.npy")
 		teY = np.concatenate((np.logical_not(teY).astype(np.int64), teY), axis = 1)
 		shape_dict = {
@@ -53,4 +55,5 @@ if __name__ == "__main__":
 		sys.exit(1)
 
 	cnn = ConvolutionalNeuralNetwork().initialize_dataset(trX, trY, teX, teY, shape_dict)
-	cnn.create_model_functions().train_net(epochs = 10, batch_size = 50, verbose = True)
+	cnn.create_model_functions().train_net(epochs = 10, batch_size = 50, verbose = False)
+	print("Accuracy on the {0} dataset: {1:0.02f}%".format(dataset, cnn.calc_accuracy(teX, teY)*100))
