@@ -6,7 +6,6 @@ from theano.tensor.nnet.conv import conv2d
 from theano.tensor.signal.downsample import max_pool_2d
 import numpy as np
 import cPickle
-from load import mnist
 
 def reprocess(data):
 	""" Turns the 'values' into something that looks like neural network output
