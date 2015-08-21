@@ -39,7 +39,7 @@ if __name__ == "__main__":
 		trY = np.load(data_dir + "trY.npy")
 		trY = np.concatenate((np.logical_not(trY).astype(np.int64), trY), axis = 1)
 		teX = np.load(data_dir + "teX.npy")
-		trX = teX[:, np.newaxis, :, :]
+		teX = teX[:, np.newaxis, :, :]
 		teY = np.load(data_dir + "teY.npy")
 		teY = np.concatenate((np.logical_not(teY).astype(np.int64), teY), axis = 1)
 		shape_dict = {
