@@ -55,5 +55,5 @@ if __name__ == "__main__":
 		sys.exit(1)
 
 	cnn = ConvolutionalNeuralNetwork().initialize_dataset(trX, trY, teX, teY, shape_dict)
-	cnn.create_model_functions().train_net(epochs = 10, batch_size = 50, verbose = False)
+	cnn.create_model_functions().train_net(epochs = 10, batch_size = 32, verbose = False)
 	print("Accuracy on the {0} dataset: {1:0.02f}%".format(dataset, cnn.calc_accuracy(teX, teY)*100))
