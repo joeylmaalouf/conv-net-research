@@ -14,7 +14,7 @@ def grid_search(model, params, verbose = False):
 		requirement for the model is that it has an eval()
 		method that returns a number; if there is any code that
 		needs to be run after __init__() and before eval(), it
-		can go in a prep() method that will be run if it exists.
+		can go in a setup() method that will be run if it exists.
 	"""
 	best = ({}, -float("Inf"))
 	names = params.keys()
@@ -27,8 +27,8 @@ def grid_search(model, params, verbose = False):
 		for k, v in params.items():
 			setattr(instance, k, v)
 
-		if hasattr(instance, "prep"):
-			instance.prep()
+		if hasattr(instance, "setup"):
+			instance.setup()
 
 		val = instance.eval()
 		if verbose:
@@ -50,7 +50,7 @@ class DummyModel(object):
 		self.par2 = par2
 		self.par3 = par3
 
-	def prep(self):
+	def setup(self):
 		""" Do any work that, for some reason, needs to
 			be done before eval and can't be combined with it.
 			This method does not need to exist in your object.

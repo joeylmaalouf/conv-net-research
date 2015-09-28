@@ -10,7 +10,7 @@ from functions.GridSearch import grid_search
 class ConvWrapper(object):
 	""" An example model to show how to make a
 		wrapper object if you don't want to add
-		a prep() method (optional) and an eval()
+		a setup() method (optional) and an eval()
 		method (required) to your existing model.
 		The alternative to making a wrapper object
 		is to add an eval() method directly to the
@@ -23,10 +23,10 @@ class ConvWrapper(object):
 		self.net.initialize_mnist()
 
 
-	def prep(self):
+	def setup(self):
 		# all of this could've gone at the beginning of eval(),
 		# but i wanted that to just be the accuracy evaluation,
-		# so we'll train the model here in prep()
+		# so we'll train the model here in setup()
 		self.net.create_model_functions(self.dropout_conv_prob, self.dropout_hidden_prob, self.learning_rate)
 
 		for i in range(self.epochs):
